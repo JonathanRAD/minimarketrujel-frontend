@@ -355,18 +355,22 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       }
     } else if (event.key === 'F9') {
       event.preventDefault();
-      if (this.items().length > 0) {
-        if (confirm('¿Estás seguro de cancelar toda la venta actual?')) {
-          this.carritoService.limpiar();
-          this.ultimoProducto.set(null);
-          this.clienteSeleccionado.set(null);
-        }
-      }
+      this.limpiarCarrito();
     } else if (event.key === 'F10') {
       event.preventDefault();
       if (this.items().length > 0 && !this.procesandoCobro()) {
         this.cobrar('EFECTIVO');
       }
+    }
+  }
+
+  limpiarCarrito(): void {
+    if (this.items().length === 0) return;
+    if (confirm('¿Estás seguro de vaciar todo el carrito?')) {
+      this.carritoService.limpiar();
+      this.ultimoProducto.set(null);
+      this.clienteSeleccionado.set(null);
+      this.mensajeError.set(null);
     }
   }
 

@@ -88,9 +88,19 @@
       <div class="pos-cart-panel card flex-1">
         <div class="cart-header">
           <h3 class="panel-title">Detalle de la Venta</h3>
-          <span class="cart-count" *ngIf="items().length > 0">
-            {{ cantidadTotal() }} artículos
-          </span>
+          <div class="cart-header-actions" *ngIf="items().length > 0">
+            <span class="cart-count">
+              {{ cantidadTotal() }} artículos
+            </span>
+            <button 
+              type="button" 
+              class="btn-clear-cart" 
+              (click)="limpiarCarrito()"
+              title="Vaciar todo el carrito de la venta actual">
+              <span class="material-icons btn-clear-icon">remove_shopping_cart</span>
+              <span>Limpiar Carrito</span>
+            </button>
+          </div>
         </div>
 
         <!-- Visor del Último Producto Escaneado (Estilo Ticker Premium) -->
