@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CategoriaService } from '../../services/categoria.service';
 import { Categoria } from '../../../../../core/models/categoria.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-categorias-list-page',
@@ -14,6 +14,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class CategoriasListPageComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
+  private confirmModal = inject(ConfirmModalService);
 
   categorias = signal<Categoria[]>([]);
   cargando = signal(true);
@@ -38,8 +39,16 @@ export class CategoriasListPageComponent implements OnInit {
     });
   }
 
-  eliminar(categoria: Categoria) {
-    const seguro = confirm(`¿Estás seguro de que deseas eliminar la categoría "${categoria.nombre}"?`);
+  async eliminar(categoria: Categoria) {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Eliminar Categoría?',
+      mensaje: `¿Estás seguro de que deseas eliminar la categoría "${categoria.nombre}"?`,
+      submensaje: 'Esta acción no se puede deshacer.',
+      icono: 'delete_forever',
+      tipo: 'danger',
+      textoConfirmar: 'Sí, eliminar',
+      textoCancelar: 'Cancelar',
+    });
     if (!seguro) return;
 
     this.errorMessage.set(null);

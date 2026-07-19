@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { VentaService } from '../../services/venta.service';
 import { Venta, MetodoPago } from '../../../../../core/models/venta.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BadgeVariant, PaginationComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BadgeVariant, PaginationComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-ventas-list-page',
@@ -25,6 +25,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class VentasListPageComponent implements OnInit {
   private ventaService = inject(VentaService);
+  private confirmModal = inject(ConfirmModalService);
 
   ventas = signal<Venta[]>([]);
   cargando = signal(true);
@@ -123,8 +124,16 @@ export class VentasListPageComponent implements OnInit {
     this.ventaSeleccionada.set(null);
   }
 
-  anularVenta(id: string) {
-    const confirmar = confirm('¿Estás seguro de que deseas anular esta venta? Esta acción devolverá el stock de todos los artículos involucrados al inventario y registrará un movimiento de devolución. No se puede deshacer.');
+  async anularVenta(id: string) {
+    const confirmar = await this.confirmModal.confirm({
+      titulo: '¿Anular Venta?',
+      mensaje: '¿Estás seguro de que deseas anular esta venta?',
+      submensaje: 'Esta acción devolverá el stock de todos los artículos al inventario y registrará la devolución. No se puede deshacer.',
+      icono: 'cancel',
+      tipo: 'danger',
+      textoConfirmar: 'Sí, anular venta',
+      textoCancelar: 'Cancelar',
+    });
     if (!confirmar) return;
 
     this.guardando.set(true);

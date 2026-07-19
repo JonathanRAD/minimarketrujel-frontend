@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductoService } from '../../services/producto.service';
 import { Producto } from '../../../../../core/models/producto.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-productos-list-page',
@@ -14,6 +14,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class ProductosListPageComponent implements OnInit {
   private productoService = inject(ProductoService);
+  private confirmModal = inject(ConfirmModalService);
 
   productos = signal<Producto[]>([]);
   cargando = signal(true);
@@ -71,8 +72,18 @@ export class ProductosListPageComponent implements OnInit {
     this.cargar();
   }
 
-  eliminar(prod: Producto): void {
-    if (!confirm(`¿Seguro que quieres desactivar "${prod.nombre}"?`)) return;
+  async eliminar(prod: Producto): Promise<void> {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Desactivar Producto?',
+      mensaje: `¿Estás seguro de que deseas desactivar el producto "${prod.nombre}"?`,
+      submensaje: 'El producto ya no aparecerá disponible para ventas en el POS.',
+      icono: 'block',
+      tipo: 'warning',
+      textoConfirmar: 'Sí, desactivar',
+      textoCancelar: 'Cancelar',
+    });
+    if (!seguro) return;
+
     this.productoService.eliminar(prod.id).subscribe(() => this.cargar());
   }
 

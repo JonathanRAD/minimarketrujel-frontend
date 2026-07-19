@@ -1,9 +1,9 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { CompraService } from '../../services/compra.service';
 import { Compra } from '../../../../../core/models/compra.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-compra-detail-page',
@@ -16,6 +16,7 @@ export class CompraDetailPageComponent implements OnInit {
   private compraService = inject(CompraService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private confirmModal = inject(ConfirmModalService);
 
   compra = signal<Compra | null>(null);
   cargando = signal(true);
@@ -44,14 +45,19 @@ export class CompraDetailPageComponent implements OnInit {
     });
   }
 
-  anularCompra() {
+  async anularCompra() {
     const compraId = this.compra()?.id;
     if (!compraId) return;
 
-    const seguro = confirm(
-      'Â¿EstÃ¡s completamente seguro de que deseas anular esta compra?\n\n' +
-      'Esta acciÃ³n es irreversible y RESTARÃ de forma automÃ¡tica las cantidades compradas del stock actual de cada producto.'
-    );
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Anular Compra?',
+      mensaje: '¿Estás completamente seguro de que deseas anular esta compra?',
+      submensaje: 'Esta acción restará automáticamente del inventario el stock ingresado por esta compra.',
+      icono: 'remove_shopping_cart',
+      tipo: 'danger',
+      textoConfirmar: 'Sí, anular compra',
+      textoCancelar: 'Cancelar',
+    });
     if (!seguro) return;
 
     this.anulando.set(true);

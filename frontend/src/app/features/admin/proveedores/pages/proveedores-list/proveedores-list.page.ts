@@ -1,10 +1,10 @@
-﻿// Componente de listado de proveedores para el Back-office
+// Componente de listado de proveedores para el Back-office
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProveedorService } from '../../services/proveedor.service';
 import { Proveedor } from '../../../../../core/models/proveedor.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-proveedores-list-page',
@@ -15,6 +15,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class ProveedoresListPageComponent implements OnInit {
   private proveedorService = inject(ProveedorService);
+  private confirmModal = inject(ConfirmModalService);
 
   proveedores = signal<Proveedor[]>([]);
   cargando = signal(true);
@@ -39,8 +40,16 @@ export class ProveedoresListPageComponent implements OnInit {
     });
   }
 
-  eliminar(proveedor: Proveedor) {
-    const seguro = confirm(`Â¿EstÃ¡s seguro de que deseas desactivar al proveedor "${proveedor.nombre}"?`);
+  async eliminar(proveedor: Proveedor) {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Desactivar Proveedor?',
+      mensaje: `¿Estás seguro de que deseas desactivar al proveedor "${proveedor.nombre}"?`,
+      submensaje: 'El proveedor ya no estará activo para nuevas operaciones.',
+      icono: 'no_accounts',
+      tipo: 'warning',
+      textoConfirmar: 'Sí, desactivar',
+      textoCancelar: 'Cancelar',
+    });
     if (!seguro) return;
 
     this.errorMessage.set(null);

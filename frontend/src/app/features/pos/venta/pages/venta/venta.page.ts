@@ -12,7 +12,7 @@ import { ClienteService } from '../../../../admin/clientes/services/cliente.serv
 import { LocalDbService } from '../../../offline/local-db.service';
 import { MetodoPago } from '../../../../../core/models/venta.model';
 import { Producto } from '../../../../../core/models/producto.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-venta-page',
@@ -29,6 +29,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
   private turnoCajaService = inject(TurnoCajaService);
   private clienteService = inject(ClienteService);
   private localDb = inject(LocalDbService);
+  private confirmModal = inject(ConfirmModalService);
 
   private syncIntervalId: any;
 
@@ -364,9 +365,19 @@ export class VentaPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  limpiarCarrito(): void {
+  async limpiarCarrito(): Promise<void> {
     if (this.items().length === 0) return;
-    if (confirm('¿Estás seguro de vaciar todo el carrito?')) {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Vaciar Carrito?',
+      mensaje: '¿Estás seguro de que deseas vaciar todos los productos del carrito actual?',
+      submensaje: 'Se borrarán todos los artículos agregados a la venta.',
+      icono: 'remove_shopping_cart',
+      tipo: 'danger',
+      textoConfirmar: 'Sí, vaciar carrito',
+      textoCancelar: 'Cancelar',
+    });
+
+    if (seguro) {
       this.carritoService.limpiar();
       this.ultimoProducto.set(null);
       this.clienteSeleccionado.set(null);

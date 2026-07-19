@@ -1,0 +1,47 @@
+<div class="modal-overlay" *ngIf="mostrar()" (click)="cancelar()">
+  <div class="modal-card" [class]="'modal-' + (config()?.tipo || 'danger')" (click)="$event.stopPropagation()">
+    
+    <!-- Botón de Cerrar (X) -->
+    <button type="button" class="btn-close-x" (click)="cancelar()" title="Cerrar">
+      <span class="material-icons">close</span>
+    </button>
+
+    <!-- Encabezado con Icono Circular Iluminado -->
+    <div class="modal-header-icon">
+      <div class="icon-circle">
+        <span class="material-icons main-icon">{{ config()?.icono }}</span>
+      </div>
+    </div>
+
+    <!-- Contenido del Mensaje -->
+    <div class="modal-body text-center">
+      <h3 class="modal-title">{{ config()?.titulo }}</h3>
+      <p class="modal-message">{{ config()?.mensaje }}</p>
+      
+      <!-- Submensaje / Alerta Informativa Secundaria (Opcional) -->
+      <div class="modal-submessage-box" *ngIf="config()?.submensaje">
+        <span class="material-icons sub-icon">info</span>
+        <span>{{ config()?.submensaje }}</span>
+      </div>
+    </div>
+
+    <!-- Acciones / Botones -->
+    <div class="modal-actions">
+      <button type="button" class="btn-action btn-cancel" (click)="cancelar()">
+        {{ config()?.textoCancelar }}
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-action btn-confirm" 
+        [class]="'btn-' + (config()?.tipo || 'danger')"
+        (click)="confirmar()">
+        <span class="material-icons text-sm" style="font-size: 1.15rem;">
+          {{ config()?.tipo === 'danger' ? 'delete' : config()?.tipo === 'warning' ? 'check' : 'done' }}
+        </span>
+        <span>{{ config()?.textoConfirmar }}</span>
+      </button>
+    </div>
+
+  </div>
+</div>

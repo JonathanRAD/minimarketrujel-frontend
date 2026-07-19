@@ -1,9 +1,9 @@
-﻿import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ClienteService } from '../../services/cliente.service';
 import { Cliente, Fiado } from '../../../../../core/models/cliente.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-cliente-detail-page',
@@ -15,6 +15,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class ClienteDetailPageComponent implements OnInit {
   private clienteService = inject(ClienteService);
   private route = inject(ActivatedRoute);
+  private confirmModal = inject(ConfirmModalService);
 
   cliente = signal<Cliente | null>(null);
   fiados = signal<Fiado[]>([]);
@@ -75,8 +76,16 @@ export class ClienteDetailPageComponent implements OnInit {
     });
   }
 
-  cobrar(fiado: Fiado) {
-    const seguro = confirm(`Â¿Confirmas que el cliente estÃ¡ saldando la deuda de $${fiado.monto} por esta compra?`);
+  async cobrar(fiado: Fiado) {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Saldar Deuda de Cliente?',
+      mensaje: `¿Confirmas que el cliente está saldando la deuda de S/ ${fiado.monto}?`,
+      submensaje: 'La deuda quedará registrada como pagada.',
+      icono: 'payments',
+      tipo: 'info',
+      textoConfirmar: 'Sí, registrar pago',
+      textoCancelar: 'Cancelar',
+    });
     if (!seguro) return;
 
     this.cobrandoId.set(fiado.id);

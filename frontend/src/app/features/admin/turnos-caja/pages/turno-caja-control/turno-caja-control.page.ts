@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TurnoCajaService } from '../../services/turno-caja.service';
 import { TurnoCaja } from '../../../../../core/models/turno-caja.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-turno-caja-control-page',
@@ -15,6 +15,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class TurnoCajaControlPageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private turnoCajaService = inject(TurnoCajaService);
+  private confirmModal = inject(ConfirmModalService);
 
   turnoActivo = signal<TurnoCaja | null>(null);
   cargando = signal(true);
@@ -165,13 +166,18 @@ export class TurnoCajaControlPageComponent implements OnInit {
     });
   }
 
-  cerrarCaja() {
+  async cerrarCaja() {
     if (this.cierreForm.invalid) return;
 
-    const seguro = confirm(
-      '¿Está seguro de que deseas cerrar la caja y finalizar tu turno?\n\n' +
-      'Esta acción guardará los totales finales y no podrás realizar más operaciones de arqueo sobre este turno.'
-    );
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Cerrar Turno de Caja?',
+      mensaje: '¿Estás seguro de que deseas cerrar la caja y finalizar tu turno?',
+      submensaje: 'Esta acción guardará los totales finales y no podrás realizar más operaciones de arqueo sobre este turno.',
+      icono: 'lock',
+      tipo: 'warning',
+      textoConfirmar: 'Sí, cerrar caja',
+      textoCancelar: 'Cancelar',
+    });
     if (!seguro) return;
 
     this.procesando.set(true);

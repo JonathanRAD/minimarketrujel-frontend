@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ClienteService } from '../../services/cliente.service';
 import { Cliente } from '../../../../../core/models/cliente.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, ConfirmModalService } from '@shared/components';
 
 @Component({
   selector: 'app-clientes-list-page',
@@ -14,6 +14,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class ClientesListPageComponent implements OnInit {
   private clienteService = inject(ClienteService);
+  private confirmModal = inject(ConfirmModalService);
 
   clientes = signal<Cliente[]>([]);
   cargando = signal(true);
@@ -51,8 +52,16 @@ export class ClientesListPageComponent implements OnInit {
     });
   }
 
-  eliminar(cliente: Cliente) {
-    const seguro = confirm(`¿Estás seguro de que deseas desactivar al cliente "${cliente.nombre}"?`);
+  async eliminar(cliente: Cliente) {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Desactivar Cliente?',
+      mensaje: `¿Estás seguro de que deseas desactivar al cliente "${cliente.nombre}"?`,
+      submensaje: 'El cliente ya no estará activo para registrar ventas o créditos.',
+      icono: 'person_off',
+      tipo: 'warning',
+      textoConfirmar: 'Sí, desactivar',
+      textoCancelar: 'Cancelar',
+    });
     if (!seguro) return;
 
     this.errorMessage.set(null);
