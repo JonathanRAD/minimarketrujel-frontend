@@ -1,6 +1,4 @@
-import * as nodemailer from 'nodemailer';
 import { env } from '../../config/env';
-import dns from 'dns';
 
 function escapeHtml(text: string): string {
   if (!text) return '';
@@ -13,45 +11,84 @@ function escapeHtml(text: string): string {
 }
 
 export class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
 
-  constructor() {
-    this.inicializarTransporter();
-  }
-
-  private inicializarTransporter() {
+  /**
+   * Obtiene un access_token fresco desde la API de OAuth2 de Google usando el refresh_token.
+   * Esto se ejecuta mediante HTTPS (Puerto 443), libre de bloqueos de puertos SMTP en Render.
+   */
+  private async obtenerAccessToken(): Promise<string> {
     const { userEmail, clientId, clientSecret, refreshToken } = env.gmail;
 
     if (!userEmail || !clientId || !clientSecret || !refreshToken) {
-      console.warn(
-        '⚠️  Servicio de Email (Gmail OAuth2) desactivado debido a que faltan credenciales en el archivo .env.'
-      );
-      return;
+      throw new Error('Faltan credenciales de Gmail OAuth2 en las variables de entorno.');
     }
 
-    try {
-      this.transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        requireTLS: true,
-        // Forzar la resolución a IPv4 ya que Render no soporta ruteo IPv6 saliente para SMTP y falla con ENETUNREACH
-        lookup: (hostname: string, options: any, callback: any) => {
-          const opts = typeof options === 'number' ? { family: 4 } : { ...options, family: 4 };
-          dns.lookup(hostname, opts as any, callback);
-        },
-        auth: {
-          type: 'OAuth2',
-          user: userEmail,
-          clientId: clientId,
-          clientSecret: clientSecret,
-          refreshToken: refreshToken,
-        },
-      } as any);
-      console.log('✉️  Servicio de Email (Gmail OAuth2) inicializado correctamente.');
-    } catch (error) {
-      console.error('❌ Error al inicializar el transporte de nodemailer:', error);
+    const params = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    });
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error al autenticar con Google OAuth2 (${response.status}): ${errorText}`);
     }
+
+    const data = (await response.json()) as any;
+    return data.access_token;
+  }
+
+  /**
+   * Construye la estructura RFC 2822 del correo y la codifica en Base64URL para la API de Gmail.
+   */
+  private construirRawEmail(to: string, from: string, subject: string, htmlBody: string): string {
+    const str = [
+      `From: "Minimarket POS" <${from}>`,
+      `To: ${to}`,
+      `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset=utf-8`,
+      ``,
+      htmlBody,
+    ].join('\r\n');
+
+    return Buffer.from(str)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  }
+
+  /**
+   * Envía el correo mediante la API REST de Gmail utilizando HTTPS (Puerto 443).
+   */
+  private async enviarMailViaGmailApi(to: string, subject: string, htmlBody: string): Promise<any> {
+    const { userEmail } = env.gmail;
+    const accessToken = await this.obtenerAccessToken();
+    const rawMessage = this.construirRawEmail(to, userEmail!, subject, htmlBody);
+
+    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ raw: rawMessage }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error en Gmail API (${response.status}): ${errorText}`);
+    }
+
+    return response.json();
   }
 
   /**
@@ -59,16 +96,12 @@ export class EmailService {
    * @param venta Objeto Venta completo con detalles (incluyendo producto), usuario y cliente (si existe).
    */
   async enviarComprobante(venta: any): Promise<void> {
-    // Si no está inicializado, reintentar (por si se agregaron las credenciales en caliente)
-    if (!this.transporter) {
-      this.inicializarTransporter();
-      if (!this.transporter) {
-        // Si sigue sin estar inicializado, abortar silenciosamente
-        return;
-      }
+    const { adminRecipient, userEmail, clientId, clientSecret, refreshToken } = env.gmail;
+    if (!userEmail || !clientId || !clientSecret || !refreshToken) {
+      console.warn('⚠️ Servicio de Email (Gmail OAuth2) desactivado por falta de credenciales en el .env.');
+      return;
     }
 
-    const { adminRecipient, userEmail } = env.gmail;
     const destinatario = adminRecipient || userEmail;
 
     if (!destinatario) {
@@ -133,11 +166,7 @@ export class EmailService {
     const prefijo = estado === 'ANULADA' ? '⚠️ [ANULACIÓN]' : '✅ [COMPROBANTE]';
     const subject = `${prefijo} ${tipoComprobante} #${venta.id.substring(0, 8)} - S/ ${total}`;
 
-    const mailOptions = {
-      from: `"Minimarket POS" <${userEmail}>`,
-      to: destinatario,
-      subject,
-      html: `
+    const htmlBody = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -281,12 +310,11 @@ export class EmailService {
   </table>
 </body>
 </html>
-      `,
-    };
+    `;
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log(`✅ Correo enviado con éxito a ${destinatario}. ID Mensaje: ${info.messageId}`);
+      const res = await this.enviarMailViaGmailApi(destinatario, subject, htmlBody);
+      console.log(`✅ Correo de comprobante enviado con éxito a ${destinatario} vía Gmail REST API (Puerto 443 HTTPS). ID: ${res.id}`);
     } catch (error) {
       console.error(`❌ Error al enviar el comprobante de venta por correo a ${destinatario}:`, error);
     }
@@ -298,14 +326,12 @@ export class EmailService {
    * @param productos Lista de productos con stock crítico.
    */
   async enviarAlertaStock(productos: any[]): Promise<void> {
-    if (!this.transporter) {
-      this.inicializarTransporter();
-      if (!this.transporter) {
-        return;
-      }
+    const { adminRecipient, userEmail, clientId, clientSecret, refreshToken } = env.gmail;
+    if (!userEmail || !clientId || !clientSecret || !refreshToken) {
+      console.warn('⚠️ Servicio de Email (Gmail OAuth2) desactivado por falta de credenciales en el .env.');
+      return;
     }
 
-    const { adminRecipient, userEmail } = env.gmail;
     const destinatario = adminRecipient || userEmail;
 
     if (!destinatario) {
@@ -333,11 +359,8 @@ export class EmailService {
       `;
     }
 
-    const mailOptions = {
-      from: `"Minimarket POS" <${userEmail}>`,
-      to: destinatario,
-      subject: `⚠️ [ALERTA DE STOCK] ${productos.length} producto(s) por debajo del stock mínimo`,
-      html: `
+    const subject = `⚠️ [ALERTA DE STOCK] ${productos.length} producto(s) por debajo del stock mínimo`;
+    const htmlBody = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -400,12 +423,11 @@ export class EmailService {
   </table>
 </body>
 </html>
-      `,
-    };
+    `;
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log(`✅ Alerta de stock mínimo enviada con éxito a ${destinatario}. ID Mensaje: ${info.messageId}`);
+      const res = await this.enviarMailViaGmailApi(destinatario, subject, htmlBody);
+      console.log(`✅ Alerta de stock mínimo enviada con éxito a ${destinatario} vía Gmail REST API (Puerto 443 HTTPS). ID: ${res.id}`);
     } catch (error) {
       console.error(`❌ Error al enviar la alerta de stock mínimo a ${destinatario}:`, error);
     }
