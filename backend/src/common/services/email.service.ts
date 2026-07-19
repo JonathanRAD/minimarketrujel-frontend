@@ -1,5 +1,6 @@
 import * as nodemailer from 'nodemailer';
 import { env } from '../../config/env';
+import dns from 'dns';
 
 function escapeHtml(text: string): string {
   if (!text) return '';
@@ -31,6 +32,11 @@ export class EmailService {
     try {
       this.transporter = nodemailer.createTransport({
         service: 'gmail',
+        // Forzar la resolución a IPv4 ya que Render no soporta ruteo IPv6 saliente para SMTP y falla con ENETUNREACH
+        lookup: (hostname: string, options: any, callback: any) => {
+          const opts = typeof options === 'number' ? { family: 4 } : { ...options, family: 4 };
+          dns.lookup(hostname, opts as any, callback);
+        },
         auth: {
           type: 'OAuth2',
           user: userEmail,
@@ -38,7 +44,7 @@ export class EmailService {
           clientSecret: clientSecret,
           refreshToken: refreshToken,
         },
-      });
+      } as any);
       console.log('✉️  Servicio de Email (Gmail OAuth2) inicializado correctamente.');
     } catch (error) {
       console.error('❌ Error al inicializar el transporte de nodemailer:', error);
