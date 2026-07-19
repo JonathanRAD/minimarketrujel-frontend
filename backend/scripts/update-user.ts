@@ -14,16 +14,8 @@ const NUEVO_PIN = '060266';     // Tu nuevo PIN de 4 dígitos (ej: '7492')
 async function main() {
   console.log('=== Actualizando credenciales en Supabase ===');
 
-  if (
-    NUEVA_CONTRASEÑA === 'Elmaspro_123' ||
-    NUEVO_PIN === '060266'
-  ) {
-    console.error('\n❌ ERROR: Por favor, abre el archivo "backend/scripts/update-user.ts" y cambia los valores de NUEVA_CONTRASEÑA y NUEVO_PIN por los tuyos reales antes de ejecutar.');
-    process.exit(1);
-  }
-
-  if (NUEVO_PIN.length !== 4 || isNaN(Number(NUEVO_PIN))) {
-    console.error('\n❌ ERROR: El PIN debe tener exactamente 4 números.');
+  if (NUEVO_PIN.length !== 6 || isNaN(Number(NUEVO_PIN))) {
+    console.error('\n❌ ERROR: El PIN debe tener exactamente 6 números.');
     process.exit(1);
   }
 
