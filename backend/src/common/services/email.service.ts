@@ -31,7 +31,10 @@ export class EmailService {
 
     try {
       this.transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        requireTLS: true,
         // Forzar la resolución a IPv4 ya que Render no soporta ruteo IPv6 saliente para SMTP y falla con ENETUNREACH
         lookup: (hostname: string, options: any, callback: any) => {
           const opts = typeof options === 'number' ? { family: 4 } : { ...options, family: 4 };
