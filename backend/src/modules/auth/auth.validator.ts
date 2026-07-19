@@ -6,7 +6,7 @@ export const loginSchema = z.object({
 });
 
 export const loginPinSchema = z.object({
-  pin: z.string().length(4, 'El PIN debe tener 4 dígitos'),
+  pin: z.string().length(6, 'El PIN debe tener 6 dígitos'),
 });
 
 export type LoginDto = z.infer<typeof loginSchema>;

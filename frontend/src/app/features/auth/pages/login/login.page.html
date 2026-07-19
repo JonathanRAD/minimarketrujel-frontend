@@ -95,10 +95,12 @@
         <div class="pin-dot" [class.active]="pin().length >= 2"></div>
         <div class="pin-dot" [class.active]="pin().length >= 3"></div>
         <div class="pin-dot" [class.active]="pin().length >= 4"></div>
+        <div class="pin-dot" [class.active]="pin().length >= 5"></div>
+        <div class="pin-dot" [class.active]="pin().length >= 6"></div>
       </div>
 
       <p class="brand-sub" style="text-align: center; margin-bottom: 1.5rem;">
-        {{ cargando() ? 'Validando PIN...' : 'Ingresa tu PIN de 4 dígitos' }}
+        {{ cargando() ? 'Validando PIN...' : 'Ingresa tu PIN de 6 dígitos' }}
       </p>
 
       <!-- Teclado Numérico Táctil -->

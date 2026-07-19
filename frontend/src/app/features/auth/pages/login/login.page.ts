@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -39,10 +39,10 @@ export class LoginPageComponent {
 
   // LÃ³gica del teclado numÃ©rico
   pulsarNumero(num: number) {
-    if (this.pin().length < 4 && !this.cargando()) {
+    if (this.pin().length < 6 && !this.cargando()) {
       const nuevoPin = this.pin() + num;
       this.pin.set(nuevoPin);
-      if (nuevoPin.length === 4) {
+      if (nuevoPin.length === 6) {
         this.submitPin();
       }
     }
