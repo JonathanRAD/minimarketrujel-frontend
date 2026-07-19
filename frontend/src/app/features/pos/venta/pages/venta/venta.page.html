@@ -230,8 +230,8 @@
         </div>
       </div>
 
-      <!-- Resumen de Cobro & Métodos de Pago -->
-      <div class="pos-payment-panel">
+      <!-- Resumen de Cobro & Métodos de Pago (Sólo móvil) -->
+      <div class="pos-payment-panel payment-mobile-only">
         <div class="payment-summary">
           <div class="summary-row total-row">
             <span class="summary-label">Total a Cobrar</span>
@@ -292,93 +292,158 @@
 
     </div>
 
-    <!-- Columna Derecha: Catálogo Táctil de Productos -->
-    <div class="pos-catalog-panel card">
+    <!-- Columna Derecha: Catálogo & Pago -->
+    <div class="pos-right-column">
       
-      <!-- Buscador Local Táctil -->
-      <div class="catalog-search-wrapper">
-        <span class="material-icons search-icon">search</span>
-        <input 
-          type="text" 
-          placeholder="Buscar producto en el catálogo por nombre o código..." 
-          class="form-control catalog-search-input"
-          [value]="busquedaCatalogo()"
-          (input)="onBusquedaCatalogoChange(localQuery.value)"
-          #localQuery />
-        <button class="btn-clear-search" *ngIf="busquedaCatalogo()" (click)="localQuery.value = ''; onBusquedaCatalogoChange('')">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-
-      <!-- Barra de Categorías Horizontal -->
-      <div class="catalog-categories-tabs">
-        <button 
-          type="button" 
-          class="category-tab"
-          [class.active]="categoriaSeleccionadaId() === 'TODAS'"
-          (click)="seleccionarCategoria('TODAS')">
-          Todos
-        </button>
-        <button 
-          type="button" 
-          class="category-tab"
-          *ngFor="let cat of categorias()"
-          [class.active]="categoriaSeleccionadaId() === cat.id"
-          (click)="seleccionarCategoria(cat.id)">
-          {{ cat.nombre }}
-        </button>
-      </div>
-
-      <!-- Grilla del Catálogo -->
-      <div class="catalog-grid-wrapper">
-        <div class="empty-catalog-state" *ngIf="catalogoFiltrado().length === 0">
-          <span class="material-icons empty-icon">inventory_2</span>
-          <p>No se encontraron productos en esta categoría o búsqueda.</p>
+      <!-- Catálogo Táctil de Productos -->
+      <div class="pos-catalog-panel card">
+        
+        <!-- Buscador Local Táctil -->
+        <div class="catalog-search-wrapper">
+          <span class="material-icons search-icon">search</span>
+          <input 
+            type="text" 
+            placeholder="Buscar producto en el catálogo por nombre o código..." 
+            class="form-control catalog-search-input"
+            [value]="busquedaCatalogo()"
+            (input)="onBusquedaCatalogoChange(localQuery.value)"
+            #localQuery />
+          <button class="btn-clear-search" *ngIf="busquedaCatalogo()" (click)="localQuery.value = ''; onBusquedaCatalogoChange('')">
+            <span class="material-icons">close</span>
+          </button>
         </div>
 
-        <div class="products-grid" *ngIf="catalogoFiltrado().length > 0">
-          
+        <!-- Barra de Categorías Horizontal -->
+        <div class="catalog-categories-tabs">
           <button 
             type="button" 
-            class="product-card" 
-            *ngFor="let prod of catalogoFiltrado()"
-            [disabled]="obtenerStockDisponible(prod) <= 0"
-            (click)="agregarAlCarrito(prod)">
+            class="category-tab"
+            [class.active]="categoriaSeleccionadaId() === 'TODAS'"
+            (click)="seleccionarCategoria('TODAS')">
+            Todos
+          </button>
+          <button 
+            type="button" 
+            class="category-tab"
+            *ngFor="let cat of categorias()"
+            [class.active]="categoriaSeleccionadaId() === cat.id"
+            (click)="seleccionarCategoria(cat.id)">
+            {{ cat.nombre }}
+          </button>
+        </div>
+
+        <!-- Grilla del Catálogo -->
+        <div class="catalog-grid-wrapper">
+          <div class="empty-catalog-state" *ngIf="catalogoFiltrado().length === 0">
+            <span class="material-icons empty-icon">inventory_2</span>
+            <p>No se encontraron productos en esta categoría o búsqueda.</p>
+          </div>
+
+          <div class="products-grid" *ngIf="catalogoFiltrado().length > 0">
             
-            <!-- Imagen / Fallback -->
-            <div class="product-card-img-container">
-              <img 
-                *ngIf="prod.imagenUrl" 
-                [src]="prod.imagenUrl" 
-                [alt]="prod.nombre" 
-                class="product-card-img" />
+            <button 
+              type="button" 
+              class="product-card" 
+              *ngFor="let prod of catalogoFiltrado()"
+              [disabled]="obtenerStockDisponible(prod) <= 0"
+              (click)="agregarAlCarrito(prod)">
               
-              <div 
-                *ngIf="!prod.imagenUrl" 
-                class="product-card-img-fallback" 
-                [style.background]="obtenerColorFallback(prod.nombre)">
-                {{ obtenerIniciales(prod.nombre) }}
+              <!-- Imagen / Fallback -->
+              <div class="product-card-img-container">
+                <img 
+                  *ngIf="prod.imagenUrl" 
+                  [src]="prod.imagenUrl" 
+                  [alt]="prod.nombre" 
+                  class="product-card-img" />
+                
+                <div 
+                  *ngIf="!prod.imagenUrl" 
+                  class="product-card-img-fallback" 
+                  [style.background]="obtenerColorFallback(prod.nombre)">
+                  {{ obtenerIniciales(prod.nombre) }}
+                </div>
+                
+                <!-- Badge de Precio flotante -->
+                <span class="product-card-price">S/ {{ prod.precioVenta | number: '1.2-2' }}</span>
               </div>
-              
-              <!-- Badge de Precio flotante -->
-              <span class="product-card-price">S/ {{ prod.precioVenta | number: '1.2-2' }}</span>
-            </div>
 
-            <!-- Cuerpo de la tarjeta -->
-            <div class="product-card-body">
-              <span class="product-card-title">{{ prod.nombre }}</span>
-              <div class="product-card-stock-row">
-                <span 
-                  class="product-card-stock" 
-                  [class.out-of-stock]="obtenerStockDisponible(prod) <= 0"
-                  [class.low-stock]="obtenerStockDisponible(prod) > 0 && obtenerStockDisponible(prod) <= prod.stockMinimo">
-                  {{ obtenerStockDisponible(prod) <= 0 ? 'Sin Stock' : ('Stock: ' + (obtenerStockDisponible(prod) | number: '1.0-2') + ' ' + prod.unidadMedida.toLowerCase()) }}
-                </span>
+              <!-- Cuerpo de la tarjeta -->
+              <div class="product-card-body">
+                <span class="product-card-title">{{ prod.nombre }}</span>
+                <div class="product-card-stock-row">
+                  <span 
+                    class="product-card-stock" 
+                    [class.out-of-stock]="obtenerStockDisponible(prod) <= 0"
+                    [class.low-stock]="obtenerStockDisponible(prod) > 0 && obtenerStockDisponible(prod) <= prod.stockMinimo">
+                    {{ obtenerStockDisponible(prod) <= 0 ? 'Sin Stock' : ('Stock: ' + (obtenerStockDisponible(prod) | number: '1.0-2') + ' ' + prod.unidadMedida.toLowerCase()) }}
+                  </span>
+                </div>
               </div>
-            </div>
 
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Resumen de Cobro & Métodos de Pago (Solo Desktop) -->
+      <div class="pos-payment-panel payment-desktop payment-desktop-only">
+        <div class="payment-summary">
+          <div class="summary-row total-row">
+            <span class="summary-label">Total a Cobrar</span>
+            <strong class="summary-total">S/ {{ total() | number: '1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="payment-actions">
+          <button 
+            type="button" 
+            class="btn-pay btn-pay-cash" 
+            [disabled]="items().length === 0 || procesandoCobro()"
+            (click)="cobrar('EFECTIVO')">
+            <span class="material-icons btn-pay-icon">payments</span>
+            <div class="btn-pay-text">
+              <span class="pay-title font-semibold">Cobrar en Efectivo</span>
+              <span class="pay-sub text-xs">Ingresa efectivo físico</span>
+            </div>
           </button>
 
+          <button 
+            type="button" 
+            class="btn-pay btn-pay-card" 
+            [disabled]="items().length === 0 || procesandoCobro()"
+            (click)="cobrar('TARJETA')">
+            <span class="material-icons btn-pay-icon">credit_card</span>
+            <div class="btn-pay-text">
+              <span class="pay-title font-semibold">Cobrar con Tarjeta</span>
+              <span class="pay-sub text-xs">Vouchers del POS</span>
+            </div>
+          </button>
+
+          <button 
+            type="button" 
+            class="btn-pay btn-pay-qr" 
+            [disabled]="items().length === 0 || procesandoCobro()"
+            (click)="abrirModalQr()">
+            <span class="material-icons btn-pay-icon">qr_code_2</span>
+            <div class="btn-pay-text">
+              <span class="pay-title font-semibold">Cobrar con QR</span>
+              <span class="pay-sub text-xs">Yape o Plin</span>
+            </div>
+          </button>
+
+          <button 
+            type="button" 
+            class="btn-pay btn-pay-mixed" 
+            [disabled]="items().length === 0 || procesandoCobro()"
+            (click)="abrirCobroMixto()">
+            <span class="material-icons btn-pay-icon">sync_alt</span>
+            <div class="btn-pay-text">
+              <span class="pay-title font-semibold">Cobrar Pago Mixto</span>
+              <span class="pay-sub text-xs">Dividir efectivo/tarjeta</span>
+            </div>
+          </button>
         </div>
       </div>
 
