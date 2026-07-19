@@ -84,6 +84,10 @@ export class ProductoRepository {
     return prisma.producto.update({ where: { id }, data: { activo: false } });
   }
 
+  async eliminarFisico(id: string) {
+    return prisma.producto.delete({ where: { id } });
+  }
+
   async listarStockBajo() {
     // Productos donde el stock actual ya llegó o pasó el mínimo configurado
     return prisma.$queryRaw`

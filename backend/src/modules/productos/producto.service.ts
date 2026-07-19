@@ -1,6 +1,7 @@
 import { productoRepository } from './producto.repository';
 import { CrearProductoDto, ActualizarProductoDto, FiltrarProductosDto } from './producto.validator';
 import { ConflictError, NotFoundError } from '../../common/errors/AppError';
+import { prisma } from '../../config/prisma';
 
 /**
  * Capa de lógica de negocio. No conoce Express ni Prisma directamente,
@@ -45,7 +46,19 @@ export class ProductoService {
 
   async eliminar(id: string) {
     await this.obtenerPorId(id);
-    return productoRepository.desactivar(id);
+
+    // Validar si tiene historial asociado
+    const ventasAsociadas = await prisma.ventaDetalle.count({ where: { productoId: id } });
+    const comprasAsociadas = await prisma.compraDetalle.count({ where: { productoId: id } });
+    const movimientosAsociados = await prisma.movimientoInventario.count({ where: { productoId: id } });
+
+    if (ventasAsociadas > 0 || comprasAsociadas > 0 || movimientosAsociados > 0) {
+      throw new ConflictError(
+        'No se puede eliminar físicamente el producto porque tiene historial de ventas, compras o movimientos en el inventario. Si no deseas venderlo más, puedes desactivarlo editándolo.'
+      );
+    }
+
+    return productoRepository.eliminarFisico(id);
   }
 
   async listarStockBajo() {

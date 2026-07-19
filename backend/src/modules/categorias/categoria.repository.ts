@@ -62,8 +62,13 @@ export class CategoriaRepository {
     return prisma.producto.count({
       where: {
         categoriaId: id,
-        activo: true, // solo contamos los productos activos asociados
       },
+    });
+  }
+
+  async eliminarFisico(id: string) {
+    return prisma.categoria.delete({
+      where: { id },
     });
   }
 }

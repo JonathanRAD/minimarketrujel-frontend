@@ -37,17 +37,17 @@ export class CategoriaService {
   }
 
   async eliminar(id: string) {
-    await this.obtenerPorId(id); // Valida que exista y esté activa
+    await this.obtenerPorId(id); // Valida que exista
 
-    // Validar si tiene productos activos asociados
+    // Validar si tiene productos asociados
     const productosAsociados = await categoriaRepository.contarProductosAsociados(id);
     if (productosAsociados > 0) {
       throw new ConflictError(
-        `No se puede eliminar la categoría porque tiene ${productosAsociados} producto(s) asociado(s) activo(s)`
+        `No se puede eliminar físicamente la categoría porque tiene ${productosAsociados} producto(s) asociado(s). Si no deseas borrarla, puedes desactivarla editándola.`
       );
     }
 
-    return categoriaRepository.desactivar(id);
+    return categoriaRepository.eliminarFisico(id);
   }
 }
 

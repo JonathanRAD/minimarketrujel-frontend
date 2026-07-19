@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 // ==========================================
 const EMAIL_A_BUSCAR = 'admin@minimarket.com'; // Email actual a actualizar
 const NUEVO_EMAIL = 'admin@minimarket.com';     // Cambia si deseas otro email de login, o déjalo igual
-const NUEVA_CONTRASEÑA = 'Elmaspro_123'; // Tu nueva contraseña secreta
-const NUEVO_PIN = '060266';     // Tu nuevo PIN de 4 dígitos (ej: '7492')
+const NUEVA_CONTRASEÑA = 'CAMBIA_ESTO_POR_TU_CONTRASEÑA'; // Tu nueva contraseña secreta
+const NUEVO_PIN = 'CAMBIA_ESTO_POR_TU_PIN';     // Tu nuevo PIN de 4 dígitos (ej: '7492')
 
 async function main() {
   console.log('=== Actualizando credenciales en Supabase ===');
