@@ -3,7 +3,9 @@
   type="text"
   class="scanner-input"
   [(ngModel)]="codigoActual"
-  (keyup.enter)="emitirCodigo()"
+  (input)="onInputChange()"
+  (keydown.enter)="emitirCodigo($event)"
+  (keyup.enter)="emitirCodigo($event)"
   placeholder="Escanea un producto..."
   autocomplete="off"
 />
