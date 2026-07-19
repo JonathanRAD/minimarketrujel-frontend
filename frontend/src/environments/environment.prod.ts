@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-backend-en-produccion.com/api',
+  apiUrl: 'https://minimarket-backend-dkoj.onrender.com/api',
 };
