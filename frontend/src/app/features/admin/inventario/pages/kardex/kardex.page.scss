@@ -1,0 +1,415 @@
+.font-semibold { font-weight: 600; }
+.text-muted { color: var(--color-text-muted); }
+
+.filters-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.filters-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.search-input-wrapper { position: relative; }
+
+.btn-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-clear:hover { color: var(--color-text-dark); }
+
+.search-results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.result-item {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+.result-item:hover { background-color: var(--color-bg-base); }
+.result-name { color: var(--color-text-dark); }
+.result-code { font-size: 0.75rem; }
+
+.type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.type-badge.venta { background-color: #fee2e2; color: var(--color-danger); }
+.type-badge.compra { background-color: var(--color-success-light); color: var(--color-success); }
+.type-badge.ajuste { background-color: #e0f2fe; color: #0284c7; }
+.type-badge.merma { background-color: #ffedd5; color: #d97706; }
+.type-badge.devolucion { background-color: #f3e8ff; color: #7c3aed; }
+
+.quantity-value { font-size: 0.95rem; color: var(--color-success); }
+.quantity-value.negative { color: var(--color-danger); }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.empty-icon { font-size: 4rem; color: var(--color-border); margin-bottom: 1rem; }
+.empty-state h3 { font-size: 1.25rem; color: var(--color-text-dark); margin-bottom: 0.25rem; }
+.empty-state p { font-size: 0.95rem; color: var(--color-text-muted); }
+
+.error-alert {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: var(--color-danger);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.btn-close-alert {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+/* --- PAGINACIÓN PREMIUM --- */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg-card);
+  margin-top: 0.5rem;
+
+  .pagination-info {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+
+    .font-bold {
+      font-weight: 700;
+      color: var(--color-text-dark);
+    }
+  }
+
+  .pagination-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .limit-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .limit-select {
+      width: 65px;
+      height: 34px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: white;
+    }
+  }
+
+  .pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .btn-page-nav,
+    .btn-page-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      min-width: 34px;
+      padding: 0 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: white;
+      color: var(--color-text-dark);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not([disabled]) {
+        background-color: var(--color-bg-base);
+        border-color: var(--color-text-muted);
+      }
+
+      &[disabled] {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-page-nav {
+      .material-icons {
+        font-size: 1.25rem;
+      }
+    }
+
+    .btn-page-num.active {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
+  }
+}
+
+/* --- LINK DE REFERENCIAS EN TABLA --- */
+.btn-ref-link {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+
+  &.btn-ref-compra {
+    color: var(--color-secondary);
+    
+    &:hover {
+      color: var(--color-secondary-hover);
+    }
+  }
+}
+
+/* --- ESTILOS DE MODAL DETALLE DE REF (TICKET TÉRMICO) --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  max-width: 480px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .btn-close {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--color-bg-base);
+      color: var(--color-text-dark);
+    }
+  }
+}
+
+/* --- TICKET VIEW --- */
+.ticket-modal {
+  padding: 1.5rem;
+  max-width: 420px;
+}
+
+.ticket-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 0.5rem;
+
+  .ticket-icon {
+    font-size: 2.5rem;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .ticket-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .ticket-subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    margin: 0.15rem 0 0 0;
+    letter-spacing: 1px;
+  }
+}
+
+.ticket-divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  border-top: 1px dashed var(--color-border);
+  margin: 1rem 0;
+}
+
+.ticket-meta {
+  font-size: 0.825rem;
+  color: var(--color-text-dark);
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+  }
+}
+
+.ticket-body {
+  margin-top: 0.5rem;
+
+  .body-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 0.5rem 0;
+    color: var(--color-text-muted);
+  }
+}
+
+.ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  td {
+    font-size: 0.8rem;
+    padding: 0.5rem 0;
+    vertical-align: top;
+  }
+
+  .product-name {
+    font-weight: 600;
+    color: var(--color-text-dark);
+  }
+
+  .product-code {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-top: 0.1rem;
+  }
+}
+
+.ticket-footer {
+  margin-top: 0.5rem;
+  text-align: center;
+
+  .footer-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    border-top: 1px dashed var(--color-border);
+    padding-top: 0.75rem;
+  }
+}

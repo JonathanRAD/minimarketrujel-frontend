@@ -1,0 +1,80 @@
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+/* Input con prefijo */
+.input-addon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix {
+  position: absolute;
+  left: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.input-addon-wrapper .form-control {
+  padding-left: 1.5rem;
+}
+
+/* Acciones */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-cancel {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-dark);
+}
+
+.btn-submit {
+  min-width: 140px;
+}
+
+/* Alerta */
+.error-alert {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: var(--color-danger);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}

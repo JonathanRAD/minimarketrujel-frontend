@@ -1,0 +1,7 @@
+<div class="empty-state card">
+  <span class="material-icons empty-icon">{{ icon }}</span>
+  <h3 class="empty-title">{{ title }}</h3>
+  <p class="empty-message" *ngIf="message">{{ message }}</p>
+  <!-- Slot para botones de acción opcionales -->
+  <ng-content></ng-content>
+</div>

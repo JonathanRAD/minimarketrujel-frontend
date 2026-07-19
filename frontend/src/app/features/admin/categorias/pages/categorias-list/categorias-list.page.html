@@ -1,0 +1,58 @@
+<app-page-header
+  title="Categorías de Productos"
+  subtitle="Gestiona las categorías del catálogo del minimarket">
+  <a routerLink="/admin/categorias/nuevo" class="btn-primary">
+    <span class="material-icons">add</span>
+    <span>Nueva Categoría</span>
+  </a>
+</app-page-header>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando categorías..." />
+
+<div class="table-container" *ngIf="!cargando() && categorias().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let cat of categorias()">
+        <td class="font-semibold">{{ cat.nombre }}</td>
+        <td class="text-muted">{{ cat.descripcion || '-' }}</td>
+        <td>
+          <app-status-badge
+            [label]="cat.activo ? 'Activo' : 'Inactivo'"
+            [variant]="cat.activo ? 'success' : 'danger'"
+            style="cursor: pointer; user-select: none;"
+            (click)="toggleEstado(cat)"
+            title="Cambiar estado de la categoría" />
+        </td>
+        <td class="actions-cell">
+          <a [routerLink]="['/admin/categorias', cat.id, 'editar']" class="btn-action-icon btn-edit" title="Editar">
+            <span class="material-icons">edit</span>
+          </a>
+          <button (click)="eliminar(cat)" class="btn-action-icon btn-delete" title="Eliminar">
+            <span class="material-icons">delete</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && categorias().length === 0"
+  icon="category"
+  title="Sin categorías"
+  message="Aún no has creado ninguna categoría. Crea la primera para organizar tu catálogo.">
+  <a routerLink="/admin/categorias/nuevo" class="btn-secondary">
+    <span class="material-icons">add</span>
+    <span>Crear primera categoría</span>
+  </a>
+</app-empty-state>

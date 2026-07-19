@@ -1,0 +1,96 @@
+<div class="admin-container">
+  <!-- Sidebar de Navegación -->
+  <aside class="admin-sidebar" [class.open]="sidebarOpen">
+    <div class="sidebar-header">
+      <span class="material-icons brand-icon">storefront</span>
+      <div class="brand-details">
+        <h1 class="brand-name">Minimarket</h1>
+        <span class="brand-sub">Panel de Control</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/admin/productos" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">inventory_2</span>
+        <span>Productos</span>
+      </a>
+      <a routerLink="/admin/categorias" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">category</span>
+        <span>Categorías</span>
+      </a>
+      <a routerLink="/admin/clientes" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">people</span>
+        <span>Clientes &amp; Fiados</span>
+      </a>
+      <a routerLink="/admin/proveedores" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">local_shipping</span>
+        <span>Proveedores</span>
+      </a>
+      <a routerLink="/admin/compras" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">shopping_bag</span>
+        <span>Compras</span>
+      </a>
+      <a routerLink="/admin/ventas" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">receipt_long</span>
+        <span>Historial de Ventas</span>
+      </a>
+      <a routerLink="/admin/inventario" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">inventory</span>
+        <span>Inventario &amp; Kardex</span>
+      </a>
+      <a routerLink="/admin/turnos-caja" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">point_of_sale</span>
+        <span>Turnos de Caja</span>
+      </a>
+      <a routerLink="/admin/reportes" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">bar_chart</span>
+        <span>Reportes</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <span class="material-icons user-avatar">account_circle</span>
+        <div class="user-details">
+          <span class="user-name">{{ usuario()?.nombre }}</span>
+          <span class="user-role badge">{{ usuario()?.rol }}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay para móviles -->
+  <div class="sidebar-overlay" *ngIf="sidebarOpen" (click)="toggleSidebar()"></div>
+
+  <!-- Área de Contenido Principal -->
+  <div class="admin-main">
+    <!-- Header superior -->
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="menu-toggle btn-icon" (click)="toggleSidebar()">
+          <span class="material-icons">menu</span>
+        </button>
+        <h2 class="header-title">Sistema de Gestión</h2>
+      </div>
+
+      <div class="header-actions">
+        <!-- Botón de acceso rápido al POS -->
+        <a routerLink="/pos" class="btn-pos">
+          <span class="material-icons">point_of_sale</span>
+          <span>Ir al POS</span>
+        </a>
+
+        <!-- Botón de logout -->
+        <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+          <span class="material-icons">logout</span>
+          <span>Salir</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Outlet de Rutas Hijas -->
+    <main class="admin-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

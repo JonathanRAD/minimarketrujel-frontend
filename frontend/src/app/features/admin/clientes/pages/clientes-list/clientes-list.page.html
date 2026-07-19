@@ -1,0 +1,76 @@
+<app-page-header
+  title="Clientes &amp; Cuentas por Cobrar"
+  subtitle="Gestiona el padrón de clientes y controla deudas de fiados">
+  <a routerLink="/admin/clientes/nuevo" class="btn-primary">
+    <span class="material-icons">person_add</span>
+    <span>Nuevo Cliente</span>
+  </a>
+</app-page-header>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando clientes..." />
+
+<div class="table-container" *ngIf="!cargando() && clientes().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Teléfono</th>
+        <th>Deuda Pendiente</th>
+        <th>Límite de Crédito</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let cliente of clientes()">
+        <td>
+          <a [routerLink]="['/admin/clientes', cliente.id, 'detalle']" class="cliente-link font-semibold">
+            {{ cliente.nombre }}
+          </a>
+        </td>
+        <td class="text-muted">{{ cliente.telefono || '-' }}</td>
+        <td>
+          <span class="deuda-badge" [class.danger]="getDeudaTotal(cliente) > 0">
+            S/ {{ getDeudaTotal(cliente) | number: '1.2-2' }}
+          </span>
+        </td>
+        <td class="text-muted">
+          {{ cliente.limiteCredito > 0 ? 'S/ ' + (cliente.limiteCredito | number: '1.2-2') : 'Sin crédito' }}
+        </td>
+        <td class="actions-cell">
+          <a [routerLink]="['/admin/clientes', cliente.id, 'detalle']" class="btn-action-icon btn-detail" title="Ver Ficha">
+            <span class="material-icons">account_circle</span>
+          </a>
+          <a [routerLink]="['/admin/clientes', cliente.id, 'editar']" class="btn-action-icon btn-edit" title="Editar">
+            <span class="material-icons">edit</span>
+          </a>
+          <button (click)="eliminar(cliente)" class="btn-action-icon btn-delete" title="Eliminar">
+            <span class="material-icons">delete</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Paginación -->
+  <app-pagination
+    [pagina]="pagina()"
+    [limite]="limite()"
+    [total]="total()"
+    [paginas]="paginas()"
+    (paginaChange)="irAPagina($event)"
+    (limiteChange)="cambiarLimite($event)">
+  </app-pagination>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && clientes().length === 0"
+  icon="people"
+  title="Sin clientes registrados"
+  message="Registra el primer cliente para comenzar a gestionar fiados y créditos.">
+  <a routerLink="/admin/clientes/nuevo" class="btn-secondary">
+    <span class="material-icons">person_add</span>
+    <span>Agregar primer cliente</span>
+  </a>
+</app-empty-state>

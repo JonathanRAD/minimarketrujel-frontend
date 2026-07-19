@@ -1,0 +1,191 @@
+<app-page-header
+  title="Historial de Arqueos &amp; Turnos de Caja"
+  subtitle="Monitorea aperturas, cierres y las diferencias de efectivo declaradas en caja">
+  <a routerLink="/admin/turnos-caja/control" class="btn-primary">
+    <span class="material-icons">point_of_sale</span>
+    <span>Control de Caja Actual</span>
+  </a>
+</app-page-header>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando historial de turnos..." />
+
+<div class="table-container" *ngIf="!cargando() && turnos().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Fecha Apertura</th>
+        <th>Fecha Cierre</th>
+        <th>Cajero / Usuario</th>
+        <th>Monto Inicial</th>
+        <th>Monto Esperado</th>
+        <th>Monto Real</th>
+        <th>Diferencia</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let turno of turnos()" (click)="seleccionarTurno(turno)" style="cursor: pointer;" title="Hacer clic para ver auditoría del arqueo">
+        <td class="font-semibold text-muted">{{ turno.fechaApertura | date: 'dd/MM/yyyy, hh:mm a' }}</td>
+        <td class="text-muted">
+          {{ turno.fechaCierre ? (turno.fechaCierre | date: 'dd/MM/yyyy, hh:mm a') : 'Abierto actualmente' }}
+        </td>
+        <td class="font-semibold">{{ turno.usuario?.nombre || 'Desconocido' }}</td>
+        <td>S/ {{ turno.montoInicial | number: '1.2-2' }}</td>
+        <td>{{ turno.montoFinalEsperado ? 'S/ ' + (turno.montoFinalEsperado | number: '1.2-2') : '-' }}</td>
+        <td>{{ turno.montoFinalReal ? 'S/ ' + (turno.montoFinalReal | number: '1.2-2') : '-' }}</td>
+        <td>
+          <span *ngIf="turno.estado === 'CERRADO'" class="diff-value font-semibold"
+            [class.negative]="esDiferenciaNegativa(turno.diferencia)"
+            [class.success]="esDiferenciaCero(turno.diferencia)">
+            {{ turno.diferencia! > 0 ? '+' : '' }}S/ {{ turno.diferencia | number: '1.2-2' }}
+          </span>
+          <span *ngIf="turno.estado === 'ABIERTO'">-</span>
+        </td>
+        <td>
+          <app-status-badge [label]="turno.estado" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Paginación -->
+  <app-pagination
+    [pagina]="pagina()"
+    [limite]="limite()"
+    [total]="total()"
+    [paginas]="paginas()"
+    (paginaChange)="irAPagina($event)"
+    (limiteChange)="cambiarLimite($event)">
+  </app-pagination>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && turnos().length === 0"
+  icon="account_balance_wallet"
+  title="Sin registros de caja"
+  message="Aún no se ha abierto ningún turno de caja en el sistema.">
+  <a routerLink="/admin/turnos-caja/control" class="btn-secondary">
+    <span class="material-icons">point_of_sale</span>
+    <span>Ir a Control de Caja</span>
+  </a>
+</app-empty-state>
+
+<!-- Drawer Lateral de Detalle de Arqueo -->
+<div class="drawer-overlay" *ngIf="turnoSeleccionado()" (click)="cerrarDetalle()">
+  <div class="drawer-card" (click)="$event.stopPropagation()">
+    <div class="drawer-header">
+      <h3 class="drawer-title">Auditoría de Arqueo</h3>
+      <button class="btn-close-drawer" (click)="cerrarDetalle()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Datos básicos -->
+      <div class="arqueo-detail-section">
+        <h4 class="detail-sec-title">Información del Turno</h4>
+        <div class="detail-grid-row">
+          <span>Cajero:</span>
+          <strong class="text-dark">{{ turnoSeleccionado()?.usuario?.nombre }}</strong>
+        </div>
+        <div class="detail-grid-row">
+          <span>Apertura:</span>
+          <span>{{ turnoSeleccionado()?.fechaApertura | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+        </div>
+        <div class="detail-grid-row" *ngIf="turnoSeleccionado()?.fechaCierre">
+          <span>Cierre:</span>
+          <span>{{ turnoSeleccionado()?.fechaCierre | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+        </div>
+        <div class="detail-grid-row">
+          <span>Estado:</span>
+          <app-status-badge [label]="turnoSeleccionado()?.estado!" />
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Desglose Financiero -->
+      <div class="arqueo-detail-section" *ngIf="turnoSeleccionado()?.estado === 'CERRADO'">
+        <h4 class="detail-sec-title">Desglose Contable por Medios</h4>
+        
+        <!-- Efectivo -->
+        <div class="medio-item-card">
+          <div class="medio-header">
+            <span class="font-semibold text-dark">Efectivo de Caja</span>
+            <span class="diff-tag" [class.negative]="esDiferenciaNegativa(turnoSeleccionado()?.auditoriaArqueo?.diferenciaEfectivo)" [class.success]="esDiferenciaCero(turnoSeleccionado()?.auditoriaArqueo?.diferenciaEfectivo)">
+              Dif: {{ turnoSeleccionado()?.auditoriaArqueo?.diferenciaEfectivo! > 0 ? '+' : '' }}{{ turnoSeleccionado()?.auditoriaArqueo?.diferenciaEfectivo | number: '1.2-2' }}
+            </span>
+          </div>
+          <div class="medio-details">
+            <div class="sub-row">
+              <span>Esperado (Monto Inicial + Ventas):</span>
+              <span>S/ {{ turnoSeleccionado()?.auditoriaArqueo?.efectivoEsperado | number: '1.2-2' }}</span>
+            </div>
+            <div class="sub-row">
+              <span>Declarado por Cajero:</span>
+              <strong class="text-dark">S/ {{ turnoSeleccionado()?.auditoriaArqueo?.efectivoReal | number: '1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta -->
+        <div class="medio-item-card" style="margin-top: 0.75rem;">
+          <div class="medio-header">
+            <span class="font-semibold text-dark">Vouchers Tarjeta</span>
+            <span class="diff-tag" [class.negative]="esDiferenciaNegativa(turnoSeleccionado()?.auditoriaArqueo?.diferenciaTarjeta)" [class.success]="esDiferenciaCero(turnoSeleccionado()?.auditoriaArqueo?.diferenciaTarjeta)">
+              Dif: {{ turnoSeleccionado()?.auditoriaArqueo?.diferenciaTarjeta! > 0 ? '+' : '' }}{{ turnoSeleccionado()?.auditoriaArqueo?.diferenciaTarjeta | number: '1.2-2' }}
+            </span>
+          </div>
+          <div class="medio-details">
+            <div class="sub-row">
+              <span>Esperado en POS:</span>
+              <span>S/ {{ turnoSeleccionado()?.auditoriaArqueo?.tarjetaEsperada | number: '1.2-2' }}</span>
+            </div>
+            <div class="sub-row">
+              <span>Declarado por Cajero:</span>
+              <strong class="text-dark">S/ {{ turnoSeleccionado()?.auditoriaArqueo?.tarjetaReal | number: '1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Consolidado -->
+        <div class="total-consolidado-card" style="margin-top: 1rem;">
+          <div class="consolidado-row">
+            <span>Esperado Total:</span>
+            <span>S/ {{ turnoSeleccionado()?.montoFinalEsperado | number: '1.2-2' }}</span>
+          </div>
+          <div class="consolidado-row">
+            <span>Declarado Total:</span>
+            <span>S/ {{ turnoSeleccionado()?.montoFinalReal | number: '1.2-2' }}</span>
+          </div>
+          <div class="consolidado-row main-diff-row" [class.negative]="esDiferenciaNegativa(turnoSeleccionado()?.diferencia)" [class.success]="esDiferenciaCero(turnoSeleccionado()?.diferencia)">
+            <span>Diferencia General:</span>
+            <strong>{{ turnoSeleccionado()?.diferencia! > 0 ? '+' : '' }}S/ {{ turnoSeleccionado()?.diferencia | number: '1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" *ngIf="turnoSeleccionado()?.auditoriaArqueo?.conteoMonedasBilletes" />
+
+      <!-- Desglose de denominaciones (Billetes y Monedas) -->
+      <div class="arqueo-detail-section" *ngIf="turnoSeleccionado()?.auditoriaArqueo?.conteoMonedasBilletes">
+        <h4 class="detail-sec-title">Denominaciones Declaradas</h4>
+        <div class="denoms-list">
+          <div class="denom-detail-row" *ngFor="let item of obtenerDenominacionesLista(turnoSeleccionado()?.auditoriaArqueo?.conteoMonedasBilletes)">
+            <span class="denom-lbl">{{ item.label }}</span>
+            <span class="denom-qty">x {{ item.cantidad }}</span>
+            <strong class="denom-sub">S/ {{ item.subtotal | number: '1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Si el turno está abierto -->
+      <div class="caja-abierta-warning" *ngIf="turnoSeleccionado()?.estado === 'ABIERTO'">
+        <span class="material-icons">info</span>
+        <span>El desglose de arqueo y denominaciones se generará una vez que la caja sea cerrada.</span>
+      </div>
+    </div>
+  </div>
+</div>

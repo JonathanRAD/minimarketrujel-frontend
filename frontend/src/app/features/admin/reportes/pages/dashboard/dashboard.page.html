@@ -1,0 +1,145 @@
+<app-page-header
+  title="Dashboard de Reportes y Estadísticas"
+  subtitle="Monitorea el rendimiento financiero de las ventas, márgenes y deudas de clientes"
+  class="no-print">
+  <button *ngIf="!cargando() && data()" (click)="imprimirReporte()" class="btn-primary">
+    <span class="material-icons">print</span>
+    <span>Imprimir PDF</span>
+  </button>
+</app-page-header>
+
+<!-- Encabezado para la impresión del reporte -->
+<div class="print-report-header print-only" *ngIf="!cargando() && data()">
+  <div class="print-brand">
+    <h1 class="print-title">MINIMARKET - REPORTE GERENCIAL DE VENTAS</h1>
+    <span class="print-subtitle">Rendimiento financiero y estadística de ventas</span>
+    <p class="print-dates">Período de análisis: <strong>{{ filterForm.value.fechaInicio | date: 'dd/MM/yyyy' }}</strong> al <strong>{{ filterForm.value.fechaFin | date: 'dd/MM/yyyy' }}</strong></p>
+  </div>
+  <hr class="print-divider" />
+</div>
+
+<div class="card filters-card" [formGroup]="filterForm">
+  <h3 class="filters-title">Período de Análisis</h3>
+  <div class="filters-grid">
+    <div class="form-group">
+      <label class="form-label" for="fechaInicio">Fecha Inicio</label>
+      <input type="date" id="fechaInicio" formControlName="fechaInicio" class="form-control" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fechaFin">Fecha Fin</label>
+      <input type="date" id="fechaFin" formControlName="fechaFin" class="form-control" />
+    </div>
+  </div>
+  <div class="filter-actions">
+    <button (click)="limpiarFiltros()" class="btn-secondary">
+      <span class="material-icons">restart_alt</span>
+      <span>Mes Actual</span>
+    </button>
+    <button (click)="cargarDashboard()" class="btn-primary">
+      <span class="material-icons">analytics</span>
+      <span>Consultar</span>
+    </button>
+  </div>
+</div>
+
+<div class="error-alert" *ngIf="errorMessage()">
+  <span class="material-icons">error_outline</span>
+  <span>{{ errorMessage() }}</span>
+  <button class="btn-close-alert" (click)="errorMessage.set(null)">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="loading-state" *ngIf="cargando()">
+  <div class="spinner"></div>
+  <p>Procesando estadísticas financieras...</p>
+</div>
+
+<div class="dashboard-content" *ngIf="!cargando() && data()">
+
+  <div class="metrics-grid">
+    <div class="metric-card card-sales">
+      <div class="metric-icon-wrapper"><span class="material-icons">trending_up</span></div>
+      <div class="metric-info">
+        <span class="metric-label">Ventas Totales</span>
+        <h3 class="metric-value">S/ {{ data()?.resumenFinanciero?.ventasTotales | number: '1.2-2' }}</h3>
+        <span class="metric-help text-xs">Ingresos brutos facturados</span>
+      </div>
+    </div>
+
+    <div class="metric-card card-profit">
+      <div class="metric-icon-wrapper"><span class="material-icons">payments</span></div>
+      <div class="metric-info">
+        <span class="metric-label">Ganancia Bruta Real</span>
+        <h3 class="metric-value">S/ {{ data()?.resumenFinanciero?.gananciaBruta | number: '1.2-2' }}</h3>
+        <span class="metric-help text-xs">Total ventas - costo de compra</span>
+      </div>
+    </div>
+
+    <div class="metric-card card-margin">
+      <div class="metric-icon-wrapper"><span class="material-icons">percent</span></div>
+      <div class="metric-info">
+        <span class="metric-label">Margen de Utilidad</span>
+        <h3 class="metric-value">{{ data()?.resumenFinanciero?.margenPorcentual | number: '1.1-1' }}%</h3>
+        <span class="metric-help text-xs">Porcentaje de ganancia sobre ventas</span>
+      </div>
+    </div>
+
+    <div class="metric-card card-debt">
+      <div class="metric-icon-wrapper"><span class="material-icons">warning</span></div>
+      <div class="metric-info">
+        <span class="metric-label">Cuentas por Cobrar</span>
+        <h3 class="metric-value">S/ {{ data()?.estadoFiados?.totalDeudaPendiente | number: '1.2-2' }}</h3>
+        <span class="metric-help text-xs">{{ data()?.estadoFiados?.clientesConDeudaConteo }} clientes con deudas pendientes</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-grid">
+    <div class="card detail-card">
+      <h3 class="detail-title">Distribución por Método de Pago</h3>
+      <p class="detail-desc">Representación del flujo de dinero ingresado y créditos otorgados.</p>
+      <div class="payment-methods-list">
+        <div class="payment-method-item" *ngFor="let item of data()?.resumenFinanciero?.metodosPago">
+          <div class="method-info">
+            <span class="method-name font-semibold">{{ item.metodo }}</span>
+            <span class="method-amount font-semibold">S/ {{ item.total | number: '1.2-2' }}</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" [class]="item.metodo.toLowerCase()" [style.width.%]="calcularPorcentajeMetodo(item.total)"></div>
+          </div>
+          <span class="method-percent text-xs text-muted">{{ calcularPorcentajeMetodo(item.total) | number: '1.1-1' }}% de ventas totales</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card detail-card">
+      <h3 class="detail-title">Top 5 Productos Más Vendidos</h3>
+      <p class="detail-desc">Listado de productos con mayor número de unidades vendidas.</p>
+
+      <div class="top-products-list" *ngIf="data()!.topProductos.length > 0">
+        <div class="top-product-item-wrapper" *ngFor="let prod of data()?.topProductos; let i = index">
+          <div class="top-product-item">
+            <div class="product-rank" [class]="'rank-' + (i + 1)">{{ i + 1 }}</div>
+            <div class="product-details">
+              <span class="product-name font-semibold">{{ prod.nombre }}</span>
+              <span class="product-code text-xs text-muted">Cod: {{ prod.codigoBarras }}</span>
+            </div>
+            <div class="product-stats">
+              <span class="stat-quantity font-semibold">{{ prod.cantidadVendida | number: '1.0-2' }} uds.</span>
+              <span class="stat-revenue text-xs text-muted font-semibold text-primary">S/ {{ prod.totalFacturado | number: '1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="product-progress-container">
+            <div class="product-progress-fill" [style.width.%]="obtenerPorcentajeTopProducto(prod.cantidadVendida)" [class]="'fill-' + (i + 1)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-top-products" *ngIf="data()!.topProductos.length === 0">
+        <span class="material-icons text-muted">analytics</span>
+        <p>No hay ventas registradas en este período</p>
+      </div>
+    </div>
+  </div>
+</div>

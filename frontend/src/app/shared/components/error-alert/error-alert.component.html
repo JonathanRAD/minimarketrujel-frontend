@@ -1,0 +1,12 @@
+<div class="error-alert" *ngIf="message" role="alert">
+  <span class="material-icons alert-icon">error_outline</span>
+  <span class="alert-message">{{ message }}</span>
+  <button
+    type="button"
+    class="alert-close"
+    (click)="dismiss.emit()"
+    aria-label="Cerrar alerta"
+    *ngIf="dismiss.observed">
+    <span class="material-icons">close</span>
+  </button>
+</div>

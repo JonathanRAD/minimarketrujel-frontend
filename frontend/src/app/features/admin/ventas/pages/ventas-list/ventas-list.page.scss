@@ -1,0 +1,386 @@
+/* Panel de Filtros */
+.filter-card {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  .filter-actions {
+    margin-top: 0;
+  }
+}
+
+/* Tabla y Filas */
+.ticket-id {
+  color: var(--color-primary);
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  text-decoration: underline;
+  transition: color 0.15s;
+  
+  &:hover {
+    color: var(--color-primary-dark);
+  }
+}
+
+.row-anulada {
+  opacity: 0.65;
+  background-color: var(--color-bg-base) !important;
+  text-decoration: line-through;
+
+  .ticket-id {
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+  }
+
+  .text-primary {
+    color: var(--color-text-muted) !important;
+  }
+}
+
+.text-mono {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.btn-action-icon {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &.btn-detail {
+    color: var(--color-primary);
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  &.btn-cancel {
+    color: var(--color-danger);
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Modal y Recibo Térmico (Ticket) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 550px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ticket-modal {
+  padding: 2rem;
+  background-color: #faf9f6; /* color papel */
+  border: 1px solid #e2e0d9;
+}
+
+/* Encabezado del ticket */
+.ticket-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.5rem;
+
+  .ticket-icon {
+    font-size: 2.5rem;
+    color: var(--color-text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .ticket-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .ticket-subtitle {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #666;
+    margin: 0.25rem 0 0;
+  }
+}
+
+.ticket-divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  border-top: 1px dashed #bbb;
+  margin: 1.2rem 0;
+}
+
+/* Meta información del ticket */
+.ticket-meta {
+  font-size: 0.85rem;
+  color: #333;
+  
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+
+    span:first-child {
+      color: #666;
+    }
+    
+    strong, span:last-child {
+      font-weight: 600;
+    }
+  }
+}
+
+/* Cuerpo del ticket (Artículos) */
+.ticket-body {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  
+  .body-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    color: #1a1a1a;
+  }
+
+  .ticket-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+
+    th {
+      font-weight: 700;
+      color: #666;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.5rem;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    td {
+      padding: 0.6rem 0;
+      vertical-align: top;
+      border-bottom: 1px solid #eee;
+    }
+
+    .product-name {
+      font-weight: 600;
+      color: #111;
+    }
+
+    .product-code {
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 0.1rem;
+    }
+  }
+}
+
+/* Pie del ticket */
+.ticket-footer {
+  text-align: center;
+  margin-bottom: 1.5rem;
+
+  .footer-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #111;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+  }
+
+  .total-amount {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+  }
+
+  .footer-thanks {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #555;
+    margin: 0;
+  }
+
+  .footer-anulada {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--color-danger);
+    border: 2px solid var(--color-danger);
+    padding: 0.4rem;
+    display: inline-block;
+    transform: rotate(-2deg);
+    margin: 0.5rem 0;
+    letter-spacing: 1px;
+  }
+}
+
+/* Botones de acción del modal */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.25rem;
+
+  button {
+    font-weight: 600;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .material-icons {
+      font-size: 1.15rem;
+    }
+  }
+
+  .btn-danger {
+    background-color: var(--color-danger);
+    color: white;
+    border: none;
+
+    &:hover:not(:disabled) {
+      background-color: #b91c1c;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* --- FORMATO IMPRESIÓN COMPROBANTE 80MM --- */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  // Ocultar todo lo de atrás
+  body * {
+    visibility: hidden;
+  }
+  
+  // Mostrar únicamente el modal de ticket activo
+  .modal-backdrop,
+  .modal-backdrop * {
+    visibility: visible;
+  }
+  
+  .modal-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: auto;
+    background-color: white !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .modal-content.ticket-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    max-width: 80mm;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 4mm 0 4mm !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  // Ocultar botones de acción en la impresión
+  .modal-actions,
+  .ticket-icon {
+    display: none !important;
+  }
+
+  // Ajustes de márgenes y tipografía para ticket térmico
+  .ticket-header {
+    margin-bottom: 0.8rem !important;
+  }
+  
+  .ticket-title {
+    font-size: 1.25rem !important;
+  }
+
+  .ticket-table th, 
+  .ticket-table td {
+    font-size: 0.75rem !important;
+    padding: 6px 2px !important;
+  }
+
+  .product-code {
+    font-size: 0.65rem !important;
+  }
+
+  .footer-total-row {
+    font-size: 1rem !important;
+  }
+}

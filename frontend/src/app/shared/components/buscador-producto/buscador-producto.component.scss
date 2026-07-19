@@ -1,0 +1,125 @@
+.search-field-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.search-input-wrapper .form-control {
+  padding-left: 2.25rem;
+  padding-right: 2.25rem;
+  width: 100%;
+}
+
+.btn-clear {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-dark);
+  }
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-top: 0.25rem;
+  z-index: 100;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border-bottom: 1px solid var(--color-bg-base);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--color-primary-light);
+  }
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.result-name {
+  color: var(--color-text-dark);
+  font-size: 0.9rem;
+}
+
+.result-code {
+  font-size: 0.75rem;
+}
+
+.result-stock {
+  font-size: 0.8rem;
+  font-weight: 600;
+  background-color: var(--color-bg-base);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: var(--color-text-dark);
+
+  &.low {
+    background-color: #fef2f2;
+    color: var(--color-danger);
+  }
+}
+
+.search-loading {
+  position: absolute;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  
+  .spin {
+    animation: rotate 1s linear infinite;
+    font-size: 1.25rem;
+  }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

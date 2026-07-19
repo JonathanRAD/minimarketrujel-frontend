@@ -1,0 +1,128 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    
+    <!-- Cabecera de la Marca -->
+    <div class="brand-section">
+      <div class="brand-logo">
+        <span class="material-icons">storefront</span>
+      </div>
+      <h1 class="brand-title">Minimarket Familiar</h1>
+      <p class="brand-sub">Sistema de Punto de Venta & Gestión</p>
+    </div>
+
+    <!-- Alternador de Métodos de Acceso -->
+    <div class="login-tabs">
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="metodoAcceso() === 'password'" 
+        (click)="cambiarMetodo('password')">
+        <span class="material-icons">badge</span>
+        <span>Administración</span>
+      </button>
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="metodoAcceso() === 'pin'" 
+        (click)="cambiarMetodo('pin')">
+        <span class="material-icons">dialpad</span>
+        <span>Cajero POS</span>
+      </button>
+    </div>
+
+    <!-- Mensaje de Error -->
+    <div class="error-alert" *ngIf="error()">
+      <span class="material-icons">error_outline</span>
+      <span>{{ error() }}</span>
+    </div>
+
+    <!-- OPCIÓN 1: Acceso Tradicional por Contraseña -->
+    <form *ngIf="metodoAcceso() === 'password'" [formGroup]="form" (ngSubmit)="submitPassword()" class="form-layout">
+      <div class="form-group">
+        <label class="form-label" for="email">Correo Electrónico</label>
+        <div class="input-field">
+          <span class="material-icons input-icon">email</span>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email" 
+            class="form-control form-control-icon" 
+            placeholder="ejemplo@minimarket.com" 
+            autocomplete="email" />
+        </div>
+        <div class="error" *ngIf="form.get('email')?.touched && form.get('email')?.errors?.['required']">
+          El correo es obligatorio
+        </div>
+        <div class="error" *ngIf="form.get('email')?.touched && form.get('email')?.errors?.['email']">
+          Ingresa un correo válido
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Contraseña</label>
+        <div class="input-field">
+          <span class="material-icons input-icon">lock</span>
+          <input 
+            type="password" 
+            id="password" 
+            formControlName="password" 
+            class="form-control form-control-icon" 
+            placeholder="••••••••" 
+            autocomplete="current-password" />
+        </div>
+        <div class="error" *ngIf="form.get('password')?.touched && form.get('password')?.errors?.['required']">
+          La contraseña es obligatoria
+        </div>
+        <div class="error" *ngIf="form.get('password')?.touched && form.get('password')?.errors?.['minlength']">
+          Mínimo 6 caracteres
+        </div>
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-primary btn-submit-login" 
+        [disabled]="form.invalid || cargando()">
+        <span class="material-icons" *ngIf="!cargando()">login</span>
+        <span>{{ cargando() ? 'Iniciando Sesión...' : 'Ingresar al Panel' }}</span>
+      </button>
+    </form>
+
+    <!-- OPCIÓN 2: Acceso Rápido por PIN Táctil -->
+    <div *ngIf="metodoAcceso() === 'pin'" class="pin-layout">
+      <!-- Indicador visual de puntos de PIN -->
+      <div class="pin-display">
+        <div class="pin-dot" [class.active]="pin().length >= 1"></div>
+        <div class="pin-dot" [class.active]="pin().length >= 2"></div>
+        <div class="pin-dot" [class.active]="pin().length >= 3"></div>
+        <div class="pin-dot" [class.active]="pin().length >= 4"></div>
+      </div>
+
+      <p class="brand-sub" style="text-align: center; margin-bottom: 1.5rem;">
+        {{ cargando() ? 'Validando PIN...' : 'Ingresa tu PIN de 4 dígitos' }}
+      </p>
+
+      <!-- Teclado Numérico Táctil -->
+      <div class="pin-keyboard">
+        <button type="button" class="key-btn" (click)="pulsarNumero(1)" [disabled]="cargando()">1</button>
+        <button type="button" class="key-btn" (click)="pulsarNumero(2)" [disabled]="cargando()">2</button>
+        <button type="button" class="key-btn" (click)="pulsarNumero(3)" [disabled]="cargando()">3</button>
+        
+        <button type="button" class="key-btn" (click)="pulsarNumero(4)" [disabled]="cargando()">4</button>
+        <button type="button" class="key-btn" (click)="pulsarNumero(5)" [disabled]="cargando()">5</button>
+        <button type="button" class="key-btn" (click)="pulsarNumero(6)" [disabled]="cargando()">6</button>
+        
+        <button type="button" class="key-btn" (click)="pulsarNumero(7)" [disabled]="cargando()">7</button>
+        <button type="button" class="key-btn" (click)="pulsarNumero(8)" [disabled]="cargando()">8</button>
+        <button type="button" class="key-btn" (click)="pulsarNumero(9)" [disabled]="cargando()">9</button>
+        
+        <!-- Botón vacío o de acción opcional -->
+        <div class="key-btn action" style="border: none; pointer-events: none;"></div>
+        <button type="button" class="key-btn" (click)="pulsarNumero(0)" [disabled]="cargando()">0</button>
+        <button type="button" class="key-btn action" (click)="borrarDigito()" [disabled]="cargando()">
+          <span class="material-icons">backspace</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

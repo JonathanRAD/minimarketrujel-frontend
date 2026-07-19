@@ -1,0 +1,49 @@
+<div class="pos-container">
+  <!-- Encabezado Táctil y de Alto Contraste -->
+  <header class="pos-header">
+    <div class="header-left">
+      <div class="brand">
+        <span class="material-icons pos-icon">point_of_sale</span>
+        <span class="pos-title">Caja POS</span>
+      </div>
+
+      <!-- Indicador de Conexión (Offline-First) -->
+      <div class="connection-status" [class.offline]="!isOnline()">
+        <span class="material-icons">
+          {{ isOnline() ? 'wifi' : 'wifi_off' }}
+        </span>
+        <span class="status-text">
+          {{ isOnline() ? 'En Línea' : 'Sin Conexión (Offline)' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Info de Cajero Activo -->
+      <div class="cajero-badge">
+        <span class="material-icons">account_circle</span>
+        <div class="cajero-info">
+          <span class="cajero-name">{{ usuario()?.nombre }}</span>
+          <span class="cajero-role">{{ usuario()?.rol }}</span>
+        </div>
+      </div>
+
+      <!-- Acceso a Administración (Solo administradores) -->
+      <a *ngIf="esAdmin()" routerLink="/admin" class="btn-action btn-admin" title="Panel de Administración">
+        <span class="material-icons">dashboard</span>
+        <span>Administración</span>
+      </a>
+
+      <!-- Botón de Cierre de Turno / Salir -->
+      <button class="btn-action btn-exit" (click)="salir()" title="Cerrar turno / Salir">
+        <span class="material-icons">logout</span>
+        <span>Salir</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Área de Ventas Principal -->
+  <main class="pos-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

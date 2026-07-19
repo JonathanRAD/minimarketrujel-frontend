@@ -1,0 +1,9 @@
+<input
+  #scannerInput
+  type="text"
+  class="scanner-input"
+  [(ngModel)]="codigoActual"
+  (keyup.enter)="emitirCodigo()"
+  placeholder="Escanea un producto..."
+  autocomplete="off"
+/>

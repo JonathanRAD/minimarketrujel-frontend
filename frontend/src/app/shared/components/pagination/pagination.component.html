@@ -1,0 +1,63 @@
+<div class="pagination-container" *ngIf="paginas > 1 || total > 10">
+  <div class="pagination-info">
+    <span>Mostrando </span>
+    <strong class="font-bold">{{ minRecord }}</strong>
+    <span> - </span>
+    <strong class="font-bold">{{ maxRecord }}</strong>
+    <span> de </span>
+    <strong class="font-bold">{{ total }}</strong>
+    <span> registros</span>
+  </div>
+
+  <div class="pagination-actions">
+    <!-- Cambiar límite -->
+    <div class="limit-selector">
+      <span class="text-xs text-muted">Mostrar:</span>
+      <select [value]="limite" (change)="onLimitChange($event)" class="form-control limit-select">
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </div>
+
+    <!-- Botones de páginas -->
+    <div class="pagination-pages">
+      <button
+        [disabled]="pagina === 1"
+        (click)="onPageChange(pagina - 1)"
+        class="btn-page-nav"
+        title="Página Anterior">
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <!-- Botón de primera página si el rango está desplazado -->
+      <ng-container *ngIf="arrayPaginas.length > 0 && arrayPaginas[0] > 1">
+        <button (click)="onPageChange(1)" class="btn-page-num">1</button>
+        <span class="pagination-ellipsis" *ngIf="arrayPaginas[0] > 2">...</span>
+      </ng-container>
+
+      <button
+        *ngFor="let p of arrayPaginas"
+        [class.active]="p === pagina"
+        (click)="onPageChange(p)"
+        class="btn-page-num">
+        {{ p }}
+      </button>
+
+      <!-- Botón de última página si el rango está desplazado -->
+      <ng-container *ngIf="arrayPaginas.length > 0 && arrayPaginas[arrayPaginas.length - 1] < paginas">
+        <span class="pagination-ellipsis" *ngIf="arrayPaginas[arrayPaginas.length - 1] < paginas - 1">...</span>
+        <button (click)="onPageChange(paginas)" class="btn-page-num">{{ paginas }}</button>
+      </ng-container>
+
+      <button
+        [disabled]="pagina === paginas"
+        (click)="onPageChange(pagina + 1)"
+        class="btn-page-nav"
+        title="Siguiente Página">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+  </div>
+</div>

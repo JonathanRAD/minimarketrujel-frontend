@@ -1,0 +1,104 @@
+<app-page-header
+  title="Catálogo de Productos"
+  subtitle="Gestiona todos los productos del minimarket: precios, stock y categorías">
+  <a routerLink="/admin/productos/nuevo" class="btn-primary">
+    <span class="material-icons">add</span>
+    <span>Nuevo Producto</span>
+  </a>
+</app-page-header>
+
+<!-- Buscador -->
+<div class="card search-card">
+  <div class="search-input-wrapper">
+    <span class="material-icons search-icon">search</span>
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Buscar por nombre o código de barras..."
+      style="padding-left: 2.5rem;"
+      (input)="buscar($any($event.target).value)"
+    />
+  </div>
+</div>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando catálogo de productos..." />
+
+<div class="table-container" *ngIf="!cargando() && productos().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Código</th>
+        <th>Precio Venta</th>
+        <th>Costo</th>
+        <th>Stock</th>
+        <th>Estado</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let prod of productos()">
+        <td>
+          <div class="product-info-cell">
+            <span class="material-icons product-avatar">inventory_2</span>
+            <div class="product-meta">
+              <span class="product-name font-semibold">{{ prod.nombre }}</span>
+              <span class="product-category text-muted text-xs">{{ prod.categoria?.nombre || 'Sin categoría' }}</span>
+            </div>
+          </div>
+        </td>
+        <td class="text-muted">{{ prod.codigoBarras }}</td>
+        <td class="font-semibold">S/ {{ prod.precioVenta | number: '1.2-2' }}</td>
+        <td class="text-muted">S/ {{ prod.costo | number: '1.2-2' }}</td>
+        <td>
+          <div class="stock-badge-wrapper">
+            <span class="stock-badge" [class.low]="prod.stockActual > 0 && prod.stockActual <= prod.stockMinimo" [class.empty]="prod.stockActual === 0">
+              {{ prod.stockActual }} {{ prod.unidadMedida }}
+            </span>
+            <span *ngIf="prod.stockActual <= prod.stockMinimo" class="material-icons warning-icon" style="color: var(--color-danger); font-size: 1rem;">warning</span>
+          </div>
+        </td>
+        <td>
+          <app-status-badge [label]="prod.activo ? 'Activo' : 'Inactivo'" />
+        </td>
+        <td class="actions-cell">
+          <a [routerLink]="['/admin/productos', prod.id, 'editar']" class="btn-action-icon btn-edit" title="Editar">
+            <span class="material-icons">edit</span>
+          </a>
+          <button (click)="eliminar(prod)" class="btn-action-icon btn-delete" title="Eliminar">
+            <span class="material-icons">delete</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Paginación -->
+  <app-pagination
+    [pagina]="pagina()"
+    [limite]="limite()"
+    [total]="total()"
+    [paginas]="paginas()"
+    (paginaChange)="irAPagina($event)"
+    (limiteChange)="cambiarLimite($event)">
+  </app-pagination>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && productos().length === 0 && busqueda()"
+  icon="search_off"
+  title="Sin resultados"
+  message="Ningún producto coincide con la búsqueda. Intenta con otro nombre o código." />
+
+<app-empty-state
+  *ngIf="!cargando() && productos().length === 0 && !busqueda()"
+  icon="inventory_2"
+  title="Sin productos en el catálogo"
+  message="Empieza cargando los productos de tu minimarket.">
+  <a routerLink="/admin/productos/nuevo" class="btn-secondary">
+    <span class="material-icons">add</span>
+    <span>Agregar primer producto</span>
+  </a>
+</app-empty-state>

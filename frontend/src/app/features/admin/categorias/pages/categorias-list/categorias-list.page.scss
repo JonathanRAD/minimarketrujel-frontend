@@ -1,0 +1,113 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.page-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+/* Acciones en tabla */
+.text-right {
+  text-align: right;
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
+}
+
+.btn-edit {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary);
+}
+
+.btn-edit:hover {
+  background-color: var(--color-secondary);
+  color: white;
+}
+
+.btn-delete {
+  background-color: #fee2e2;
+  color: var(--color-danger);
+}
+
+.btn-delete:hover {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+/* Alerta de error */
+.error-alert {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: var(--color-danger);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.btn-close-alert {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.btn-close-alert:hover {
+  color: var(--color-text-dark);
+}
+
+/* Estado vacío */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: var(--color-border);
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  color: var(--color-text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.empty-state p {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  max-width: 300px;
+}

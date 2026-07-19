@@ -1,0 +1,93 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">{{ modoEditar() ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+    <p class="page-subtitle">
+      {{ modoEditar() ? 'Modifica los datos del cliente seleccionado' : 'Registra un nuevo cliente con opción a cuenta de fiados' }}
+    </p>
+  </div>
+  <a routerLink="/admin/clientes" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver a la lista</span>
+  </a>
+</div>
+
+<div class="form-container card">
+  <!-- Error general -->
+  <div class="error-alert" *ngIf="errorMessage()">
+    <span class="material-icons">error_outline</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Cargando datos (solo modo edición) -->
+  <div class="loading-form" *ngIf="cargandoDatos()">
+    <div class="spinner"></div>
+    <p>Cargando datos del cliente...</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" *ngIf="!cargandoDatos()">
+    <div class="form-group">
+      <label class="form-label" for="nombre">Nombre Completo</label>
+      <input type="text" id="nombre" formControlName="nombre" class="form-control"
+        placeholder="Ej. JUAN PÉREZ, MARÍA GÓMEZ..." appUppercase maxlength="100" autocomplete="off" />
+
+      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['required']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El nombre es obligatorio.</span>
+      </div>
+      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['minlength']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El nombre debe tener al menos 3 caracteres.</span>
+      </div>
+      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['maxlength']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El nombre no puede superar los 100 caracteres.</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="telefono">Teléfono (9 dígitos, opcional)</label>
+      <input type="text" id="telefono" formControlName="telefono" class="form-control"
+        placeholder="Ej. 987654321" appOnlyNumbers maxlength="9" autocomplete="off" />
+      <div class="error" *ngIf="form.get('telefono')?.touched && form.get('telefono')?.errors?.['pattern']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El teléfono debe constar exactamente de 9 dígitos numéricos.</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="direccion">Dirección (Opcional)</label>
+      <input type="text" id="direccion" formControlName="direccion" class="form-control"
+        placeholder="Ej. Av. Siempreviva 742..." maxlength="150" autocomplete="off" />
+      <div class="error" *ngIf="form.get('direccion')?.touched && form.get('direccion')?.errors?.['maxlength']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>La dirección no puede superar los 150 caracteres.</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="limiteCredito">Límite de Crédito / Fiado (S/)</label>
+      <input type="number" id="limiteCredito" formControlName="limiteCredito" class="form-control"
+        placeholder="Ej. 100, 500 (0 para no permitir fiados)" min="0" step="1" autocomplete="off" />
+      <p class="help-text">Monto máximo que el cliente puede acumular en cuentas fiadas sin pagar.</p>
+
+      <div class="error" *ngIf="form.get('limiteCredito')?.touched && form.get('limiteCredito')?.errors?.['required']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El límite de crédito es obligatorio.</span>
+      </div>
+      <div class="error" *ngIf="form.get('limiteCredito')?.touched && form.get('limiteCredito')?.errors?.['min']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El límite de crédito no puede ser negativo.</span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a routerLink="/admin/clientes" class="btn-cancel">
+        Cancelar
+      </a>
+      <button type="submit" class="btn-primary btn-submit" [disabled]="form.invalid || guardando()">
+        <span class="material-icons" *ngIf="!guardando()">save</span>
+        <span>{{ guardando() ? 'Guardando...' : 'Guardar Cliente' }}</span>
+      </button>
+    </div>
+  </form>
+</div>

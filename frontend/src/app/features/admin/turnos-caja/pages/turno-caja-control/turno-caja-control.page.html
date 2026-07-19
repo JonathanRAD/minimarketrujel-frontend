@@ -1,0 +1,230 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Consola de Control de Caja</h2>
+    <p class="page-subtitle">Apertura de turno, arqueo físico y cierre de flujo diario</p>
+  </div>
+</div>
+
+<div class="error-alert" *ngIf="errorMessage()">
+  <span class="material-icons">error_outline</span>
+  <span>{{ errorMessage() }}</span>
+  <button class="btn-close-alert" (click)="errorMessage.set(null)">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="loading-state" *ngIf="cargando()">
+  <div class="spinner"></div>
+  <p>Consultando estado de la caja...</p>
+</div>
+
+<div class="control-container" *ngIf="!cargando()">
+
+  <div class="card state-card closed-state" *ngIf="!turnoActivo()">
+    <span class="material-icons state-icon">lock</span>
+    <h3 class="state-title">La caja se encuentra CERRADA</h3>
+    <p class="state-desc">Para comenzar a registrar ventas en el POS, debes abrir un turno declarando el efectivo inicial de caja.</p>
+
+    <form [formGroup]="aperturaForm" (ngSubmit)="abrirCaja()" class="control-form">
+      <div class="form-group" style="max-width: 320px; margin: 1.5rem auto;">
+        <label class="form-label" for="montoInicial">Efectivo Inicial en Caja (S/)</label>
+        <div class="money-input-wrapper">
+          <span class="currency-symbol">S/</span>
+          <input type="number" id="montoInicial" formControlName="montoInicial" class="form-control" placeholder="0.00" min="0" />
+        </div>
+        <div class="error" *ngIf="aperturaForm.get('montoInicial')?.touched && aperturaForm.get('montoInicial')?.errors?.['required']">El monto inicial es obligatorio.</div>
+        <div class="error" *ngIf="aperturaForm.get('montoInicial')?.touched && aperturaForm.get('montoInicial')?.errors?.['min']">El monto inicial no puede ser negativo.</div>
+      </div>
+      <button type="submit" class="btn-primary btn-submit" [disabled]="aperturaForm.invalid || procesando()">
+        <span class="material-icons">vpn_key</span>
+        <span>{{ procesando() ? 'Abriendo Caja...' : 'Abrir Caja / Iniciar Turno' }}</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="open-state-grid" *ngIf="turnoActivo()">
+
+    <div class="card info-card">
+      <h3 class="card-title">Turno Activo</h3>
+      <div class="info-list">
+        <div class="info-item">
+          <span class="material-icons">schedule</span>
+          <div>
+            <span class="info-label">Hora Apertura</span>
+            <span class="info-value font-semibold">{{ turnoActivo()?.fechaApertura | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="material-icons">badge</span>
+          <div>
+            <span class="info-label">Cajero Operando</span>
+            <span class="info-value">{{ usuarioNombre }}</span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <h4 class="section-title">Resumen de Medios de Pago</h4>
+      <div class="metric-row">
+        <span class="metric-label">Efectivo Inicial:</span>
+        <span class="metric-value font-semibold">S/ {{ turnoActivo()?.montoInicial | number: '1.2-2' }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Ventas en Efectivo (+):</span>
+        <span class="metric-value font-semibold text-success">S/ {{ turnoActivo()?.ventasEfectivo | number: '1.2-2' }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Ventas con Tarjeta:</span>
+        <span class="metric-value font-semibold text-blue-600" style="color: #2563eb;">S/ {{ turnoActivo()?.ventasTarjeta | number: '1.2-2' }}</span>
+      </div>
+      <div class="metric-row total-row" style="border-top: 1px dashed var(--color-border); padding-top: 0.75rem; margin-top: 0.5rem;">
+        <span class="metric-label">Total Esperado (Ef. + Tar.):</span>
+        <strong class="metric-total" style="font-size: 1.25rem;">S/ {{ turnoActivo()?.montoFinalEsperado | number: '1.2-2' }}</strong>
+      </div>
+      <p class="help-text" style="font-size: 0.75rem; margin-top: 0.75rem;">
+        * El efectivo esperado de caja incluye el monto inicial más las ventas pagadas en efectivo (incluyendo la porción en efectivo de los cobros mixtos).
+      </p>
+    </div>
+
+    <div class="card form-card">
+      <h3 class="card-title">Arqueo &amp; Cierre de Turno</h3>
+      <p class="section-desc">Realiza el conteo detallado de caja. Puedes usar la calculadora de denominaciones para sumar el efectivo físico automáticamente.</p>
+
+      <form [formGroup]="cierreForm" (ngSubmit)="cerrarCaja()" class="control-form-horizontal">
+        
+        <!-- Calculadora de Billetes y Monedas -->
+        <h4 class="section-title" style="margin-bottom: 0.5rem;">Calculadora de Billetes &amp; Monedas (Soles)</h4>
+        <div class="denominaciones-grid" formGroupName="conteoMonedasBilletes">
+          
+          <div class="denom-column">
+            <span class="denom-col-title">Billetes</span>
+            <div class="denom-input-row">
+              <label for="b200">S/ 200</label>
+              <input type="number" id="b200" formControlName="b200" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="b100">S/ 100</label>
+              <input type="number" id="b100" formControlName="b100" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="b50">S/ 50</label>
+              <input type="number" id="b50" formControlName="b50" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="b20">S/ 20</label>
+              <input type="number" id="b20" formControlName="b20" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="b10">S/ 10</label>
+              <input type="number" id="b10" formControlName="b10" class="form-control" min="0" placeholder="0" />
+            </div>
+          </div>
+
+          <div class="denom-column">
+            <span class="denom-col-title">Monedas</span>
+            <div class="denom-input-row">
+              <label for="m5">S/ 5</label>
+              <input type="number" id="m5" formControlName="m5" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="m2">S/ 2</label>
+              <input type="number" id="m2" formControlName="m2" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="m1">S/ 1</label>
+              <input type="number" id="m1" formControlName="m1" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="m050">S/ 0.50</label>
+              <input type="number" id="m050" formControlName="m050" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="m020">S/ 0.20</label>
+              <input type="number" id="m020" formControlName="m020" class="form-control" min="0" placeholder="0" />
+            </div>
+            <div class="denom-input-row">
+              <label for="m010">S/ 0.10</label>
+              <input type="number" id="m010" formControlName="m010" class="form-control" min="0" placeholder="0" />
+            </div>
+          </div>
+          
+        </div>
+
+        <hr class="divider" style="margin: 1.25rem 0;" />
+
+        <h4 class="section-title" style="margin-bottom: 0.75rem;">Desglose y Declaración del Arqueo</h4>
+        
+        <!-- Formulario Declarado y Esperados -->
+        <div class="arqueo-desglose-panel">
+          
+          <!-- Fila Efectivo -->
+          <div class="arqueo-row">
+            <div class="arqueo-meta">
+              <span class="arqueo-name font-semibold">1. Efectivo de Caja (S/)</span>
+              <span class="arqueo-expected">Esperado: S/ {{ efectivoEsperado() | number: '1.2-2' }}</span>
+            </div>
+            <div class="money-input-wrapper flex-1">
+              <span class="currency-symbol">S/</span>
+              <input type="number" step="0.01" formControlName="efectivoReal" class="form-control" min="0" />
+            </div>
+            <div class="arqueo-diff-badge" [class.negative]="diferenciaEfectivo() < 0" [class.success]="diferenciaEfectivo() === 0">
+              Dif: {{ diferenciaEfectivo() > 0 ? '+' : '' }}{{ diferenciaEfectivo() | number: '1.2-2' }}
+            </div>
+          </div>
+
+          <!-- Fila Tarjeta -->
+          <div class="arqueo-row">
+            <div class="arqueo-meta">
+              <span class="arqueo-name font-semibold">2. Vouchers Tarjeta (S/)</span>
+              <span class="arqueo-expected">Esperado: S/ {{ tarjetaEsperada() | number: '1.2-2' }}</span>
+            </div>
+            <div class="money-input-wrapper flex-1">
+              <span class="currency-symbol">S/</span>
+              <input type="number" step="0.01" formControlName="tarjetaReal" class="form-control" min="0" />
+            </div>
+            <div class="arqueo-diff-badge" [class.negative]="diferenciaTarjeta() < 0" [class.success]="diferenciaTarjeta() === 0">
+              Dif: {{ diferenciaTarjeta() > 0 ? '+' : '' }}{{ diferenciaTarjeta() | number: '1.2-2' }}
+            </div>
+          </div>
+
+          <!-- Fila Total Consolidado -->
+          <div class="arqueo-row arqueo-total-row">
+            <div class="arqueo-meta">
+              <span class="arqueo-name font-bold">TOTAL DECLARADO (1 + 2)</span>
+              <span class="arqueo-expected">Esperado Total: S/ {{ (turnoActivo()?.montoFinalEsperado || 0) | number: '1.2-2' }}</span>
+            </div>
+            <div class="money-input-wrapper flex-1">
+              <span class="currency-symbol">S/</span>
+              <input type="number" readonly formControlName="montoFinalReal" class="form-control font-bold" style="background-color: var(--color-bg-base);" />
+            </div>
+            <div class="arqueo-diff-badge font-bold" [class.negative]="diferenciaVivo() < 0" [class.success]="diferenciaVivo() === 0">
+              Dif: {{ diferenciaVivo() > 0 ? '+' : '' }}{{ diferenciaVivo() | number: '1.2-2' }}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="live-diff" style="margin-top: 1.25rem;"
+          [class.negative]="diferenciaVivo() < 0" [class.success]="diferenciaVivo() === 0">
+          <span class="material-icons">
+            {{ diferenciaVivo() === 0 ? 'check_circle' : (diferenciaVivo() > 0 ? 'add_circle' : 'warning') }}
+          </span>
+          <div>
+            <span class="diff-title font-semibold">
+              {{ diferenciaVivo() === 0 ? 'Arqueo Cuadra Perfectamente' : (diferenciaVivo() > 0 ? 'Sobrante en Arqueo General' : 'Faltante en Arqueo General') }}
+            </span>
+            <span class="diff-amount block">
+              Diferencia Consolidada: {{ diferenciaVivo() > 0 ? '+' : '' }}S/ {{ diferenciaVivo() | number: '1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-danger btn-submit-cierre" style="margin-top: 1.25rem; width: 100%; height: 48px;" [disabled]="cierreForm.invalid || procesando()">
+          <span class="material-icons">lock_open</span>
+          <span>{{ procesando() ? 'Cerrando caja...' : 'Confirmar Arqueo & Cerrar Caja' }}</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

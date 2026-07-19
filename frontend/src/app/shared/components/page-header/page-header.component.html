@@ -1,0 +1,10 @@
+<header class="page-header">
+  <div class="header-text">
+    <h2 class="page-title">{{ title }}</h2>
+    <p class="page-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+  </div>
+  <!-- Slot para botones/acciones a la derecha -->
+  <div class="header-actions">
+    <ng-content></ng-content>
+  </div>
+</header>

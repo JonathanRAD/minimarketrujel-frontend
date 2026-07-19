@@ -1,0 +1,145 @@
+<div class="page-header" *ngIf="cliente()">
+  <div>
+    <h2 class="page-title">Ficha de Cliente: {{ cliente()?.nombre }}</h2>
+    <p class="page-subtitle">Control de cuentas de fiado y resumen crediticio</p>
+  </div>
+  <a routerLink="/admin/clientes" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver a la lista</span>
+  </a>
+</div>
+
+<div class="error-alert" *ngIf="errorMessage()">
+  <span class="material-icons">error_outline</span>
+  <span>{{ errorMessage() }}</span>
+  <button class="btn-close-alert" (click)="errorMessage.set(null)">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="loading-state" *ngIf="cargando()">
+  <div class="spinner"></div>
+  <p>Cargando información del cliente...</p>
+</div>
+
+<div class="detail-grid" *ngIf="!cargando() && cliente()">
+
+  <div class="info-section">
+    <div class="card info-card">
+      <h3 class="card-title">Datos Personales</h3>
+      <div class="info-list">
+        <div class="info-item">
+          <span class="material-icons">person</span>
+          <div>
+            <span class="info-label">Nombre</span>
+            <span class="info-value">{{ cliente()?.nombre }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="material-icons">phone</span>
+          <div>
+            <span class="info-label">Teléfono</span>
+            <span class="info-value">{{ cliente()?.telefono || 'No registrado' }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="material-icons">home</span>
+          <div>
+            <span class="info-label">Dirección</span>
+            <span class="info-value">{{ cliente()?.direccion || 'No registrada' }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="material-icons">calendar_today</span>
+          <div>
+            <span class="info-label">Fecha de Registro</span>
+            <span class="info-value">{{ cliente()?.createdAt | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+        <a [routerLink]="['/admin/clientes', cliente()?.id, 'editar']" class="btn-secondary" style="width: 100%; justify-content: center;">
+          <span class="material-icons">edit</span>
+          <span>Editar Datos</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="card credit-card" [class.no-credit]="cliente()!.limiteCredito === 0">
+      <h3 class="card-title">Estado de Crédito</h3>
+
+      <div class="credit-metric">
+        <span class="metric-label">Deuda Pendiente</span>
+        <span class="metric-value" [class.has-debt]="deudaTotal() > 0">
+          S/ {{ deudaTotal() | number: '1.2-2' }}
+        </span>
+      </div>
+
+      <div class="credit-progress-container" *ngIf="cliente()!.limiteCredito > 0">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" [style.width.%]="porcentajeCredito()" [class.high]="porcentajeCredito() > 80"></div>
+        </div>
+        <div class="progress-labels">
+          <span>Límite: S/ {{ cliente()?.limiteCredito | number: '1.2-2' }}</span>
+          <span>Disponible: S/ {{ creditoDisponible() | number: '1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="no-credit-alert" *ngIf="cliente()!.limiteCredito === 0">
+        <span class="material-icons">lock</span>
+        <p>Este cliente no tiene habilitado el límite de crédito (fiados). Modifica su perfil para asignarle un cupo.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fiados-section">
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <span>Cuentas por Cobrar Pendientes</span>
+        <span class="badge" *ngIf="fiados().length > 0">{{ fiados().length }} pendientes</span>
+      </h3>
+
+      <div class="loading-state" style="padding: 2rem;" *ngIf="cargandoFiados()">
+        <div class="spinner" style="width: 24px; height: 24px; border-width: 2px;"></div>
+        <p style="font-size: 0.85rem;">Actualizando deudas...</p>
+      </div>
+
+      <div class="table-container" *ngIf="!cargandoFiados() && fiados().length > 0">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha de Venta</th>
+              <th>Monto Fiado</th>
+              <th>Vendedor</th>
+              <th class="text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fiado of fiados()">
+              <td class="font-semibold">{{ fiado.createdAt | date: 'dd/MM/yyyy, hh:mm a' }}</td>
+              <td class="font-semibold text-danger">S/ {{ fiado.monto | number: '1.2-2' }}</td>
+              <td class="text-muted">{{ fiado.venta?.usuario?.nombre || 'Desconocido' }}</td>
+              <td class="text-right">
+                <button
+                  (click)="cobrar(fiado)"
+                  class="btn-cobrar"
+                  [disabled]="cobrandoId() === fiado.id"
+                  title="Saldar esta deuda">
+                  <span class="material-icons">payments</span>
+                  <span>{{ cobrandoId() === fiado.id ? 'Procesando...' : 'Saldar' }}</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-fiados" *ngIf="!cargandoFiados() && fiados().length === 0">
+        <span class="material-icons checked-icon">check_circle</span>
+        <h4>¡Sin cuentas pendientes!</h4>
+        <p>El cliente se encuentra totalmente al día con sus pagos.</p>
+      </div>
+    </div>
+  </div>
+
+</div>

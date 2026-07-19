@@ -1,0 +1,106 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">{{ modoEditar() ? 'Editar Categoría' : 'Nueva Categoría' }}</h2>
+    <p class="page-subtitle">
+      {{ modoEditar() ? 'Modifica los datos de la categoría seleccionada' : 'Crea una nueva clasificación para tus productos' }}
+    </p>
+  </div>
+  <a routerLink="/admin/categorias" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver a la lista</span>
+  </a>
+</div>
+
+<div class="form-container card">
+  <!-- Error general -->
+  <div class="error-alert" *ngIf="errorMessage()">
+    <span class="material-icons">error_outline</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Cargando datos (solo modo edición) -->
+  <div class="loading-form" *ngIf="cargandoDatos()">
+    <div class="spinner"></div>
+    <p>Cargando datos de la categoría...</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" *ngIf="!cargandoDatos()">
+    <div class="form-group">
+      <label class="form-label" for="nombre">Nombre de la Categoría</label>
+      <input
+        type="text"
+        id="nombre"
+        formControlName="nombre"
+        class="form-control"
+        placeholder="Ej. LÁCTEOS, BEBIDAS, ABARROTES..."
+        appUppercase
+        maxlength="50"
+        autocomplete="off" />
+
+      <!-- Errores de Validación -->
+      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['required']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El nombre es obligatorio.</span>
+      </div>
+      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['minlength']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El nombre debe tener al menos 2 caracteres.</span>
+      </div>
+      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['maxlength']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>El nombre no puede superar los 50 caracteres.</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="descripcion">Descripción (Opcional)</label>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion"
+        class="form-control text-area"
+        placeholder="Breve descripción de los productos..."
+        maxlength="250"
+        rows="4"></textarea>
+      
+      <!-- Errores de Validación -->
+      <div class="error" *ngIf="form.get('descripcion')?.touched && form.get('descripcion')?.errors?.['maxlength']">
+        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+        <span>La descripción no puede superar los 250 caracteres.</span>
+      </div>
+    </div>
+
+    <!-- Toggle de Estado (Solo modo edición) -->
+    <div class="form-group" *ngIf="modoEditar()">
+      <label class="form-label">Estado de la Categoría</label>
+      <div class="status-toggle-wrapper">
+        <label class="status-toggle-label">
+          <input
+            type="checkbox"
+            id="activo"
+            formControlName="activo"
+            class="status-toggle-input" />
+          <span class="status-toggle-custom"></span>
+          <span class="status-toggle-text font-semibold" [class.text-success]="form.get('activo')?.value" [class.text-muted]="!form.get('activo')?.value">
+            {{ form.get('activo')?.value ? 'ACTIVA' : 'INACTIVA' }}
+          </span>
+        </label>
+      </div>
+      <p class="form-desc text-xs text-muted" style="margin-top: 0.35rem;">
+        Las categorías inactivas no se mostrarán al registrar productos en el POS.
+      </p>
+    </div>
+
+    <div class="form-actions">
+      <a routerLink="/admin/categorias" class="btn-cancel">
+        Cancelar
+      </a>
+      <button
+        type="submit"
+        class="btn-primary btn-submit"
+        [disabled]="form.invalid || guardando()">
+        <span class="material-icons" *ngIf="!guardando()">save</span>
+        <span>{{ guardando() ? 'Guardando...' : 'Guardar Categoría' }}</span>
+      </button>
+    </div>
+  </form>
+</div>

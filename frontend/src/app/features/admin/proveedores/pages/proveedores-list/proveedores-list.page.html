@@ -1,0 +1,55 @@
+<app-page-header
+  title="Proveedores"
+  subtitle="Gestiona las empresas y contactos que surten al minimarket">
+  <a routerLink="/admin/proveedores/nuevo" class="btn-primary">
+    <span class="material-icons">add_business</span>
+    <span>Nuevo Proveedor</span>
+  </a>
+</app-page-header>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando proveedores..." />
+
+<div class="table-container" *ngIf="!cargando() && proveedores().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Contacto</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Dirección</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let prov of proveedores()">
+        <td class="font-semibold">{{ prov.nombre }}</td>
+        <td class="text-muted">{{ prov.contacto || '-' }}</td>
+        <td class="text-muted">{{ prov.telefono || '-' }}</td>
+        <td class="text-muted">{{ prov.email || '-' }}</td>
+        <td class="text-muted">{{ prov.direccion || '-' }}</td>
+        <td class="actions-cell">
+          <a [routerLink]="['/admin/proveedores', prov.id, 'editar']" class="btn-action-icon btn-edit" title="Editar">
+            <span class="material-icons">edit</span>
+          </a>
+          <button (click)="eliminar(prov)" class="btn-action-icon btn-delete" title="Eliminar">
+            <span class="material-icons">delete</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && proveedores().length === 0"
+  icon="local_shipping"
+  title="Sin proveedores"
+  message="Aún no has registrado proveedores en tu catálogo.">
+  <a routerLink="/admin/proveedores/nuevo" class="btn-secondary">
+    <span class="material-icons">add_business</span>
+    <span>Registrar el primero</span>
+  </a>
+</app-empty-state>

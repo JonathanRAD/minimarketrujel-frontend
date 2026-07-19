@@ -1,0 +1,116 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Registrar Factura / Compra</h2>
+    <p class="page-subtitle">Ingresa la mercancía recibida y actualiza inventario de forma automática</p>
+  </div>
+  <a routerLink="/admin/compras" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver al listado</span>
+  </a>
+</div>
+
+<div class="error-alert" *ngIf="errorMessage()">
+  <span class="material-icons">error_outline</span>
+  <span>{{ errorMessage() }}</span>
+  <button class="btn-close-alert" (click)="errorMessage.set(null)">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="compra-grid">
+  <div class="card form-card">
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <div class="form-group">
+        <label class="form-label" for="proveedorId">Proveedor</label>
+        <select id="proveedorId" formControlName="proveedorId" class="form-control">
+          <option value="">-- Selecciona un proveedor --</option>
+          <option *ngFor="let p of proveedores()" [value]="p.id">
+            {{ p.nombre }}
+          </option>
+        </select>
+        <div class="error" *ngIf="form.get('proveedorId')?.touched && form.get('proveedorId')?.errors?.['required']">
+          El proveedor es obligatorio.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="estado">Estado de Ingreso</label>
+        <select id="estado" formControlName="estado" class="form-control">
+          <option value="RECIBIDA">Recibida (Ingresa stock e inventario al instante)</option>
+          <option value="PENDIENTE">Pendiente (No incrementa stock hasta marcarse como Recibida)</option>
+        </select>
+      </div>
+
+      <app-buscador-producto
+        label="Añadir Productos a la Compra"
+        placeholder="Buscar por nombre o código de barras..."
+        [clearOnSelect]="true"
+        (productoSeleccionado)="agregarItem($event)">
+      </app-buscador-producto>
+    </form>
+  </div>
+
+  <div class="card detail-card">
+    <h3 class="card-title">Detalle de Artículos</h3>
+
+    <div class="table-container" *ngIf="items().length > 0" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;">
+      <table class="table minified-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th style="width: 100px;">Cantidad</th>
+            <th style="width: 120px;">Costo Unit.</th>
+            <th>Subtotal</th>
+            <th class="text-right"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items(); let idx = index">
+            <td>
+              <div class="font-semibold">{{ item.producto.nombre }}</div>
+              <div class="text-muted text-xs">Cod: {{ item.producto.codigoBarras }}</div>
+            </td>
+            <td>
+              <input type="number" class="form-control minified-input" [value]="item.cantidad"
+                (input)="actualizarCantidad(idx, $any($event.target).value)" min="1" />
+            </td>
+            <td>
+              <input type="number" class="form-control minified-input" [value]="item.costoUnitario"
+                (input)="actualizarCosto(idx, $any($event.target).value)" min="0" step="0.01" />
+            </td>
+            <td class="font-semibold">S/ {{ item.subtotal | number: '1.2-2' }}</td>
+            <td class="text-right">
+              <button (click)="quitarItem(idx)" class="btn-quitar" title="Quitar de la lista">
+                <span class="material-icons">delete</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-items-state" *ngIf="items().length === 0">
+      <span class="material-icons">shopping_basket</span>
+      <p>Aún no has añadido ningún producto. Utiliza el buscador para agregarlos.</p>
+    </div>
+
+    <div class="total-box" *ngIf="items().length > 0">
+      <div class="total-row">
+        <span>Total de artículos:</span>
+        <span class="font-semibold">{{ totalArticulos() }}</span>
+      </div>
+      <div class="total-row main-total">
+        <span>TOTAL COMPRA:</span>
+        <strong>S/ {{ totalCompra() | number: '1.2-2' }}</strong>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+        <a routerLink="/admin/compras" class="btn-cancel">Cancelar</a>
+        <button (click)="guardar()" class="btn-primary" [disabled]="form.invalid || items().length === 0 || guardando()">
+          <span class="material-icons" *ngIf="!guardando()">save</span>
+          <span>{{ guardando() ? 'Procesando...' : 'Registrar Compra' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

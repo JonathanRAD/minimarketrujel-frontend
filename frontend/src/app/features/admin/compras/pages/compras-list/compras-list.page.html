@@ -1,0 +1,70 @@
+<app-page-header
+  title="Compras &amp; Recepción de Stock"
+  subtitle="Gestiona facturas de proveedores y entradas de mercancía">
+  <a routerLink="/admin/compras/nuevo" class="btn-primary">
+    <span class="material-icons">add_shopping_cart</span>
+    <span>Registrar Compra</span>
+  </a>
+</app-page-header>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando historial de compras..." />
+
+<div class="table-container" *ngIf="!cargando() && compras().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Folio / ID</th>
+        <th>Proveedor</th>
+        <th>Fecha</th>
+        <th>Registrado Por</th>
+        <th>Total Compra</th>
+        <th>Estado</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let compra of compras()">
+        <td class="font-semibold text-truncate" [title]="compra.id">
+          <a [routerLink]="['/admin/compras', compra.id, 'detalle']" class="compra-link">
+            #{{ compra.id.substring(0, 8) }}
+          </a>
+        </td>
+        <td class="font-semibold">{{ compra.proveedor?.nombre || 'Desconocido' }}</td>
+        <td class="text-muted">{{ compra.fecha | date: 'dd/MM/yyyy, hh:mm a' }}</td>
+        <td class="text-muted">{{ compra.usuario?.nombre || 'Admin' }}</td>
+        <td class="font-semibold">S/ {{ compra.total | number: '1.2-2' }}</td>
+        <td>
+          <app-status-badge [label]="compra.estado" />
+        </td>
+        <td class="actions-cell">
+          <a [routerLink]="['/admin/compras', compra.id, 'detalle']" class="btn-action-icon btn-detail" title="Ver Detalle">
+            <span class="material-icons">receipt</span>
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Paginación -->
+  <app-pagination
+    [pagina]="pagina()"
+    [limite]="limite()"
+    [total]="total()"
+    [paginas]="paginas()"
+    (paginaChange)="irAPagina($event)"
+    (limiteChange)="cambiarLimite($event)">
+  </app-pagination>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && compras().length === 0"
+  icon="receipt_long"
+  title="Sin compras registradas"
+  message="Aún no has registrado ninguna compra o reabastecimiento de mercancía.">
+  <a routerLink="/admin/compras/nuevo" class="btn-secondary">
+    <span class="material-icons">add_shopping_cart</span>
+    <span>Registrar la primera</span>
+  </a>
+</app-empty-state>

@@ -1,0 +1,94 @@
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg-card);
+  margin-top: 0.5rem;
+
+  .pagination-info {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+
+    .font-bold {
+      font-weight: 700;
+      color: var(--color-text-dark);
+    }
+  }
+
+  .pagination-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .limit-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .limit-select {
+      width: 65px;
+      height: 34px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: white;
+    }
+  }
+
+  .pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .btn-page-nav,
+    .btn-page-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      min-width: 34px;
+      padding: 0 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: white;
+      color: var(--color-text-dark);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not([disabled]) {
+        background-color: var(--color-bg-base);
+        border-color: var(--color-text-muted);
+      }
+
+      &[disabled] {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-page-nav {
+      .material-icons {
+        font-size: 1.25rem;
+      }
+    }
+
+    .btn-page-num.active {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
+
+    .pagination-ellipsis {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      padding: 0 0.25rem;
+      user-select: none;
+    }
+  }
+}

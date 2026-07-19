@@ -1,0 +1,249 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">{{ productoId() ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+    <p class="page-subtitle">
+      {{ productoId() ? 'Modifica los datos del producto seleccionado' : 'Registra un nuevo artículo para su venta o control en el inventario' }}
+    </p>
+  </div>
+  <a routerLink="/admin/productos" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver al Catálogo</span>
+  </a>
+</div>
+
+<div class="form-container card">
+  <!-- Error general -->
+  <div class="error-alert" *ngIf="error()">
+    <span class="material-icons">error_outline</span>
+    <span>{{ error() }}</span>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="form-grid">
+      
+      <!-- Nombre del Producto -->
+      <div class="form-group form-group-full">
+        <label class="form-label" for="nombre">Nombre del Producto</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          formControlName="nombre" 
+          class="form-control" 
+          placeholder="Ej. LECHE ENTERA GLORIA 1L"
+          appUppercase
+          maxlength="100" />
+        <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El nombre del producto es obligatorio.</span>
+        </div>
+        <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['minlength']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El nombre debe tener al menos 3 caracteres.</span>
+        </div>
+      </div>
+
+      <!-- Código de Barras -->
+      <div class="form-group">
+        <label class="form-label" for="codigoBarras">Código de Barras (8-13 dígitos)</label>
+        <input 
+          type="text" 
+          id="codigoBarras" 
+          formControlName="codigoBarras" 
+          class="form-control" 
+          placeholder="Ej. 7750102030405"
+          appOnlyNumbers
+          maxlength="13" />
+        <div class="error" *ngIf="form.get('codigoBarras')?.touched && form.get('codigoBarras')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El código de barras es obligatorio.</span>
+        </div>
+        <div class="error" *ngIf="form.get('codigoBarras')?.touched && form.get('codigoBarras')?.errors?.['pattern']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>Debe ser un código numérico válido de 8 a 13 dígitos.</span>
+        </div>
+      </div>
+
+      <!-- Categoría -->
+      <div class="form-group">
+        <label class="form-label" for="categoriaId">Categoría</label>
+        <select id="categoriaId" formControlName="categoriaId" class="form-control">
+          <option value="">-- Selecciona una categoría --</option>
+          <option *ngFor="let cat of categorias()" [value]="cat.id">
+            {{ cat.nombre }}
+          </option>
+        </select>
+        <div class="error" *ngIf="form.get('categoriaId')?.touched && form.get('categoriaId')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>La categoría es obligatoria para clasificar el producto.</span>
+        </div>
+      </div>
+
+      <!-- Costo de Compra -->
+      <div class="form-group">
+        <label class="form-label" for="costo">Costo de Adquisición / Compra</label>
+        <div class="input-addon-wrapper">
+          <span class="input-prefix">S/</span>
+          <input 
+            type="number" 
+            step="0.01" 
+            id="costo" 
+            formControlName="costo" 
+            class="form-control" 
+            placeholder="0.00" 
+            min="0" />
+        </div>
+        <div class="error" *ngIf="form.get('costo')?.touched && form.get('costo')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El costo es obligatorio.</span>
+        </div>
+        <div class="error" *ngIf="form.get('costo')?.touched && form.get('costo')?.errors?.['min']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El costo no puede ser negativo.</span>
+        </div>
+      </div>
+
+      <!-- Precio de Venta -->
+      <div class="form-group">
+        <label class="form-label" for="precioVenta">Precio de Venta al Público</label>
+        <div class="input-addon-wrapper">
+          <span class="input-prefix">S/</span>
+          <input 
+            type="number" 
+            step="0.01" 
+            id="precioVenta" 
+            formControlName="precioVenta" 
+            class="form-control" 
+            placeholder="0.00" 
+            min="0.01" />
+        </div>
+        <div class="error" *ngIf="form.get('precioVenta')?.touched && form.get('precioVenta')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El precio de venta es obligatorio.</span>
+        </div>
+        <div class="error" *ngIf="form.get('precioVenta')?.touched && form.get('precioVenta')?.errors?.['min']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El precio de venta debe ser mayor a 0.</span>
+        </div>
+      </div>
+
+      <!-- Stock Inicial -->
+      <div class="form-group">
+        <label class="form-label" for="stockActual">Stock Físico Inicial</label>
+        <input 
+          type="number" 
+          id="stockActual" 
+          formControlName="stockActual" 
+          class="form-control" 
+          placeholder="0" 
+          min="0"
+          step="1" />
+        <div class="error" *ngIf="form.get('stockActual')?.touched && form.get('stockActual')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El stock inicial es obligatorio.</span>
+        </div>
+        <div class="error" *ngIf="form.get('stockActual')?.touched && form.get('stockActual')?.errors?.['min']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El stock no puede ser negativo.</span>
+        </div>
+      </div>
+
+      <!-- Stock Mínimo -->
+      <div class="form-group">
+        <label class="form-label" for="stockMinimo">Stock Mínimo (Alerta)</label>
+        <input 
+          type="number" 
+          id="stockMinimo" 
+          formControlName="stockMinimo" 
+          class="form-control" 
+          placeholder="5" 
+          min="0"
+          step="1" />
+        <div class="error" *ngIf="form.get('stockMinimo')?.touched && form.get('stockMinimo')?.errors?.['required']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El stock mínimo es obligatorio.</span>
+        </div>
+        <div class="error" *ngIf="form.get('stockMinimo')?.touched && form.get('stockMinimo')?.errors?.['min']">
+          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
+          <span>El stock mínimo no puede ser negativo.</span>
+        </div>
+      </div>
+
+      <!-- Unidad de Medida -->
+      <div class="form-group form-group-full">
+        <label class="form-label" for="unidadMedida">Unidad de Medida</label>
+        <select id="unidadMedida" formControlName="unidadMedida" class="form-control">
+          <option value="UNIDAD">Unidad (Unidades enteras)</option>
+          <option value="KG">Kilogramo (Venta por peso)</option>
+          <option value="G">Gramo</option>
+          <option value="LITRO">Litro (Fluidos)</option>
+          <option value="ML">Mililitro</option>
+        </select>
+      </div>
+
+      <!-- Imagen del Producto -->
+      <div class="form-group form-group-full">
+        <label class="form-label">Imagen del Producto (Opcional)</label>
+        
+        <div class="upload-container" style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+          
+          <!-- Selector de archivo e Input de URL en un diseño limpio -->
+          <div class="upload-options" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+            
+            <!-- Botón de subida de archivo -->
+            <div class="file-upload-box" style="flex: 1; min-width: 200px; border: 2px dashed var(--color-border); border-radius: var(--border-radius-md); padding: 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s;" (click)="fileInput.click()">
+              <input 
+                type="file" 
+                #fileInput 
+                accept="image/*" 
+                style="display: none;" 
+                (change)="onFileSelected($event)" />
+              <span class="material-icons" style="font-size: 2rem; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">photo_camera</span>
+              <span class="text-sm font-semibold" style="color: var(--color-primary);">Subir desde dispositivo</span>
+            </div>
+            
+            <!-- Separador -->
+            <div class="upload-separator" style="color: var(--color-text-muted); font-weight: 600; text-align: center; padding: 0 0.5rem;">O</div>
+            
+            <!-- Entrada de URL de imagen -->
+            <div class="url-upload-box" style="flex: 1.5; min-width: 250px;">
+              <input 
+                type="text" 
+                id="imagenUrl" 
+                formControlName="imagenUrl" 
+                class="form-control" 
+                placeholder="Pegar URL de imagen (Ej. https://...)" />
+            </div>
+          </div>
+          
+          <!-- Previsualización en vivo -->
+          <div class="image-preview-wrapper" *ngIf="form.get('imagenUrl')?.value" style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem; background-color: var(--color-bg-base); padding: 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--color-border); width: fit-content;">
+            <img [src]="form.get('imagenUrl')?.value" alt="Previsualización" style="width: 80px; height: 80px; object-fit: cover; border-radius: var(--border-radius-md); border: 1px solid var(--color-border);" />
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+              <span class="text-xs font-semibold" style="color: var(--color-text-dark);">Vista previa de la imagen</span>
+              <button type="button" class="btn-cancel" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: fit-content; background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; cursor: pointer; border-radius: var(--border-radius-sm);" (click)="removeImage()">
+                Quitar Imagen
+              </button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Acciones de Formulario -->
+    <div class="form-actions">
+      <a routerLink="/admin/productos" class="btn-cancel">
+        Cancelar
+      </a>
+      <button 
+        type="submit" 
+        class="btn-primary btn-submit" 
+        [disabled]="form.invalid || guardando()">
+        <span class="material-icons" *ngIf="!guardando()">save</span>
+        <span>{{ guardando() ? 'Guardando...' : 'Guardar Producto' }}</span>
+      </button>
+    </div>
+
+  </form>
+</div>

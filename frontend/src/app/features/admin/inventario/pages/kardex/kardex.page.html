@@ -1,0 +1,343 @@
+<app-page-header
+  title="Kardex - Auditoría de Inventario"
+  subtitle="Monitorea cada entrada, salida y ajuste manual de stock del minimarket">
+  <a routerLink="/admin/inventario/ajuste" class="btn-primary">
+    <span class="material-icons">rule</span>
+    <span>Ajuste de Stock</span>
+  </a>
+</app-page-header>
+
+<div class="card filters-card" [formGroup]="filterForm">
+  <h3 class="filters-title">Filtrar Movimientos</h3>
+  <div class="filters-grid">
+    <div class="form-group">
+      <label class="form-label" for="tipo">Tipo de Movimiento</label>
+      <select id="tipo" formControlName="tipo" class="form-control">
+        <option value="">-- Todos --</option>
+        <option value="VENTA">Ventas (Salidas)</option>
+        <option value="COMPRA">Compras (Entradas)</option>
+        <option value="AJUSTE">Ajustes Manuales</option>
+        <option value="MERMA">Mermas / Pérdidas</option>
+        <option value="DEVOLUCION">Devoluciones</option>
+      </select>
+    </div>
+    <app-buscador-producto
+      label="Producto"
+      placeholder="Buscar producto..."
+      [selectedProducto]="productoSeleccionado()"
+      (productoSeleccionado)="seleccionarProducto($event)"
+      (productoDeseleccionado)="limpiarProducto()">
+    </app-buscador-producto>
+    <div class="form-group">
+      <label class="form-label" for="fechaInicio">Fecha Inicio</label>
+      <input type="date" id="fechaInicio" formControlName="fechaInicio" class="form-control" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fechaFin">Fecha Fin</label>
+      <input type="date" id="fechaFin" formControlName="fechaFin" class="form-control" />
+    </div>
+  </div>
+  <div class="filter-actions">
+    <button (click)="limpiarFiltros()" class="btn-secondary">
+      <span class="material-icons">restart_alt</span>
+      <span>Limpiar</span>
+    </button>
+    <button (click)="aplicarFiltros()" class="btn-primary">
+      <span class="material-icons">filter_alt</span>
+      <span>Aplicar Filtros</span>
+    </button>
+  </div>
+</div>
+
+<app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+<app-spinner *ngIf="cargando()" message="Cargando auditoría de inventario..." />
+
+<div class="table-container" *ngIf="!cargando() && movimientos().length > 0">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Fecha y Hora</th>
+        <th>Producto</th>
+        <th>Código de Barras</th>
+        <th>Tipo</th>
+        <th>Cantidad</th>
+        <th>Motivo / Referencia</th>
+        <th>Usuario</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let mov of movimientos()">
+        <td class="text-muted">{{ mov.fecha | date: 'dd/MM/yyyy, hh:mm a' }}</td>
+        <td class="font-semibold">{{ mov.producto?.nombre }}</td>
+        <td class="text-muted">{{ mov.producto?.codigoBarras }}</td>
+        <td>
+          <app-status-badge [label]="mov.tipo" [variant]="getTipoVariant(mov.tipo)" />
+        </td>
+        <td>
+          <span class="quantity-value font-semibold" [class.negative]="esSalida(mov.cantidad)">
+            {{ mov.cantidad > 0 ? '+' : '' }}{{ mov.cantidad | number: '1.0-2' }}
+          </span>
+        </td>
+        <td class="text-muted" style="max-width: 250px;" [title]="mov.motivo || ''">
+          <ng-container *ngIf="mov.tipo === 'VENTA' && mov.referenciaId; else checkCompra">
+            <button type="button" (click)="verDetalleReferencia(mov)" class="btn-ref-link" title="Ver detalle de la venta">
+              <span class="material-icons" style="font-size: 0.95rem; margin-right: 2px;">description</span>
+              Venta #{{ mov.referenciaId.substring(0, 8) }}
+            </button>
+          </ng-container>
+          <ng-template #checkCompra>
+            <ng-container *ngIf="mov.tipo === 'COMPRA' && mov.referenciaId; else defaultMotivo">
+              <button type="button" (click)="verDetalleReferencia(mov)" class="btn-ref-link btn-ref-compra" title="Ver detalle de la compra">
+                <span class="material-icons" style="font-size: 0.95rem; margin-right: 2px;">local_shipping</span>
+                Compra #{{ mov.referenciaId.substring(0, 8) }}
+              </button>
+            </ng-container>
+          </ng-template>
+          <ng-template #defaultMotivo>
+            {{ mov.motivo || 'Sin especificar' }}
+          </ng-template>
+        </td>
+        <td class="text-muted">{{ mov.usuario?.nombre || 'Sistema' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Paginación Premium -->
+  <div class="pagination-container">
+    <div class="pagination-info">
+      <span>Mostrando </span>
+      <strong class="font-bold">{{ (pagina() - 1) * limite() + 1 }}</strong>
+      <span> - </span>
+      <strong class="font-bold">{{ pagina() * limite() < total() ? pagina() * limite() : total() }}</strong>
+      <span> de </span>
+      <strong class="font-bold">{{ total() }}</strong>
+      <span> registros</span>
+    </div>
+
+    <div class="pagination-actions">
+      <!-- Cambiar límite -->
+      <div class="limit-selector">
+        <span class="text-xs text-muted">Mostrar:</span>
+        <select [value]="limite()" (change)="onLimiteChange($event)" class="form-control limit-select">
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+
+      <!-- Botones de páginas -->
+      <div class="pagination-pages">
+        <button
+          [disabled]="pagina() === 1"
+          (click)="irAPagina(pagina() - 1)"
+          class="btn-page-nav"
+          title="Página Anterior">
+          <span class="material-icons">chevron_left</span>
+        </button>
+
+        <button
+          *ngFor="let p of arrayPaginas"
+          [class.active]="p === pagina()"
+          (click)="irAPagina(p)"
+          class="btn-page-num">
+          {{ p }}
+        </button>
+
+        <button
+          [disabled]="pagina() === paginas()"
+          (click)="irAPagina(pagina() + 1)"
+          class="btn-page-nav"
+          title="Siguiente Página">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-empty-state
+  *ngIf="!cargando() && movimientos().length === 0"
+  icon="analytics"
+  title="Sin registros"
+  message="No se encontraron movimientos de inventario con los filtros aplicados." />
+
+<!-- Modal Detalle Venta -->
+<div class="modal-backdrop" *ngIf="ventaSeleccionada()" (click)="cerrarDetalles()">
+  <div class="modal-content ticket-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Venta</h3>
+      <button class="btn-close" (click)="cerrarDetalles()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="ticket-header">
+      <span class="material-icons ticket-icon">storefront</span>
+      <h3 class="ticket-title">MINIMARKET RUJEL</h3>
+      <p class="ticket-subtitle">Detalle de Transacción</p>
+      <span class="ticket-divider"></span>
+    </div>
+
+    <div class="ticket-meta">
+      <div class="meta-row">
+        <span>ID Venta:</span>
+        <strong class="text-mono">{{ ventaSeleccionada()?.id }}</strong>
+      </div>
+      <div class="meta-row">
+        <span>Fecha:</span>
+        <span>{{ ventaSeleccionada()?.fecha | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Cajero:</span>
+        <span>{{ ventaSeleccionada()?.usuario?.nombre || 'Sistema' }}</span>
+      </div>
+      <div class="meta-row" *ngIf="ventaSeleccionada()?.cliente">
+        <span>Cliente:</span>
+        <span>{{ ventaSeleccionada()?.cliente?.nombre }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Estado:</span>
+        <app-status-badge [label]="ventaSeleccionada()?.estado" />
+      </div>
+      <span class="ticket-divider"></span>
+    </div>
+
+    <div class="ticket-body">
+      <h4 class="body-title">Artículos</h4>
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Descripción</th>
+            <th style="width: 50px; text-align: center;">Cant.</th>
+            <th style="width: 70px; text-align: right;">Unit.</th>
+            <th style="width: 80px; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let det of ventaSeleccionada()?.detalles">
+            <td>
+              <div class="product-name">{{ det.producto?.nombre }}</div>
+              <div class="product-code">Cod: {{ det.producto?.codigoBarras }}</div>
+            </td>
+            <td style="text-align: center;" class="text-mono">{{ det.cantidad }}</td>
+            <td style="text-align: right;" class="text-mono">S/ {{ det.precioUnitario | number: '1.2-2' }}</td>
+            <td style="text-align: right;" class="text-mono font-semibold">S/ {{ det.subtotal | number: '1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <span class="ticket-divider"></span>
+    </div>
+
+    <div class="ticket-footer">
+      <div class="footer-total-row">
+        <span>TOTAL:</span>
+        <strong class="total-amount">S/ {{ ventaSeleccionada()?.total | number: '1.2-2' }}</strong>
+      </div>
+      <div class="footer-payment-detail" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: left;">
+        <div><strong>Método de Pago:</strong> {{ ventaSeleccionada()?.metodoPago }}</div>
+        <div *ngIf="ventaSeleccionada()?.metodoPago === 'MIXTO'">
+          <div>- Efectivo: S/ {{ ventaSeleccionada()?.montoEfectivo | number: '1.2-2' }}</div>
+          <div>- Tarjeta: S/ {{ ventaSeleccionada()?.montoTarjeta | number: '1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button (click)="cerrarDetalles()" class="btn-secondary">
+        Cerrar
+      </button>
+      <button (click)="imprimir()" class="btn-secondary" style="border: 1px solid var(--color-border); background-color: white; color: var(--color-text-dark); display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+        <span class="material-icons" style="font-size: 1.1rem;">print</span>
+        <span>Imprimir</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalle Compra -->
+<div class="modal-backdrop" *ngIf="compraSeleccionada()" (click)="cerrarDetalles()">
+  <div class="modal-content ticket-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Compra</h3>
+      <button class="btn-close" (click)="cerrarDetalles()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="ticket-header">
+      <span class="material-icons ticket-icon" style="color: var(--color-secondary);">local_shipping</span>
+      <h3 class="ticket-title">MINIMARKET RUJEL</h3>
+      <p class="ticket-subtitle">Ingreso de Mercadería</p>
+      <span class="ticket-divider"></span>
+    </div>
+
+    <div class="ticket-meta">
+      <div class="meta-row">
+        <span>ID Compra:</span>
+        <strong class="text-mono">{{ compraSeleccionada()?.id }}</strong>
+      </div>
+      <div class="meta-row">
+        <span>Fecha:</span>
+        <span>{{ compraSeleccionada()?.fecha | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+      </div>
+      <div class="meta-row" *ngIf="compraSeleccionada()?.proveedor">
+        <span>Proveedor:</span>
+        <span>{{ compraSeleccionada()?.proveedor?.nombre }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Registrado Por:</span>
+        <span>{{ compraSeleccionada()?.usuario?.nombre || 'Sistema' }}</span>
+      </div>
+      <div class="meta-row">
+        <span>Estado:</span>
+        <app-status-badge [label]="compraSeleccionada()?.estado" />
+      </div>
+      <span class="ticket-divider"></span>
+    </div>
+
+    <div class="ticket-body">
+      <h4 class="body-title">Artículos Recibidos</h4>
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Descripción</th>
+            <th style="width: 50px; text-align: center;">Cant.</th>
+            <th style="width: 70px; text-align: right;">Costo</th>
+            <th style="width: 80px; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let det of compraSeleccionada()?.detalles">
+            <td>
+              <div class="product-name">{{ det.producto?.nombre }}</div>
+              <div class="product-code">Cod: {{ det.producto?.codigoBarras }}</div>
+            </td>
+            <td style="text-align: center;" class="text-mono">{{ det.cantidad }}</td>
+            <td style="text-align: right;" class="text-mono">S/ {{ det.costoUnitario | number: '1.2-2' }}</td>
+            <td style="text-align: right;" class="text-mono font-semibold">S/ {{ det.subtotal | number: '1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <span class="ticket-divider"></span>
+    </div>
+
+    <div class="ticket-footer">
+      <div class="footer-total-row">
+        <span>TOTAL COSTO:</span>
+        <strong class="total-amount">S/ {{ compraSeleccionada()?.total | number: '1.2-2' }}</strong>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button (click)="cerrarDetalles()" class="btn-secondary">
+        Cerrar
+      </button>
+      <button (click)="imprimir()" class="btn-secondary" style="border: 1px solid var(--color-border); background-color: white; color: var(--color-text-dark); display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+        <span class="material-icons" style="font-size: 1.1rem;">print</span>
+        <span>Imprimir</span>
+      </button>
+    </div>
+  </div>
+</div>

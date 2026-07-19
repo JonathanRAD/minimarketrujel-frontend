@@ -1,0 +1,88 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Registrar Ajuste de Stock</h2>
+    <p class="page-subtitle">Modifica manualmente el inventario físico por mermas, pérdidas o auditorías</p>
+  </div>
+  <a routerLink="/admin/inventario" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver al Kardex</span>
+  </a>
+</div>
+
+<div class="form-container card">
+  <div class="error-alert" *ngIf="errorMessage()">
+    <span class="material-icons">error_outline</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+
+    <div class="form-group" style="position: relative;" *ngIf="!productoSeleccionado()">
+      <app-buscador-producto
+        label="Producto a Ajustar"
+        placeholder="Buscar producto por nombre o código..."
+        [clearOnSelect]="true"
+        (productoSeleccionado)="seleccionarProducto($event)">
+      </app-buscador-producto>
+    </div>
+
+    <div class="selected-product-card" *ngIf="productoSeleccionado()">
+      <span class="material-icons card-icon">inventory_2</span>
+      <div class="card-details">
+        <span class="product-name font-semibold">{{ productoSeleccionado()?.nombre }}</span>
+        <span class="product-info text-muted text-xs">
+          Cod: {{ productoSeleccionado()?.codigoBarras }} | Stock Actual: {{ productoSeleccionado()?.stockActual }}
+        </span>
+      </div>
+      <button type="button" class="btn-remove-selected" (click)="deseleccionarProducto()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="tipo">Concepto de Ajuste</label>
+      <select id="tipo" formControlName="tipo" class="form-control">
+        <option value="AJUSTE">Ajuste Manual (Corrección de inventario)</option>
+        <option value="MERMA">Merma / Pérdida (Productos rotos, vencidos, robados)</option>
+        <option value="DEVOLUCION">Devolución (Retorno de stock de clientes)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Sentido del Ajuste</label>
+      <div class="direction-toggle">
+        <button type="button" class="toggle-btn btn-in" [class.active]="sentido() === 'ENTRADA'" (click)="cambiarSentido('ENTRADA')">
+          <span class="material-icons">add</span>
+          <span>Entrada (Sumar Stock)</span>
+        </button>
+        <button type="button" class="toggle-btn btn-out" [class.active]="sentido() === 'SALIDA'" (click)="cambiarSentido('SALIDA')">
+          <span class="material-icons">remove</span>
+          <span>Salida (Restar Stock)</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="cantidad">Cantidad a Ajustar</label>
+      <input type="number" id="cantidad" formControlName="cantidad" class="form-control" placeholder="Ej. 5, 10..." min="1" />
+      <div class="error" *ngIf="form.get('cantidad')?.touched && form.get('cantidad')?.errors?.['required']">La cantidad es obligatoria.</div>
+      <div class="error" *ngIf="form.get('cantidad')?.touched && form.get('cantidad')?.errors?.['min']">La cantidad a ajustar debe ser al menos 1.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="motivo">Motivo / Justificación (Auditoría)</label>
+      <textarea id="motivo" formControlName="motivo" class="form-control textarea"
+        placeholder="Explica en detalle por qué se realiza este ajuste..." rows="3"></textarea>
+      <div class="error" *ngIf="form.get('motivo')?.touched && form.get('motivo')?.errors?.['required']">Debes ingresar un motivo que justifique el ajuste.</div>
+      <div class="error" *ngIf="form.get('motivo')?.touched && form.get('motivo')?.errors?.['minlength']">El motivo debe ser más descriptivo (mínimo 5 caracteres).</div>
+    </div>
+
+    <div class="form-actions">
+      <a routerLink="/admin/inventario" class="btn-cancel">Cancelar</a>
+      <button type="submit" class="btn-primary btn-submit" [disabled]="form.invalid || !productoSeleccionado() || guardando()">
+        <span class="material-icons" *ngIf="!guardando()">save</span>
+        <span>{{ guardando() ? 'Guardando...' : 'Registrar Ajuste' }}</span>
+      </button>
+    </div>
+  </form>
+</div>

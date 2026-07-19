@@ -1,0 +1,583 @@
+:root {
+  /* --- PALETA DE COLORES --- */
+  /* Primario: Terracota cálido (Cercano, amigable, evoca hogar y comida) */
+  --color-primary: #D95D39;
+  --color-primary-hover: #C54B28;
+  --color-primary-light: #FCECE8;
+
+  /* Secundario: Verde Orgánico/Fresco (Frescura de productos, orden, éxito) */
+  --color-secondary: #2C6A4F;
+  --color-secondary-hover: #204E3A;
+  --color-secondary-light: #EBF4F0;
+
+  /* Acento: Amarillo Dorado/Miel (Alertas, elementos destacados, botones de acción en POS) */
+  --color-accent: #E09F3E;
+  --color-accent-hover: #C9882B;
+  --color-accent-light: #FCF4E7;
+
+  /* Neutros (Fondos, textos y bordes) */
+  --color-text-dark: #2D2D2D;      /* Texto principal */
+  --color-text-muted: #6B7280;     /* Texto secundario/desactivado */
+  --color-bg-base: #F8F9FA;        /* Fondo general de la app */
+  --color-bg-card: #FFFFFF;        /* Tarjetas, contenedores, filas */
+  --color-border: #E5E7EB;         /* Líneas divisorias y bordes */
+
+  /* Estados */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+
+  /* --- TIPOGRAFÍA --- */
+  --font-family: 'Outfit', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* --- TAMAÑOS Y BORDES --- */
+  --border-radius-sm: 6px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
+
+  /* Alturas del POS */
+  --pos-button-height: 48px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s ease-in-out;
+}
+
+input, select, textarea {
+  font-family: var(--font-family);
+}
+
+/* --- ESTILOS COMUNES & UTILIDADES --- */
+
+/* Scrollbar estilizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Tarjeta estándar (Admin) */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Botón primario */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Botón secundario */
+.btn-secondary {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-secondary:hover {
+  background-color: var(--color-secondary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Tablas estilizadas */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  padding: 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.95rem;
+  color: var(--color-text-dark);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: var(--color-primary-light);
+}
+
+/* Formularios estándar */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-dark);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: 0.95rem;
+  color: var(--color-text-dark);
+  background-color: var(--color-bg-card);
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(217, 93, 57, 0.15);
+}
+
+/* Estilización premium de selectores (comboboxes) */
+select.form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.15rem;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+select.form-control:focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(44, 106, 79, 0.15);
+}
+
+/* Estilización premium de inputs de fecha y hora */
+input[type="date"].form-control,
+input[type="time"].form-control {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Feedback de validación de Angular */
+.form-control.ng-touched.ng-invalid {
+  border-color: var(--color-danger) !important;
+}
+.form-control.ng-touched.ng-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Mensajes de error */
+.error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* --- TICKET DIGITAL MONOCROMÁTICO (PANTALLA) --- */
+.ticket-modal {
+  background-color: white !important;
+  color: black !important;
+  
+  // Forzar color negro en pantalla para todos los textos del ticket, excluyendo los botones de acción
+  *:not(.modal-actions):not(.modal-actions *) {
+    color: black !important;
+  }
+}
+
+/* --- ESTILOS DE IMPRESIÓN GLOBAL (TICKETERA TÉRMICA 80MM / REPORTES A4) --- */
+@media print {
+  // Reporte Gerencial A4
+  body.print-report-mode {
+    @page {
+      margin: 15mm;
+      size: A4 portrait;
+    }
+
+    * {
+      color: black !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    background-color: white !important;
+    color: black !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    // Ocultar controles y barras de navegación
+    .admin-sidebar,
+    .admin-header,
+    .sidebar-overlay,
+    .filters-card,
+    .no-print,
+    button,
+    .btn-pos,
+    .btn-logout {
+      display: none !important;
+    }
+
+    .admin-container {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+
+    .admin-main {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      display: block !important;
+      background: white !important;
+    }
+
+    .admin-content {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      background: white !important;
+    }
+
+    .dashboard-content {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    .metrics-grid {
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr) !important;
+      gap: 15px !important;
+      margin-bottom: 25px !important;
+    }
+
+    .metric-card {
+      padding: 15px !important;
+      border: 1px solid #ddd !important;
+      border-radius: 8px !important;
+      background: #fafafa !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      page-break-inside: avoid !important;
+    }
+
+    .details-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 20px !important;
+      page-break-inside: avoid !important;
+    }
+
+    .card.detail-card {
+      border: 1px solid #ddd !important;
+      border-radius: 8px !important;
+      padding: 15px !important;
+      background: white !important;
+      page-break-inside: avoid !important;
+    }
+  }
+
+  body.print-ticket-mode {
+    @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+  
+  * {
+    color: black !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  background-color: white !important;
+  color: black !important;
+  width: 80mm !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  // Ocultar absolutamente todo en pantalla por defecto
+  * {
+    visibility: hidden;
+  }
+
+  // --- POS: Mostrar únicamente el ticket oculto print-only-ticket ---
+  .print-only-ticket,
+  .print-only-ticket * {
+    visibility: visible !important;
+  }
+
+  .print-only-ticket {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 4mm 0 4mm !important;
+    background-color: white !important;
+  }
+
+  // --- HISTORIAL: Mostrar únicamente el modal de ticket (ticket-modal) ---
+  .ticket-modal,
+  .ticket-modal * {
+    visibility: visible !important;
+  }
+
+  .modal-backdrop {
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    background-color: white !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    backdrop-filter: none !important;
+  }
+
+  .modal-content.ticket-modal {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 4mm 0 4mm !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  // Ocultar botones de pantalla, overlays de diálogos y checkmarks
+  .modal-actions,
+  .modal-header,
+  .btn-close,
+  .ticket-icon,
+  .success-modal-actions,
+  .success-animation-wrapper,
+  .modal-overlay,
+  .modal-card {
+    display: none !important;
+  }
+
+  // --- ESTILIZACIÓN COMPACTA DE BOLETA ---
+  .ticket-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin-bottom: 0.8rem !important;
+
+    .ticket-title {
+      font-size: 1.2rem !important;
+      font-weight: 800 !important;
+      letter-spacing: 1px !important;
+      color: black !important;
+      margin: 0 !important;
+    }
+
+    .ticket-subtitle {
+      font-size: 0.85rem !important;
+      text-transform: uppercase !important;
+      color: black !important;
+      margin: 0.2rem 0 0 0 !important;
+    }
+  }
+
+  .ticket-divider {
+    display: block !important;
+    width: 100% !important;
+    height: 1px !important;
+    border-top: 1px dashed black !important;
+    margin: 0.8rem 0 !important;
+  }
+
+  .ticket-meta {
+    font-size: 0.75rem !important;
+    color: black !important;
+    
+    .meta-row {
+      display: flex !important;
+      justify-content: space-between !important;
+      margin-bottom: 0.25rem !important;
+      color: black !important;
+    }
+  }
+
+  .ticket-body {
+    margin-top: 0.5rem !important;
+
+    .body-title {
+      font-size: 0.8rem !important;
+      margin: 0 0 0.5rem 0 !important;
+      font-weight: 700 !important;
+      color: black !important;
+    }
+  }
+
+  .ticket-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+
+    th {
+      font-size: 0.7rem !important;
+      font-weight: 700 !important;
+      border-bottom: 1px dashed black !important;
+      padding: 4px !important;
+      color: black !important;
+      text-transform: uppercase !important;
+    }
+
+    td {
+      font-size: 0.75rem !important;
+      padding: 6px 4px !important;
+      vertical-align: top !important;
+      color: black !important;
+    }
+
+    .product-name {
+      font-weight: 600 !important;
+      color: black !important;
+    }
+
+    .product-code {
+      font-size: 0.65rem !important;
+      color: black !important;
+    }
+  }
+
+  .ticket-footer {
+    margin-top: 0.5rem !important;
+    text-align: center !important;
+
+    .footer-total-row {
+      display: flex !important;
+      justify-content: space-between !important;
+      font-size: 1.05rem !important;
+      font-weight: 800 !important;
+      border-top: 1px dashed black !important;
+      padding-top: 0.5rem !important;
+      color: black !important;
+    }
+
+    .footer-thanks {
+      font-size: 0.7rem !important;
+      font-style: italic !important;
+      margin-top: 0.8rem !important;
+      color: black !important;
+    }
+    
+    .footer-anulada {
+      font-size: 0.9rem !important;
+      font-weight: 800 !important;
+      color: black !important;
+      border: 2px solid black !important;
+      padding: 0.3rem !important;
+      display: inline-block !important;
+      margin-top: 0.5rem !important;
+      transform: none !important;
+    }
+  }
+}
+}
+
+// Utilidades de Impresión Global
+.print-only {
+  display: none !important;
+}
+
+@media print {
+  body.print-report-mode {
+    .print-only {
+      display: block !important;
+    }
+  }
+}
+
+

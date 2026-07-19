@@ -1,0 +1,106 @@
+<div class="page-header" *ngIf="compra()">
+  <div>
+    <h2 class="page-title">Detalle de Compra #{{ compra()?.id?.substring(0, 8) }}</h2>
+    <p class="page-subtitle">Consulta la factura cargada y el estado del inventario</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <button *ngIf="compra()?.estado === 'RECIBIDA'" (click)="anularCompra()" class="btn-danger" [disabled]="anulando()">
+      <span class="material-icons">cancel</span>
+      <span>{{ anulando() ? 'Anulando...' : 'Anular Compra' }}</span>
+    </button>
+    <a routerLink="/admin/compras" class="btn-secondary">
+      <span class="material-icons">arrow_back</span>
+      <span>Volver a la lista</span>
+    </a>
+  </div>
+</div>
+
+<div class="error-alert" *ngIf="errorMessage()">
+  <span class="material-icons">error_outline</span>
+  <span>{{ errorMessage() }}</span>
+  <button class="btn-close-alert" (click)="errorMessage.set(null)"><span class="material-icons">close</span></button>
+</div>
+
+<div class="loading-state" *ngIf="cargando()">
+  <div class="spinner"></div>
+  <p>Cargando información de la compra...</p>
+</div>
+
+<div class="detail-grid" *ngIf="!cargando() && compra()">
+  <div class="card info-card">
+    <h3 class="card-title">Cabecera de Factura</h3>
+    <div class="info-list">
+      <div class="info-item">
+        <span class="material-icons">receipt</span>
+        <div>
+          <span class="info-label">Folio Compra</span>
+          <span class="info-value text-xs font-semibold">{{ compra()?.id }}</span>
+        </div>
+      </div>
+      <div class="info-item">
+        <span class="material-icons">local_shipping</span>
+        <div>
+          <span class="info-label">Proveedor</span>
+          <span class="info-value">{{ compra()?.proveedor?.nombre }}</span>
+          <span class="info-value text-muted text-xs block" *ngIf="compra()?.proveedor?.contacto">
+            Contacto: {{ compra()?.proveedor?.contacto }} ({{ compra()?.proveedor?.telefono || '-' }})
+          </span>
+        </div>
+      </div>
+      <div class="info-item">
+        <span class="material-icons">calendar_today</span>
+        <div>
+          <span class="info-label">Fecha de Ingreso</span>
+          <span class="info-value">{{ compra()?.fecha | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+        </div>
+      </div>
+      <div class="info-item">
+        <span class="material-icons">badge</span>
+        <div>
+          <span class="info-label">Registrado Por</span>
+          <span class="info-value">{{ compra()?.usuario?.nombre }} ({{ compra()?.usuario?.email }})</span>
+        </div>
+      </div>
+      <div class="info-item">
+        <span class="material-icons">info</span>
+        <div>
+          <span class="info-label">Estado</span>
+          <span class="status-badge" [class]="compra()!.estado.toLowerCase()">{{ compra()?.estado }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card items-card">
+    <h3 class="card-title">Productos Recibidos</h3>
+    <div class="table-container" style="margin-top: 1rem;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Código de Barras</th>
+            <th>Cantidad</th>
+            <th>Costo Unitario</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let det of compra()?.detalles">
+            <td class="font-semibold">{{ det.producto?.nombre }}</td>
+            <td class="text-muted">{{ det.producto?.codigoBarras || '-' }}</td>
+            <td>{{ det.cantidad | number: '1.0-2' }}</td>
+            <td>S/ {{ det.costoUnitario | number: '1.2-2' }}</td>
+            <td class="font-semibold">S/ {{ det.subtotal | number: '1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="total-summary">
+      <div class="total-row">
+        <span>Total Compra:</span>
+        <strong>S/ {{ compra()?.total | number: '1.2-2' }}</strong>
+      </div>
+    </div>
+  </div>
+</div>

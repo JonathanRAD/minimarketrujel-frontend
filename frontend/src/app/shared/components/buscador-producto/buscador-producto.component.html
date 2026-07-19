@@ -1,0 +1,44 @@
+<div class="search-field-container">
+  <label class="form-label" *ngIf="label">{{ label }}</label>
+  <div class="search-input-wrapper">
+    <span class="material-icons search-icon">search</span>
+    <input
+      type="text"
+      class="form-control"
+      [placeholder]="placeholder"
+      [value]="selectedProducto ? selectedProducto.nombre : textoBusqueda()"
+      (input)="buscar($any($event.target).value)"
+      [disabled]="!!selectedProducto && !clearOnSelect"
+      autocomplete="off"
+    />
+    <button
+      type="button"
+      class="btn-clear"
+      *ngIf="selectedProducto || (textoBusqueda() && !selectedProducto)"
+      (click)="limpiar()"
+    >
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <!-- Lista de resultados -->
+  <div class="search-results" *ngIf="productosEncontrados().length > 0">
+    <div
+      class="result-item"
+      *ngFor="let prod of productosEncontrados()"
+      (click)="seleccionar(prod)"
+    >
+      <div class="result-info">
+        <span class="result-name font-semibold">{{ prod.nombre }}</span>
+        <span class="result-code text-muted">Cod: {{ prod.codigoBarras }}</span>
+      </div>
+      <span class="result-stock" [class.low]="esBajoStock(prod)">
+        Stock: {{ prod.stockActual }} {{ prod.unidadMedida }}
+      </span>
+    </div>
+  </div>
+
+  <div class="search-loading" *ngIf="buscando()">
+    <span class="material-icons spin">sync</span>
+  </div>
+</div>
