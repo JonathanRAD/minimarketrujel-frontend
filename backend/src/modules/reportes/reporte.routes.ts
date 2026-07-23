@@ -10,5 +10,6 @@ router.use(requireAuth);
 router.use(requireRole('ADMIN'));
 
 router.get('/dashboard', asyncHandler(reporteController.obtenerDashboard));
+router.get('/excel/:tabla', asyncHandler(reporteController.exportarExcel));
 
 export default router;
