@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CompraService } from '../../services/compra.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Compra } from '../../../../../core/models/compra.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent } from '@shared/components';
 
@@ -14,6 +15,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class ComprasListPageComponent implements OnInit {
   private compraService = inject(CompraService);
+  public excelService = inject(ReporteExcelService);
 
   compras = signal<Compra[]>([]);
   cargando = signal(true);
@@ -61,6 +63,10 @@ export class ComprasListPageComponent implements OnInit {
     this.limite.set(l);
     this.pagina.set(1);
     this.cargarCompras();
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('compras', 'Reporte_Compras.xlsx');
   }
 }
 

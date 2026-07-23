@@ -1,10 +1,19 @@
 <app-page-header
   title="Proveedores"
   subtitle="Gestiona las empresas y contactos que surten al minimarket">
-  <a routerLink="/admin/proveedores/nuevo" class="btn-primary">
-    <span class="material-icons">add_business</span>
-    <span>Nuevo Proveedor</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'proveedores'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'proveedores') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/proveedores/nuevo" class="btn-primary">
+      <span class="material-icons">add_business</span>
+      <span>Nuevo Proveedor</span>
+    </a>
+  </div>
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />

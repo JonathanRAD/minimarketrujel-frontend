@@ -1,10 +1,19 @@
 <app-page-header
   title="Kardex - Auditoría de Inventario"
   subtitle="Monitorea cada entrada, salida y ajuste manual de stock del minimarket">
-  <a routerLink="/admin/inventario/ajuste" class="btn-primary">
-    <span class="material-icons">rule</span>
-    <span>Ajuste de Stock</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'inventario'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'inventario') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/inventario/ajuste" class="btn-primary">
+      <span class="material-icons">rule</span>
+      <span>Ajuste de Stock</span>
+    </a>
+  </div>
 </app-page-header>
 
 <div class="card filters-card" [formGroup]="filterForm">

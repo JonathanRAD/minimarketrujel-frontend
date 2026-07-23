@@ -1,6 +1,13 @@
 <app-page-header
   title="Auditoría de Ventas (Historial)"
   subtitle="Consulta boletas, tickets del POS y realiza anulaciones/devoluciones de inventario">
+  <button
+    class="btn-excel"
+    (click)="exportarExcel()"
+    [disabled]="excelService.exportando() && excelService.tablaActual() === 'ventas'">
+    <span class="material-icons">file_download</span>
+    <span>{{ (excelService.exportando() && excelService.tablaActual() === 'ventas') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+  </button>
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />

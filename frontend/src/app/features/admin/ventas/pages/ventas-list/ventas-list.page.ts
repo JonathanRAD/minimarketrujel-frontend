@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { VentaService } from '../../services/venta.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Venta, MetodoPago } from '../../../../../core/models/venta.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BadgeVariant, PaginationComponent, ConfirmModalService } from '@shared/components';
 
@@ -26,6 +27,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class VentasListPageComponent implements OnInit {
   private ventaService = inject(VentaService);
   private confirmModal = inject(ConfirmModalService);
+  public excelService = inject(ReporteExcelService);
 
   ventas = signal<Venta[]>([]);
   cargando = signal(true);
@@ -175,5 +177,9 @@ export class VentasListPageComponent implements OnInit {
     document.body.classList.add('print-ticket-mode');
     window.print();
     document.body.classList.remove('print-ticket-mode');
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('ventas', 'Reporte_Ventas.xlsx');
   }
 }

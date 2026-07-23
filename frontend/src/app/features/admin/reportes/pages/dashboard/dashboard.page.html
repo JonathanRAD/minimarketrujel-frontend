@@ -2,10 +2,26 @@
   title="Dashboard de Reportes y Estadísticas"
   subtitle="Monitorea el rendimiento financiero de las ventas, márgenes y deudas de clientes"
   class="no-print">
-  <button *ngIf="!cargando() && data()" (click)="imprimirReporte()" class="btn-primary">
-    <span class="material-icons">print</span>
-    <span>Imprimir PDF</span>
-  </button>
+  <div style="display: flex; gap: 0.75rem; align-items: center;" *ngIf="!cargando() && data()">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel('productos')"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'productos'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'productos') ? 'Generando Excel...' : 'Excel Productos' }}</span>
+    </button>
+    <button
+      class="btn-excel"
+      (click)="exportarExcel('ventas')"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'ventas'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'ventas') ? 'Generando Excel...' : 'Excel Ventas' }}</span>
+    </button>
+    <button (click)="imprimirReporte()" class="btn-primary">
+      <span class="material-icons">print</span>
+      <span>Imprimir PDF</span>
+    </button>
+  </div>
 </app-page-header>
 
 <!-- Encabezado para la impresión del reporte -->

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { InventarioService } from '../../services/inventario.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { ProductoService } from '../../../productos/services/producto.service';
 import { VentaService } from '../../../ventas/services/venta.service';
 import { CompraService } from '../../../compras/services/compra.service';
@@ -23,6 +24,7 @@ export class KardexPageComponent implements OnInit {
   private productoService = inject(ProductoService);
   private ventaService = inject(VentaService);
   private compraService = inject(CompraService);
+  public excelService = inject(ReporteExcelService);
 
   movimientos = signal<MovimientoInventario[]>([]);
   cargando = signal(true);
@@ -187,6 +189,10 @@ export class KardexPageComponent implements OnInit {
       window.print();
       document.body.classList.remove('print-ticket-mode');
     }, 250);
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('inventario', 'Reporte_Inventario_Kardex.xlsx');
   }
 }
 

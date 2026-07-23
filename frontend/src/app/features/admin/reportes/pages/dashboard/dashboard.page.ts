@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ReporteService } from '../../services/reporte.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { DashboardReporte } from '../../../../../core/models/reporte.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
 
@@ -15,6 +16,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class DashboardPageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private reporteService = inject(ReporteService);
+  public excelService = inject(ReporteExcelService);
 
   data = signal<DashboardReporte | null>(null);
   cargando = signal(true);
@@ -87,6 +89,10 @@ export class DashboardPageComponent implements OnInit {
     document.body.classList.add('print-report-mode');
     window.print();
     document.body.classList.remove('print-report-mode');
+  }
+
+  exportarExcel(tabla: string): void {
+    this.excelService.descargarExcel(tabla);
   }
 }
 

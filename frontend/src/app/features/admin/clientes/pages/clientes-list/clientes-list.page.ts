@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ClienteService } from '../../services/cliente.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Cliente } from '../../../../../core/models/cliente.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, ConfirmModalService } from '@shared/components';
 
@@ -15,6 +16,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class ClientesListPageComponent implements OnInit {
   private clienteService = inject(ClienteService);
   private confirmModal = inject(ConfirmModalService);
+  public excelService = inject(ReporteExcelService);
 
   clientes = signal<Cliente[]>([]);
   cargando = signal(true);
@@ -89,6 +91,10 @@ export class ClientesListPageComponent implements OnInit {
 
   getDeudaTotal(cliente: Cliente): number {
     return Number(cliente.deudaTotal ?? 0);
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('clientes', 'Reporte_Clientes_Creditos.xlsx');
   }
 }
 

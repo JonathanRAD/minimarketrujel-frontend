@@ -1,10 +1,19 @@
 <app-page-header
   title="Compras &amp; Recepción de Stock"
   subtitle="Gestiona facturas de proveedores y entradas de mercancía">
-  <a routerLink="/admin/compras/nuevo" class="btn-primary">
-    <span class="material-icons">add_shopping_cart</span>
-    <span>Registrar Compra</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'compras'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'compras') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/compras/nuevo" class="btn-primary">
+      <span class="material-icons">add_shopping_cart</span>
+      <span>Registrar Compra</span>
+    </a>
+  </div>
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />

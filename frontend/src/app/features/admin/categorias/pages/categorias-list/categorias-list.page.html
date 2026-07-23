@@ -1,10 +1,19 @@
 <app-page-header
   title="Categorías de Productos"
   subtitle="Gestiona las categorías del catálogo del minimarket">
-  <a routerLink="/admin/categorias/nuevo" class="btn-primary">
-    <span class="material-icons">add</span>
-    <span>Nueva Categoría</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'categorias'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'categorias') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/categorias/nuevo" class="btn-primary">
+      <span class="material-icons">add</span>
+      <span>Nueva Categoría</span>
+    </a>
+  </div>
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />

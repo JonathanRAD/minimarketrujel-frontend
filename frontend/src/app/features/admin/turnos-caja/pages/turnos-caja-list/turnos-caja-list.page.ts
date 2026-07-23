@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TurnoCajaService } from '../../services/turno-caja.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { TurnoCaja } from '../../../../../core/models/turno-caja.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent } from '@shared/components';
 
@@ -14,6 +15,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class TurnosCajaListPageComponent implements OnInit {
   private turnoCajaService = inject(TurnoCajaService);
+  public excelService = inject(ReporteExcelService);
 
   turnos = signal<TurnoCaja[]>([]);
   cargando = signal(true);
@@ -109,6 +111,10 @@ export class TurnosCajaListPageComponent implements OnInit {
           subtotal: cant * info.valor
         };
       });
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('turnos-caja', 'Reporte_Turnos_Caja.xlsx');
   }
 }
 

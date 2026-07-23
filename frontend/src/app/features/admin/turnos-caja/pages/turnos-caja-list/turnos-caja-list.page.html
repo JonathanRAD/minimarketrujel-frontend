@@ -1,10 +1,19 @@
 <app-page-header
   title="Historial de Arqueos &amp; Turnos de Caja"
   subtitle="Monitorea aperturas, cierres y las diferencias de efectivo declaradas en caja">
-  <a routerLink="/admin/turnos-caja/control" class="btn-primary">
-    <span class="material-icons">point_of_sale</span>
-    <span>Control de Caja Actual</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'turnos-caja'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'turnos-caja') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/turnos-caja/control" class="btn-primary">
+      <span class="material-icons">point_of_sale</span>
+      <span>Control de Caja Actual</span>
+    </a>
+  </div>
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />

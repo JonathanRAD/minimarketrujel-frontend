@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CategoriaService } from '../../services/categoria.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Categoria } from '../../../../../core/models/categoria.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
@@ -15,6 +16,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class CategoriasListPageComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
   private confirmModal = inject(ConfirmModalService);
+  public excelService = inject(ReporteExcelService);
 
   categorias = signal<Categoria[]>([]);
   cargando = signal(true);
@@ -77,5 +79,9 @@ export class CategoriasListPageComponent implements OnInit {
         this.errorMessage.set(err.error?.message || 'No se pudo cambiar el estado de la categoría');
       }
     });
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('categorias', 'Reporte_Categorias.xlsx');
   }
 }

@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProveedorService } from '../../services/proveedor.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Proveedor } from '../../../../../core/models/proveedor.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
 
@@ -16,6 +17,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class ProveedoresListPageComponent implements OnInit {
   private proveedorService = inject(ProveedorService);
   private confirmModal = inject(ConfirmModalService);
+  public excelService = inject(ReporteExcelService);
 
   proveedores = signal<Proveedor[]>([]);
   cargando = signal(true);
@@ -61,6 +63,10 @@ export class ProveedoresListPageComponent implements OnInit {
         this.errorMessage.set(err.error?.message || 'No se pudo eliminar el proveedor');
       }
     });
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('proveedores', 'Reporte_Proveedores.xlsx');
   }
 }
 

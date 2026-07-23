@@ -1,10 +1,19 @@
 <app-page-header
   title="Catálogo de Productos"
   subtitle="Gestiona todos los productos del minimarket: precios, stock y categorías">
-  <a routerLink="/admin/productos/nuevo" class="btn-primary">
-    <span class="material-icons">add</span>
-    <span>Nuevo Producto</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'productos'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'productos') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/productos/nuevo" class="btn-primary">
+      <span class="material-icons">add</span>
+      <span>Nuevo Producto</span>
+    </a>
+  </div>
 </app-page-header>
 
 <!-- Buscador -->

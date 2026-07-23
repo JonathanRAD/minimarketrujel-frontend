@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductoService } from '../../services/producto.service';
+import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Producto } from '../../../../../core/models/producto.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, ConfirmModalService } from '@shared/components';
 
@@ -15,6 +16,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class ProductosListPageComponent implements OnInit {
   private productoService = inject(ProductoService);
   private confirmModal = inject(ConfirmModalService);
+  public excelService = inject(ReporteExcelService);
 
   productos = signal<Producto[]>([]);
   cargando = signal(true);
@@ -89,5 +91,9 @@ export class ProductosListPageComponent implements OnInit {
 
   esStockBajo(producto: Producto): boolean {
     return Number(producto.stockActual) <= Number(producto.stockMinimo);
+  }
+
+  exportarExcel(): void {
+    this.excelService.descargarExcel('productos', 'Reporte_Catalogo_Productos.xlsx');
   }
 }

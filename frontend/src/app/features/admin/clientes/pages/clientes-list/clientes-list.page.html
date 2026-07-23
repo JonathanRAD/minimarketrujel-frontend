@@ -1,10 +1,19 @@
 <app-page-header
   title="Clientes &amp; Cuentas por Cobrar"
   subtitle="Gestiona el padrón de clientes y controla deudas de fiados">
-  <a routerLink="/admin/clientes/nuevo" class="btn-primary">
-    <span class="material-icons">person_add</span>
-    <span>Nuevo Cliente</span>
-  </a>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <button
+      class="btn-excel"
+      (click)="exportarExcel()"
+      [disabled]="excelService.exportando() && excelService.tablaActual() === 'clientes'">
+      <span class="material-icons">file_download</span>
+      <span>{{ (excelService.exportando() && excelService.tablaActual() === 'clientes') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
+    </button>
+    <a routerLink="/admin/clientes/nuevo" class="btn-primary">
+      <span class="material-icons">person_add</span>
+      <span>Nuevo Cliente</span>
+    </a>
+  </div>
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />

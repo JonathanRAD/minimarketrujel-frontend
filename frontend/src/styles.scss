@@ -134,6 +134,36 @@ input, select, textarea {
   transform: translateY(-1px);
 }
 
+/* Botón Excel Especializado (Verde Esmeralda Corporativo) */
+.btn-excel {
+  background-color: #107C41; // Verde oficial Microsoft Excel
+  color: #FFFFFF;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(16, 124, 65, 0.2);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-excel:hover:not(:disabled) {
+  background-color: #0E6B37;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 124, 65, 0.3);
+}
+.btn-excel:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn-excel:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 /* Tablas estilizadas */
 .table-container {
   width: 100%;
