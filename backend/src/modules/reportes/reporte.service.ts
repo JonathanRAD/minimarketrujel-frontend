@@ -81,6 +81,7 @@ export class ReporteService {
         valorStockCosto,
         valorStockVenta,
         estado: p.activo ? 'ACTIVO' : 'INACTIVO',
+        createdAt: p.createdAt,
       };
     });
 
@@ -103,6 +104,7 @@ export class ReporteService {
         { header: 'Valor Stock (Costo)', key: 'valorStockCosto', width: 18, tipo: 'moneda', esTotalizable: true },
         { header: 'Valor Stock (Venta)', key: 'valorStockVenta', width: 18, tipo: 'moneda', esTotalizable: true },
         { header: 'Estado', key: 'estado', width: 12, tipo: 'estado' },
+        { header: 'Fecha y Hora de Agregado', key: 'createdAt', width: 22, tipo: 'fecha' },
       ],
       datos: datosFormateados,
     });
