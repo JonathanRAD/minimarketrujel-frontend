@@ -20,6 +20,7 @@ export const filtrarClientesSchema = z.object({
   limite: z.coerce.number().optional().default(10),
   pagina: z.coerce.number().optional().default(1),
   todo: z.preprocess((val) => val === 'true', z.boolean().optional()),
+  ordenarPor: z.enum(['reciente', 'antiguo', 'nombre_asc', 'nombre_desc']).optional(),
 });
 
 export type FiltrarClientesDto = z.infer<typeof filtrarClientesSchema>;

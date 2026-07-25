@@ -4,12 +4,12 @@ import { RouterLink } from '@angular/router';
 import { CompraService } from '../../services/compra.service';
 import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Compra } from '../../../../../core/models/compra.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, TableFilterComponent, SortOption } from '@shared/components';
 
 @Component({
   selector: 'app-compras-list-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent],
+  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, TableFilterComponent],
   templateUrl: './compras-list.page.html',
   styleUrl: './compras-list.page.scss'
 })
@@ -20,6 +20,14 @@ export class ComprasListPageComponent implements OnInit {
   compras = signal<Compra[]>([]);
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
+  ordenarPor = signal('reciente');
+
+  sortOptions: SortOption[] = [
+    { label: 'Más reciente', value: 'reciente', icon: 'schedule' },
+    { label: 'Más antigua', value: 'antigua', icon: 'history' },
+    { label: 'Mayor monto', value: 'monto_desc', icon: 'attach_money' },
+    { label: 'Menor monto', value: 'monto_asc', icon: 'money_off' },
+  ];
 
   // Paginación
   pagina = signal<number>(1);
@@ -37,6 +45,7 @@ export class ComprasListPageComponent implements OnInit {
     this.compraService.listar({
       pagina: this.pagina(),
       limite: this.limite(),
+      ordenarPor: this.ordenarPor(),
     }).subscribe({
       next: (res) => {
         this.compras.set(res.compras);
@@ -51,6 +60,12 @@ export class ComprasListPageComponent implements OnInit {
         this.errorMessage.set(err.error?.message || 'Error al cargar el historial de compras');
       }
     });
+  }
+
+  cambiarOrden(orden: string) {
+    this.ordenarPor.set(orden);
+    this.pagina.set(1);
+    this.cargarCompras();
   }
 
   irAPagina(p: number) {

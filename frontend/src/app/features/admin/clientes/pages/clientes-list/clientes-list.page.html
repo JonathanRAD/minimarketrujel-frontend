@@ -9,12 +9,22 @@
       <span class="material-icons">file_download</span>
       <span>{{ (excelService.exportando() && excelService.tablaActual() === 'clientes') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
     </button>
-    <a routerLink="/admin/clientes/nuevo" class="btn-primary">
+    <button (click)="abrirModalForm()" class="btn-primary">
       <span class="material-icons">person_add</span>
       <span>Nuevo Cliente</span>
-    </a>
+    </button>
   </div>
 </app-page-header>
+
+<!-- Filtros y Ordenamiento -->
+<app-table-filter
+  [options]="sortOptions"
+  [selectedValue]="ordenarPor()"
+  [searchValue]="busqueda()"
+  placeholderSearch="Buscar cliente por nombre o teléfono..."
+  (searchChange)="buscar($event)"
+  (sortChange)="cambiarOrden($event)">
+</app-table-filter>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
@@ -51,9 +61,9 @@
           <a [routerLink]="['/admin/clientes', cliente.id, 'detalle']" class="btn-action-icon btn-detail" title="Ver Ficha">
             <span class="material-icons">account_circle</span>
           </a>
-          <a [routerLink]="['/admin/clientes', cliente.id, 'editar']" class="btn-action-icon btn-edit" title="Editar">
+          <button (click)="abrirModalForm(cliente.id)" class="btn-action-icon btn-edit" title="Editar">
             <span class="material-icons">edit</span>
-          </a>
+          </button>
           <button (click)="eliminar(cliente)" class="btn-action-icon btn-delete" title="Eliminar">
             <span class="material-icons">delete</span>
           </button>

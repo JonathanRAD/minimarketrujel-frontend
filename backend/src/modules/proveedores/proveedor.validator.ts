@@ -12,3 +12,10 @@ export const actualizarProveedorSchema = crearProveedorSchema.partial();
 
 export type CrearProveedorDto = z.infer<typeof crearProveedorSchema>;
 export type ActualizarProveedorDto = z.infer<typeof actualizarProveedorSchema>;
+
+export const filtrarProveedoresSchema = z.object({
+  busqueda: z.string().optional(),
+  ordenarPor: z.enum(['reciente', 'antiguo', 'nombre_asc', 'nombre_desc']).optional(),
+});
+
+export type FiltrarProveedoresDto = z.infer<typeof filtrarProveedoresSchema>;

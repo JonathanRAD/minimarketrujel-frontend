@@ -15,3 +15,4 @@ export { BuscadorProductoComponent } from './buscador-producto/buscador-producto
 export { PaginationComponent } from './pagination/pagination.component';
 export { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 export { ConfirmModalService, ConfirmOptions } from './confirm-modal/confirm-modal.service';
+export { TableFilterComponent, SortOption } from './table-filter/table-filter.component';

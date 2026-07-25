@@ -58,6 +58,13 @@
   </div>
 </div>
 
+<app-table-filter
+  [options]="sortOptions"
+  [selectedValue]="ordenarPor()"
+  [showSearch]="false"
+  (sortChange)="cambiarOrden($event)">
+</app-table-filter>
+
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
 <app-spinner *ngIf="cargando()" message="Cargando auditoría de inventario..." />

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { proveedorService } from './proveedor.service';
-import { crearProveedorSchema, actualizarProveedorSchema } from './proveedor.validator';
+import { crearProveedorSchema, actualizarProveedorSchema, filtrarProveedoresSchema } from './proveedor.validator';
 
 export class ProveedorController {
   async crear(req: Request, res: Response): Promise<void> {
@@ -9,8 +9,9 @@ export class ProveedorController {
     res.status(201).json({ success: true, data: proveedor });
   }
 
-  async listar(_req: Request, res: Response): Promise<void> {
-    const proveedores = await proveedorService.listar();
+  async listar(req: Request, res: Response): Promise<void> {
+    const filtros = filtrarProveedoresSchema.parse(req.query);
+    const proveedores = await proveedorService.listar(filtros);
     res.json({ success: true, data: proveedores });
   }
 

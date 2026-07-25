@@ -31,6 +31,7 @@ export const filtrarTurnosSchema = z.object({
   hasta: z.string().optional(),
   limite: z.coerce.number().optional().default(10),
   pagina: z.coerce.number().optional().default(1),
+  ordenarPor: z.enum(['reciente', 'antiguo', 'monto_desc', 'monto_asc']).optional(),
 });
 
 export type FiltrarTurnosDto = z.infer<typeof filtrarTurnosSchema>;

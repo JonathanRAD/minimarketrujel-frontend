@@ -25,6 +25,7 @@ export const filtrarComprasSchema = z.object({
   hasta: z.string().optional(),
   limite: z.coerce.number().optional().default(10),
   pagina: z.coerce.number().optional().default(1),
+  ordenarPor: z.enum(['reciente', 'antigua', 'monto_desc', 'monto_asc']).optional(),
 });
 
 export type FiltrarComprasDto = z.infer<typeof filtrarComprasSchema>;

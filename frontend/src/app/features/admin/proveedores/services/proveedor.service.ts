@@ -15,9 +15,13 @@ export class ProveedorService {
 
   constructor(private http: HttpClient) {}
 
-  listar(): Observable<Proveedor[]> {
+  listar(filtros?: { busqueda?: string; ordenarPor?: string }): Observable<Proveedor[]> {
+    const params: any = {};
+    if (filtros?.busqueda) params.busqueda = filtros.busqueda;
+    if (filtros?.ordenarPor) params.ordenarPor = filtros.ordenarPor;
+
     return this.http
-      .get<ApiResponse<Proveedor[]>>(this.baseUrl)
+      .get<ApiResponse<Proveedor[]>>(this.baseUrl, { params })
       .pipe(map((res) => res.data));
   }
 

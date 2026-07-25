@@ -1,0 +1,158 @@
+<div class="modal-dialog-header" *ngIf="dialogRef">
+  <h2 mat-dialog-title class="dialog-title font-bold">
+    <span class="material-icons title-icon">local_offer</span>
+    <span>{{ esEdicion() ? 'Editar Oferta / Promoción' : 'Nueva Oferta / Promoción' }}</span>
+  </h2>
+  <button type="button" class="btn-close-dialog" (click)="cerrar()" title="Cerrar ventana">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<app-page-header
+  *ngIf="!dialogRef"
+  [title]="esEdicion() ? 'Editar Oferta / Promoción' : 'Nueva Oferta / Promoción'"
+  subtitle="Configura los detalles del descuento, vigencia y producto o categoría en promoción">
+  <a routerLink="/admin/ofertas" class="btn-secondary">
+    <span class="material-icons">arrow_back</span>
+    <span>Volver al Catálogo</span>
+  </a>
+</app-page-header>
+
+<div class="form-container" [class.card]="!dialogRef" [class.in-modal]="dialogRef">
+  <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
+
+  <app-spinner *ngIf="cargando()" message="Cargando información de la oferta..." />
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" *ngIf="!cargando()">
+    <div class="form-grid">
+
+      <!-- Título de la Oferta -->
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Título de la Oferta / Promoción</mat-label>
+        <input
+          matInput
+          placeholder="Ej: 20% OFF en Galletas Costa, 3x2 Gaseosas Inka Kola..."
+          formControlName="titulo"
+        />
+        <mat-icon matPrefix>local_offer</mat-icon>
+        <mat-error *ngIf="form.get('titulo')?.hasError('required')">El título es obligatorio</mat-error>
+        <mat-error *ngIf="form.get('titulo')?.hasError('minlength')">Debe tener al menos 3 caracteres</mat-error>
+      </mat-form-field>
+
+      <!-- Descripción opcional -->
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Descripción o Nota Interna</mat-label>
+        <textarea
+          matInput
+          rows="2"
+          placeholder="Detalles sobre la campaña de venta o condiciones..."
+          formControlName="descripcion"
+        ></textarea>
+        <mat-icon matPrefix>notes</mat-icon>
+      </mat-form-field>
+
+      <!-- Tipo de Promoción -->
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo de Descuento / Regla</mat-label>
+        <mat-select formControlName="tipo">
+          <mat-option value="PORCENTAJE">Porcentaje % Descuento</mat-option>
+          <mat-option value="PRECIO_FIJO">Precio Oferta Directo (S/)</mat-option>
+          <mat-option value="PROMO_NXM">Promoción NxM (Llevas N, Pagas M)</mat-option>
+          <mat-option value="VOLUMEN">Descuento por Volumen (Por Cantidad)</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>category</mat-icon>
+      </mat-form-field>
+
+      <!-- Alcance (Producto o Categoría) -->
+      <div class="alcance-section">
+        <label class="form-label required">Alcance de la Oferta</label>
+        <mat-radio-group class="radio-group-mat" [value]="alcanceTipo()" (change)="alcanceTipo.set($event.value)">
+          <mat-radio-button value="PRODUCTO" color="primary">Producto Específico</mat-radio-button>
+          <mat-radio-button value="CATEGORIA" color="primary">Toda una Categoría</mat-radio-button>
+        </mat-radio-group>
+      </div>
+
+      <!-- Selector de Producto si Aplica -->
+      <div class="col-span-2" *ngIf="alcanceTipo() === 'PRODUCTO'">
+        <label class="form-label required" style="margin-bottom: 0.5rem; display: block;">Producto en Oferta</label>
+        <app-buscador-producto
+          (productoSeleccionado)="productoSeleccionado.set($event)"
+          [selectedProducto]="productoSeleccionado()"
+          placeholder="Buscar producto por nombre o código de barras...">
+        </app-buscador-producto>
+      </div>
+
+      <!-- Selector de Categoría si Aplica -->
+      <mat-form-field appearance="outline" class="col-span-2" *ngIf="alcanceTipo() === 'CATEGORIA'">
+        <mat-label>Categoría en Oferta</mat-label>
+        <mat-select formControlName="categoriaId">
+          <mat-option value="">-- Seleccionar Categoría --</mat-option>
+          <mat-option *ngFor="let cat of categorias()" [value]="cat.id">
+            {{ cat.nombre }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>label</mat-icon>
+      </mat-form-field>
+
+      <!-- Campos de Valor según el Tipo -->
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'PORCENTAJE'">
+        <mat-label>Porcentaje de Descuento (%)</mat-label>
+        <input matInput type="number" min="1" max="100" formControlName="valorDescuento" />
+        <span matSuffix>%</span>
+        <mat-icon matPrefix>percent</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'PRECIO_FIJO' || form.value.tipo === 'VOLUMEN'">
+        <mat-label>Precio Especial de Oferta (S/)</mat-label>
+        <input matInput type="number" min="0" step="0.1" formControlName="valorDescuento" />
+        <span matPrefix>S/&nbsp;</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'VOLUMEN'">
+        <mat-label>Cantidad Mínima para Descuento</mat-label>
+        <input matInput type="number" min="2" formControlName="cantidadMinima" />
+        <mat-icon matPrefix>format_list_numbered</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'PROMO_NXM'">
+        <mat-label>Cantidad a Comprar (N)</mat-label>
+        <input matInput type="number" min="2" formControlName="cantidadMinima" />
+        <mat-icon matPrefix>shopping_basket</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'PROMO_NXM'">
+        <mat-label>Cantidad Gratis (M)</mat-label>
+        <input matInput type="number" min="1" formControlName="cantidadGratis" />
+        <mat-icon matPrefix>card_giftcard</mat-icon>
+      </mat-form-field>
+
+      <!-- Fechas de Vigencia -->
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de Inicio</mat-label>
+        <input matInput type="date" formControlName="fechaInicio" />
+        <mat-icon matPrefix>event</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de Término / Vencimiento</mat-label>
+        <input matInput type="date" formControlName="fechaFin" />
+        <mat-icon matPrefix>event_busy</mat-icon>
+      </mat-form-field>
+
+      <!-- Estado -->
+      <div class="col-span-2 checkbox-container">
+        <mat-checkbox formControlName="activo" color="primary">
+          Oferta Activa Inmediatamente
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="cerrar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        <span class="material-icons">save</span>
+        <span>{{ guardando() ? 'Guardando...' : (esEdicion() ? 'Actualizar Oferta' : 'Crear Oferta') }}</span>
+      </button>
+    </div>
+  </form>
+</div>

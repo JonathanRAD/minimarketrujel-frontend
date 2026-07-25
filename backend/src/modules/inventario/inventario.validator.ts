@@ -14,6 +14,7 @@ export const filtrarMovimientosSchema = z.object({
   fechaFin: z.string().optional(),
   limite: z.coerce.number().optional().default(10),
   pagina: z.coerce.number().optional().default(1),
+  ordenarPor: z.enum(['reciente', 'antiguo', 'cantidad_desc', 'cantidad_asc']).optional(),
 });
 
 export type CrearAjusteDto = z.infer<typeof crearAjusteSchema>;

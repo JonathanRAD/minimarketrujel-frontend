@@ -14,7 +14,15 @@
 
 <app-spinner *ngIf="cargando() && ventas().length === 0" message="Cargando historial de ventas..." />
 
-<!-- Panel de Filtros -->
+<!-- Ordenamiento de Ventas -->
+<app-table-filter
+  [options]="sortOptions"
+  [selectedValue]="ordenarPor()"
+  [showSearch]="false"
+  (sortChange)="cambiarOrden($event)">
+</app-table-filter>
+
+<!-- Panel de Filtros por Fecha -->
 <div class="card filter-card" *ngIf="!cargando() || ventas().length > 0">
   <div class="filter-grid">
     <div class="form-group">

@@ -33,12 +33,13 @@ export class TurnoCajaService {
       .pipe(map((res) => res.data));
   }
 
-  listar(filtros?: { desde?: string; hasta?: string; limite?: number; pagina?: number }): Observable<PaginatedTurnos> {
+  listar(filtros?: { desde?: string; hasta?: string; limite?: number; pagina?: number; ordenarPor?: string }): Observable<PaginatedTurnos> {
     const params: any = {};
     if (filtros?.desde) params.desde = filtros.desde;
     if (filtros?.hasta) params.hasta = filtros.hasta;
     if (filtros?.limite) params.limite = filtros.limite.toString();
     if (filtros?.pagina) params.pagina = filtros.pagina.toString();
+    if (filtros?.ordenarPor) params.ordenarPor = filtros.ordenarPor;
 
     return this.http
       .get<ApiResponse<PaginatedTurnos>>(this.baseUrl, { params })

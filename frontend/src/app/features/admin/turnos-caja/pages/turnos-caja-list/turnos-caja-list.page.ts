@@ -4,12 +4,12 @@ import { RouterLink } from '@angular/router';
 import { TurnoCajaService } from '../../services/turno-caja.service';
 import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { TurnoCaja } from '../../../../../core/models/turno-caja.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, TableFilterComponent, SortOption } from '@shared/components';
 
 @Component({
   selector: 'app-turnos-caja-list-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent],
+  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, TableFilterComponent],
   templateUrl: './turnos-caja-list.page.html',
   styleUrl: './turnos-caja-list.page.scss'
 })
@@ -20,13 +20,21 @@ export class TurnosCajaListPageComponent implements OnInit {
   turnos = signal<TurnoCaja[]>([]);
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
+  ordenarPor = signal('reciente');
+
+  sortOptions: SortOption[] = [
+    { label: 'Más reciente', value: 'reciente', icon: 'schedule' },
+    { label: 'Más antiguo', value: 'antiguo', icon: 'history' },
+    { label: 'Mayor monto inicial', value: 'monto_desc', icon: 'attach_money' },
+    { label: 'Menor monto inicial', value: 'monto_asc', icon: 'money_off' },
+  ];
 
   // Paginación
   pagina = signal<number>(1);
   limite = signal<number>(10);
   total = signal<number>(0);
   paginas = signal<number>(1);
-  
+
   // Detalle del Arqueo
   turnoSeleccionado = signal<TurnoCaja | null>(null);
 
@@ -40,6 +48,7 @@ export class TurnosCajaListPageComponent implements OnInit {
     this.turnoCajaService.listar({
       pagina: this.pagina(),
       limite: this.limite(),
+      ordenarPor: this.ordenarPor(),
     }).subscribe({
       next: (res) => {
         this.turnos.set(res.turnos);
@@ -54,6 +63,12 @@ export class TurnosCajaListPageComponent implements OnInit {
         this.errorMessage.set(err.error?.message || 'Error al cargar el historial de turnos de caja');
       }
     });
+  }
+
+  cambiarOrden(orden: string) {
+    this.ordenarPor.set(orden);
+    this.pagina.set(1);
+    this.cargarTurnos();
   }
 
   irAPagina(p: number) {

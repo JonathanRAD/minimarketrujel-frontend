@@ -11,8 +11,8 @@ export class ProveedorService {
     return proveedorRepository.crear(data);
   }
 
-  async listar() {
-    return proveedorRepository.listar({ activo: true });
+  async listar(filtros: { busqueda?: string; ordenarPor?: string } = {}) {
+    return proveedorRepository.listar({ activo: true, ...filtros });
   }
 
   async obtenerPorId(id: string) {

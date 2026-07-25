@@ -1,4 +1,14 @@
-<div class="page-header">
+<div class="modal-dialog-header" *ngIf="dialogRef">
+  <h2 mat-dialog-title class="dialog-title font-bold">
+    <span class="material-icons title-icon">local_shipping</span>
+    <span>{{ modoEditar() ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</span>
+  </h2>
+  <button type="button" class="btn-close-dialog" (click)="cerrar()" title="Cerrar ventana">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="page-header" *ngIf="!dialogRef">
   <div>
     <h2 class="page-title">{{ modoEditar() ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h2>
     <p class="page-subtitle">
@@ -11,11 +21,8 @@
   </a>
 </div>
 
-<div class="form-container card">
-  <div class="error-alert" *ngIf="errorMessage()">
-    <span class="material-icons">error_outline</span>
-    <span>{{ errorMessage() }}</span>
-  </div>
+<div class="form-container" [class.card]="!dialogRef" [class.in-modal]="dialogRef">
+  <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
   <div class="loading-form" *ngIf="cargandoDatos()">
     <div class="spinner"></div>
@@ -23,69 +30,75 @@
   </div>
 
   <form [formGroup]="form" (ngSubmit)="guardar()" *ngIf="!cargandoDatos()">
-    <div class="form-group">
-      <label class="form-label" for="nombre">Nombre de la Empresa / Distribuidora</label>
-      <input type="text" id="nombre" formControlName="nombre" class="form-control"
-        placeholder="Ej. DISTRIBUIDORA COCA-COLA, LÁCTEOS DEL SUR..." appUppercase maxlength="100" autocomplete="off" />
-      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['required']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>El nombre es obligatorio.</span>
-      </div>
-      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['minlength']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>El nombre debe tener al menos 3 caracteres.</span>
-      </div>
-      <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['maxlength']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>El nombre no puede superar los 100 caracteres.</span>
-      </div>
-    </div>
+    
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+      <mat-label>Nombre de la Empresa / Distribuidora</mat-label>
+      <input
+        matInput
+        formControlName="nombre"
+        placeholder="Ej. DISTRIBUIDORA COCA-COLA, LÁCTEOS DEL SUR..."
+        appUppercase
+        maxlength="100"
+        autocomplete="off" />
+      <mat-icon matPrefix>business</mat-icon>
+      <mat-error *ngIf="form.get('nombre')?.hasError('required')">El nombre es obligatorio.</mat-error>
+      <mat-error *ngIf="form.get('nombre')?.hasError('minlength')">Debe tener al menos 3 caracteres.</mat-error>
+    </mat-form-field>
 
-    <div class="form-group">
-      <label class="form-label" for="contacto">Persona de Contacto (Opcional)</label>
-      <input type="text" id="contacto" formControlName="contacto" class="form-control"
-        placeholder="Ej. Ejecutivo de ventas, Repartidor..." maxlength="80" autocomplete="off" />
-      <div class="error" *ngIf="form.get('contacto')?.touched && form.get('contacto')?.errors?.['maxlength']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>El contacto no puede superar los 80 caracteres.</span>
-      </div>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+      <mat-label>Persona de Contacto (Opcional)</mat-label>
+      <input
+        matInput
+        formControlName="contacto"
+        placeholder="Ej. Ejecutivo de ventas, Repartidor..."
+        maxlength="80"
+        autocomplete="off" />
+      <mat-icon matPrefix>badge</mat-icon>
+    </mat-form-field>
 
-    <div class="form-group">
-      <label class="form-label" for="telefono">Teléfono (9 dígitos, opcional)</label>
-      <input type="text" id="telefono" formControlName="telefono" class="form-control"
-        placeholder="Ej. 987654321" appOnlyNumbers maxlength="9" autocomplete="off" />
-      <div class="error" *ngIf="form.get('telefono')?.touched && form.get('telefono')?.errors?.['pattern']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>El teléfono debe constar exactamente de 9 dígitos numéricos.</span>
-      </div>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+      <mat-label>Teléfono (9 dígitos, opcional)</mat-label>
+      <input
+        matInput
+        formControlName="telefono"
+        placeholder="Ej. 987654321"
+        appOnlyNumbers
+        maxlength="9"
+        autocomplete="off" />
+      <mat-icon matPrefix>phone</mat-icon>
+      <mat-error *ngIf="form.get('telefono')?.hasError('pattern')">Debe constar exactamente de 9 dígitos numéricos.</mat-error>
+    </mat-form-field>
 
-    <div class="form-group">
-      <label class="form-label" for="email">Correo Electrónico (Opcional)</label>
-      <input type="email" id="email" formControlName="email" class="form-control"
-        placeholder="Ej. contacto@distribuidora.com" autocomplete="off" />
-      <div class="error" *ngIf="form.get('email')?.touched && form.get('email')?.errors?.['email']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>Ingresa un correo electrónico válido.</span>
-      </div>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+      <mat-label>Correo Electrónico (Opcional)</mat-label>
+      <input
+        matInput
+        type="email"
+        formControlName="email"
+        placeholder="Ej. contacto@distribuidora.com"
+        maxlength="100"
+        autocomplete="off" />
+      <mat-icon matPrefix>email</mat-icon>
+      <mat-error *ngIf="form.get('email')?.hasError('email')">Debe ingresar un formato de correo válido.</mat-error>
+    </mat-form-field>
 
-    <div class="form-group">
-      <label class="form-label" for="direccion">Dirección Física (Opcional)</label>
-      <input type="text" id="direccion" formControlName="direccion" class="form-control"
-        placeholder="Ej. Calle Industrial 120, Bodega 4..." maxlength="150" autocomplete="off" />
-      <div class="error" *ngIf="form.get('direccion')?.touched && form.get('direccion')?.errors?.['maxlength']">
-        <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-        <span>La dirección no puede superar los 150 caracteres.</span>
-      </div>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 1rem;">
+      <mat-label>Dirección (Opcional)</mat-label>
+      <input
+        matInput
+        formControlName="direccion"
+        placeholder="Ej. Av. Los Industriales 123..."
+        maxlength="150"
+        autocomplete="off" />
+      <mat-icon matPrefix>location_on</mat-icon>
+    </mat-form-field>
 
+    <!-- Acciones -->
     <div class="form-actions">
-      <a routerLink="/admin/proveedores" class="btn-cancel">Cancelar</a>
-      <button type="submit" class="btn-primary btn-submit" [disabled]="form.invalid || guardando()">
+      <button type="button" class="btn-secondary" (click)="cerrar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="form.invalid || guardando()">
         <span class="material-icons" *ngIf="!guardando()">save</span>
-        <span>{{ guardando() ? 'Guardando...' : 'Guardar Proveedor' }}</span>
+        <span>{{ guardando() ? 'Guardando...' : (modoEditar() ? 'Actualizar Proveedor' : 'Crear Proveedor') }}</span>
       </button>
     </div>
   </form>

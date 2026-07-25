@@ -25,10 +25,27 @@ export class ClienteRepository {
       ];
     }
 
+    let orderByClause: any = { createdAt: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antiguo':
+        orderByClause = { createdAt: 'asc' };
+        break;
+      case 'nombre_asc':
+        orderByClause = { nombre: 'asc' };
+        break;
+      case 'nombre_desc':
+        orderByClause = { nombre: 'desc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { createdAt: 'desc' };
+        break;
+    }
+
     if (filtros.todo === true) {
       const clientes = await prisma.cliente.findMany({
         where: whereClause,
-        orderBy: { nombre: 'asc' },
+        orderBy: orderByClause,
       });
       return {
         clientes,
@@ -47,7 +64,7 @@ export class ClienteRepository {
       prisma.cliente.count({ where: whereClause }),
       prisma.cliente.findMany({
         where: whereClause,
-        orderBy: { nombre: 'asc' },
+        orderBy: orderByClause,
         skip,
         take: limite,
       })

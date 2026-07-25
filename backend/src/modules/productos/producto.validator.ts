@@ -28,6 +28,7 @@ export const filtrarProductosSchema = z.object({
   limite: z.coerce.number().optional().default(10),
   pagina: z.coerce.number().optional().default(1),
   todo: z.preprocess((val) => val === 'true', z.boolean().optional()),
+  ordenarPor: z.enum(['reciente', 'antiguo', 'stock_desc', 'stock_asc', 'precio_desc', 'precio_asc', 'nombre_asc', 'nombre_desc']).optional(),
 });
 
 export type FiltrarProductosDto = z.infer<typeof filtrarProductosSchema>;

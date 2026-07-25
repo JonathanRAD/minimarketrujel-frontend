@@ -15,12 +15,13 @@ export class ClienteService {
 
   constructor(private http: HttpClient) {}
 
-  listar(filtros?: { busqueda?: string; limite?: number; pagina?: number; todo?: boolean }): Observable<PaginatedClientes> {
+  listar(filtros?: { busqueda?: string; limite?: number; pagina?: number; todo?: boolean; ordenarPor?: string }): Observable<PaginatedClientes> {
     const params: any = {};
     if (filtros?.busqueda) params.busqueda = filtros.busqueda;
     if (filtros?.limite) params.limite = filtros.limite.toString();
     if (filtros?.pagina) params.pagina = filtros.pagina.toString();
     if (filtros?.todo) params.todo = 'true';
+    if (filtros?.ordenarPor) params.ordenarPor = filtros.ordenarPor;
 
     return this.http
       .get<ApiResponse<PaginatedClientes>>(this.baseUrl, { params })

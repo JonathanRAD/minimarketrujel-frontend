@@ -7,11 +7,31 @@ import { ProductoService } from '../../../productos/services/producto.service';
 import { Producto } from '../../../../../core/models/producto.model';
 import { TipoAjuste } from '../../../../../core/models/inventario.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent } from '@shared/components';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-ajuste-form-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    SpinnerComponent,
+    ErrorAlertComponent,
+    EmptyStateComponent,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    BuscadorProductoComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   templateUrl: './ajuste-form.page.html',
   styleUrl: './ajuste-form.page.scss'
 })

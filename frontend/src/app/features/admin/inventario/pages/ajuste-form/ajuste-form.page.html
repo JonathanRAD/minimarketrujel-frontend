@@ -39,16 +39,17 @@
       </button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label" for="tipo">Concepto de Ajuste</label>
-      <select id="tipo" formControlName="tipo" class="form-control">
-        <option value="AJUSTE">Ajuste Manual (Corrección de inventario)</option>
-        <option value="MERMA">Merma / Pérdida (Productos rotos, vencidos, robados)</option>
-        <option value="DEVOLUCION">Devolución (Retorno de stock de clientes)</option>
-      </select>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-top: 1rem; margin-bottom: 0.5rem;">
+      <mat-label>Concepto de Ajuste</mat-label>
+      <mat-select formControlName="tipo">
+        <mat-option value="AJUSTE">Ajuste Manual (Corrección de inventario)</mat-option>
+        <mat-option value="MERMA">Merma / Pérdida (Productos rotos, vencidos, robados)</mat-option>
+        <mat-option value="DEVOLUCION">Devolución (Retorno de stock de clientes)</mat-option>
+      </mat-select>
+      <mat-icon matPrefix>inventory</mat-icon>
+    </mat-form-field>
 
-    <div class="form-group">
+    <div class="form-group" style="margin-bottom: 1rem;">
       <label class="form-label">Sentido del Ajuste</label>
       <div class="direction-toggle">
         <button type="button" class="toggle-btn btn-in" [class.active]="sentido() === 'ENTRADA'" (click)="cambiarSentido('ENTRADA')">
@@ -62,20 +63,22 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label" for="cantidad">Cantidad a Ajustar</label>
-      <input type="number" id="cantidad" formControlName="cantidad" class="form-control" placeholder="Ej. 5, 10..." min="1" />
-      <div class="error" *ngIf="form.get('cantidad')?.touched && form.get('cantidad')?.errors?.['required']">La cantidad es obligatoria.</div>
-      <div class="error" *ngIf="form.get('cantidad')?.touched && form.get('cantidad')?.errors?.['min']">La cantidad a ajustar debe ser al menos 1.</div>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+      <mat-label>Cantidad a Ajustar</mat-label>
+      <input matInput type="number" formControlName="cantidad" placeholder="Ej. 5, 10..." min="1" />
+      <mat-icon matPrefix>pin</mat-icon>
+      <mat-error *ngIf="form.get('cantidad')?.hasError('required')">La cantidad es obligatoria.</mat-error>
+      <mat-error *ngIf="form.get('cantidad')?.hasError('min')">La cantidad debe ser al menos 1.</mat-error>
+    </mat-form-field>
 
-    <div class="form-group">
-      <label class="form-label" for="motivo">Motivo / Justificación (Auditoría)</label>
-      <textarea id="motivo" formControlName="motivo" class="form-control textarea"
-        placeholder="Explica en detalle por qué se realiza este ajuste..." rows="3"></textarea>
-      <div class="error" *ngIf="form.get('motivo')?.touched && form.get('motivo')?.errors?.['required']">Debes ingresar un motivo que justifique el ajuste.</div>
-      <div class="error" *ngIf="form.get('motivo')?.touched && form.get('motivo')?.errors?.['minlength']">El motivo debe ser más descriptivo (mínimo 5 caracteres).</div>
-    </div>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 1rem;">
+      <mat-label>Motivo o Justificación del Ajuste</mat-label>
+      <textarea matInput formControlName="motivo" rows="3" placeholder="Explica detalladamente por qué se realiza este movimiento de stock..."></textarea>
+      <mat-icon matPrefix>notes</mat-icon>
+      <mat-error *ngIf="form.get('motivo')?.hasError('required')">El motivo es obligatorio.</mat-error>
+      <mat-error *ngIf="form.get('motivo')?.hasError('minlength')">Debe tener al menos 5 caracteres.</mat-error>
+    </mat-form-field>
+
 
     <div class="form-actions">
       <a routerLink="/admin/inventario" class="btn-cancel">Cancelar</a>

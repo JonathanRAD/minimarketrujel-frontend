@@ -36,6 +36,9 @@ export class InventarioService {
     if (filtros.pagina) {
       params = params.set('pagina', filtros.pagina.toString());
     }
+    if (filtros.ordenarPor) {
+      params = params.set('ordenarPor', filtros.ordenarPor);
+    }
 
     return this.http
       .get<ApiResponse<PaginatedMovimientos>>(this.baseUrl, { params })

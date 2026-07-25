@@ -195,6 +195,9 @@
                     <div class="cart-product-cell">
                       <span class="font-semibold product-name">{{ item.producto.nombre }}</span>
                       <span class="text-xs text-muted">Cod: {{ item.producto.codigoBarras }}</span>
+                      <span class="badge-oferta-chip text-xs" *ngIf="item.promocionTitulo" style="color: #2563eb; font-weight: 600; display: block;">
+                        🏷️ {{ item.promocionTitulo }}
+                      </span>
                     </div>
                   </td>
                   <td>
@@ -223,7 +226,13 @@
                     </div>
                   </td>
                   <td style="text-align: right;" class="text-muted text-sm">
-                    S/ {{ item.producto.precioVenta | number: '1.2-2' }}
+                    <ng-container *ngIf="item.precioEspecial">
+                      <s class="text-xs text-muted" style="text-decoration: line-through; display: block;">S/ {{ item.precioOriginal | number: '1.2-2' }}</s>
+                      <span class="font-semibold" style="color: #10b981;">S/ {{ item.precioUnitario | number: '1.2-2' }}</span>
+                    </ng-container>
+                    <ng-container *ngIf="!item.precioEspecial">
+                      S/ {{ item.precioOriginal | number: '1.2-2' }}
+                    </ng-container>
                   </td>
                   <td style="text-align: right;" class="font-semibold text-sm">
                     S/ {{ item.subtotal | number: '1.2-2' }}
@@ -246,6 +255,10 @@
           <div class="summary-row total-row">
             <span class="summary-label">Total a Cobrar</span>
             <strong class="summary-total">S/ {{ total() | number: '1.2-2' }}</strong>
+          </div>
+          <div class="summary-row ahorro-row" *ngIf="ahorroTotal() > 0" style="color: #10b981; font-weight: 600; font-size: 0.9rem; margin-top: 0.35rem; display: flex; justify-content: space-between;">
+            <span>🎉 Ahorro en Ofertas:</span>
+            <span>- S/ {{ ahorroTotal() | number: '1.2-2' }}</span>
           </div>
         </div>
 

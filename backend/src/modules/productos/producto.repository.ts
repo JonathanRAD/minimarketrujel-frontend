@@ -26,11 +26,40 @@ export class ProductoRepository {
       ];
     }
 
+    let orderByClause: any = { createdAt: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antiguo':
+        orderByClause = { createdAt: 'asc' };
+        break;
+      case 'stock_desc':
+        orderByClause = { stockActual: 'desc' };
+        break;
+      case 'stock_asc':
+        orderByClause = { stockActual: 'asc' };
+        break;
+      case 'precio_desc':
+        orderByClause = { precioVenta: 'desc' };
+        break;
+      case 'precio_asc':
+        orderByClause = { precioVenta: 'asc' };
+        break;
+      case 'nombre_asc':
+        orderByClause = { nombre: 'asc' };
+        break;
+      case 'nombre_desc':
+        orderByClause = { nombre: 'desc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { createdAt: 'desc' };
+        break;
+    }
+
     if (filtros.todo === true) {
       const productos = await prisma.producto.findMany({
         where: whereClause,
         include: { categoria: true },
-        orderBy: { nombre: 'asc' },
+        orderBy: orderByClause,
       });
       return {
         productos,
@@ -50,7 +79,7 @@ export class ProductoRepository {
       prisma.producto.findMany({
         where: whereClause,
         include: { categoria: true },
-        orderBy: { nombre: 'asc' },
+        orderBy: orderByClause,
         skip,
         take: limite,
       })

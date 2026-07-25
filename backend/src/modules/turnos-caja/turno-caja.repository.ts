@@ -51,6 +51,23 @@ export class TurnoCajaRepository {
       if (filtros.hasta) whereClause.fechaApertura.lte = new Date(filtros.hasta);
     }
 
+    let orderByClause: any = { fechaApertura: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antiguo':
+        orderByClause = { fechaApertura: 'asc' };
+        break;
+      case 'monto_desc':
+        orderByClause = { montoInicial: 'desc' };
+        break;
+      case 'monto_asc':
+        orderByClause = { montoInicial: 'asc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { fechaApertura: 'desc' };
+        break;
+    }
+
     const limite = filtros.limite ?? 10;
     const pagina = filtros.pagina ?? 1;
     const skip = (pagina - 1) * limite;
@@ -67,9 +84,7 @@ export class TurnoCajaRepository {
             },
           },
         },
-        orderBy: {
-          fechaApertura: 'desc',
-        },
+        orderBy: orderByClause,
         skip,
         take: limite,
       })

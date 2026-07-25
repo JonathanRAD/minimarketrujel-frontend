@@ -4,12 +4,14 @@ import { RouterLink } from '@angular/router';
 import { ClienteService } from '../../services/cliente.service';
 import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Cliente } from '../../../../../core/models/cliente.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, ConfirmModalService } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService, PaginationComponent, TableFilterComponent, SortOption } from '@shared/components';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ClienteFormPageComponent } from '../cliente-form/cliente-form.page';
 
 @Component({
   selector: 'app-clientes-list-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent],
+  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, TableFilterComponent, MatDialogModule],
   templateUrl: './clientes-list.page.html',
   styleUrl: './clientes-list.page.scss'
 })
@@ -17,12 +19,21 @@ export class ClientesListPageComponent implements OnInit {
   private clienteService = inject(ClienteService);
   private confirmModal = inject(ConfirmModalService);
   public excelService = inject(ReporteExcelService);
+  private dialog = inject(MatDialog);
 
   clientes = signal<Cliente[]>([]);
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
+  busqueda = signal('');
+  ordenarPor = signal('reciente');
 
-  // Paginación
+  sortOptions: SortOption[] = [
+    { label: 'Más reciente', value: 'reciente', icon: 'schedule' },
+    { label: 'Más antiguo', value: 'antiguo', icon: 'history' },
+    { label: 'Nombre A-Z', value: 'nombre_asc', icon: 'sort_by_alpha' },
+    { label: 'Mayor Deuda', value: 'deuda_desc', icon: 'payments' },
+  ];
+
   pagina = signal<number>(1);
   limite = signal<number>(10);
   total = signal<number>(0);
@@ -35,9 +46,12 @@ export class ClientesListPageComponent implements OnInit {
   cargarClientes() {
     this.cargando.set(true);
     this.errorMessage.set(null);
+
     this.clienteService.listar({
+      busqueda: this.busqueda() || undefined,
       pagina: this.pagina(),
       limite: this.limite(),
+      ordenarPor: this.ordenarPor(),
     }).subscribe({
       next: (res) => {
         this.clientes.set(res.clientes);
@@ -49,32 +63,21 @@ export class ClientesListPageComponent implements OnInit {
       },
       error: (err) => {
         this.cargando.set(false);
-        this.errorMessage.set(err.error?.message || 'Error al cargar los clientes');
+        this.errorMessage.set(err.error?.message || 'Error al cargar la lista de clientes');
       }
     });
   }
 
-  async eliminar(cliente: Cliente) {
-    const seguro = await this.confirmModal.confirm({
-      titulo: '¿Desactivar Cliente?',
-      mensaje: `¿Estás seguro de que deseas desactivar al cliente "${cliente.nombre}"?`,
-      submensaje: 'El cliente ya no estará activo para registrar ventas o créditos.',
-      icono: 'person_off',
-      tipo: 'warning',
-      textoConfirmar: 'Sí, desactivar',
-      textoCancelar: 'Cancelar',
-    });
-    if (!seguro) return;
+  buscar(valor: string): void {
+    this.busqueda.set(valor);
+    this.pagina.set(1);
+    this.cargarClientes();
+  }
 
-    this.errorMessage.set(null);
-    this.clienteService.eliminar(cliente.id).subscribe({
-      next: () => {
-        this.cargarClientes();
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message || 'No se pudo eliminar el cliente');
-      }
-    });
+  cambiarOrden(orden: string): void {
+    this.ordenarPor.set(orden);
+    this.pagina.set(1);
+    this.cargarClientes();
   }
 
   irAPagina(p: number) {
@@ -83,18 +86,50 @@ export class ClientesListPageComponent implements OnInit {
     this.cargarClientes();
   }
 
-  cambiarLimite(l: number) {
-    this.limite.set(l);
+  abrirModalForm(clienteId?: string) {
+    const dialogRef = this.dialog.open(ClienteFormPageComponent, {
+      width: '560px',
+      maxWidth: '95vw',
+      data: { clienteId },
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((guardado) => {
+      if (guardado) {
+        this.cargarClientes();
+      }
+    });
+  }
+
+  cambiarLimite(limite: number): void {
+    this.limite.set(limite);
     this.pagina.set(1);
     this.cargarClientes();
   }
 
   getDeudaTotal(cliente: Cliente): number {
-    return Number(cliente.deudaTotal ?? 0);
+    return Number(cliente.deudaTotal || 0);
   }
 
   exportarExcel(): void {
-    this.excelService.descargarExcel('clientes', 'Reporte_Clientes_Creditos.xlsx');
+    this.excelService.descargarExcel('clientes');
+  }
+
+  async eliminar(cli: Cliente) {
+    const seguro = await this.confirmModal.confirm({
+      titulo: '¿Eliminar Cliente?',
+      mensaje: `¿Estás seguro de eliminar al cliente "${cli.nombre}"?`,
+      submensaje: 'Esta acción no se puede deshacer.',
+      icono: 'person_off',
+      tipo: 'danger',
+      textoConfirmar: 'Sí, eliminar',
+      textoCancelar: 'Cancelar',
+    });
+    if (!seguro) return;
+
+    this.clienteService.eliminar(cli.id).subscribe({
+      next: () => this.cargarClientes(),
+      error: (err) => this.errorMessage.set(err.error?.message || 'Error al eliminar el cliente')
+    });
   }
 }
-

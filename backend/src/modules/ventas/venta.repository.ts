@@ -19,6 +19,23 @@ export class VentaRepository {
       if (filtros.hasta) whereClause.fecha.lte = new Date(filtros.hasta);
     }
 
+    let orderByClause: any = { fecha: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antigua':
+        orderByClause = { fecha: 'asc' };
+        break;
+      case 'monto_desc':
+        orderByClause = { total: 'desc' };
+        break;
+      case 'monto_asc':
+        orderByClause = { total: 'asc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { fecha: 'desc' };
+        break;
+    }
+
     const limite = filtros.limite ?? 10;
     const pagina = filtros.pagina ?? 1;
     const skip = (pagina - 1) * limite;
@@ -28,7 +45,7 @@ export class VentaRepository {
       prisma.venta.findMany({
         where: whereClause,
         include: { detalles: { include: { producto: true } }, usuario: true },
-        orderBy: { fecha: 'desc' },
+        orderBy: orderByClause,
         skip,
         take: limite,
       })

@@ -46,6 +46,11 @@ export const ADMIN_ROUTES: Routes = [
     loadChildren: () =>
       import('./ventas/ventas.routes').then((m) => m.VENTAS_ROUTES),
   },
+  {
+    path: 'ofertas',
+    loadChildren: () =>
+      import('./promociones/promociones.routes').then((m) => m.PROMOCIONES_ROUTES),
+  },
   // A medida que construyas los demás submódulos (categorias, ventas,
   // inventario, clientes, proveedores, compras, reportes, turnos-caja),
   // agrégalos aquí siguiendo el mismo patrón que "productos".

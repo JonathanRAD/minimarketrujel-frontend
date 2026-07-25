@@ -1,4 +1,14 @@
-<div class="page-header">
+<div class="modal-dialog-header" *ngIf="dialogRef">
+  <h2 mat-dialog-title class="dialog-title font-bold">
+    <span class="material-icons title-icon">inventory_2</span>
+    <span>{{ productoId() ? 'Editar Producto' : 'Nuevo Producto' }}</span>
+  </h2>
+  <button type="button" class="btn-close-dialog" (click)="cerrar()" title="Cerrar ventana">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="page-header" *ngIf="!dialogRef">
   <div>
     <h2 class="page-title">{{ productoId() ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
     <p class="page-subtitle">
@@ -11,221 +21,182 @@
   </a>
 </div>
 
-<div class="form-container card">
+<div class="form-container" [class.card]="!dialogRef" [class.in-modal]="dialogRef">
   <!-- Error general -->
-  <div class="error-alert" *ngIf="error()">
-    <span class="material-icons">error_outline</span>
-    <span>{{ error() }}</span>
-  </div>
+  <app-error-alert [message]="error()" (dismiss)="error.set(null)" />
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="form-grid">
       
       <!-- Nombre del Producto -->
-      <div class="form-group form-group-full">
-        <label class="form-label" for="nombre">Nombre del Producto</label>
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Nombre del Producto</mat-label>
         <input 
-          type="text" 
-          id="nombre" 
+          matInput
           formControlName="nombre" 
-          class="form-control" 
           placeholder="Ej. LECHE ENTERA GLORIA 1L"
           appUppercase
           maxlength="100" />
-        <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El nombre del producto es obligatorio.</span>
-        </div>
-        <div class="error" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.['minlength']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El nombre debe tener al menos 3 caracteres.</span>
-        </div>
-      </div>
+        <mat-icon matPrefix>inventory_2</mat-icon>
+        <mat-error *ngIf="form.get('nombre')?.hasError('required')">El nombre del producto es obligatorio.</mat-error>
+        <mat-error *ngIf="form.get('nombre')?.hasError('minlength')">El nombre debe tener al menos 3 caracteres.</mat-error>
+      </mat-form-field>
 
       <!-- Código de Barras -->
-      <div class="form-group">
-        <label class="form-label" for="codigoBarras">Código de Barras (8-13 dígitos)</label>
+      <mat-form-field appearance="outline">
+        <mat-label>Código de Barras</mat-label>
         <input 
-          type="text" 
-          id="codigoBarras" 
+          matInput
           formControlName="codigoBarras" 
-          class="form-control" 
           placeholder="Ej. 7750102030405"
           appOnlyNumbers
           maxlength="13" />
-        <div class="error" *ngIf="form.get('codigoBarras')?.touched && form.get('codigoBarras')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El código de barras es obligatorio.</span>
-        </div>
-        <div class="error" *ngIf="form.get('codigoBarras')?.touched && form.get('codigoBarras')?.errors?.['pattern']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>Debe ser un código numérico válido de 8 a 13 dígitos.</span>
-        </div>
-      </div>
+        <mat-icon matPrefix>qr_code</mat-icon>
+        <mat-error *ngIf="form.get('codigoBarras')?.hasError('required')">El código de barras es obligatorio.</mat-error>
+        <mat-error *ngIf="form.get('codigoBarras')?.hasError('pattern')">Debe ser un código numérico válido de 8 a 13 dígitos.</mat-error>
+      </mat-form-field>
 
       <!-- Categoría -->
-      <div class="form-group">
-        <label class="form-label" for="categoriaId">Categoría</label>
-        <select id="categoriaId" formControlName="categoriaId" class="form-control">
-          <option value="">-- Selecciona una categoría --</option>
-          <option *ngFor="let cat of categorias()" [value]="cat.id">
+      <mat-form-field appearance="outline">
+        <mat-label>Categoría</mat-label>
+        <mat-select formControlName="categoriaId">
+          <mat-option value="">-- Seleccionar categoría --</mat-option>
+          <mat-option *ngFor="let cat of categorias()" [value]="cat.id">
             {{ cat.nombre }}
-          </option>
-        </select>
-        <div class="error" *ngIf="form.get('categoriaId')?.touched && form.get('categoriaId')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>La categoría es obligatoria para clasificar el producto.</span>
-        </div>
-      </div>
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>category</mat-icon>
+        <mat-error *ngIf="form.get('categoriaId')?.hasError('required')">La categoría es obligatoria.</mat-error>
+      </mat-form-field>
 
       <!-- Costo de Compra -->
-      <div class="form-group">
-        <label class="form-label" for="costo">Costo de Adquisición / Compra</label>
-        <div class="input-addon-wrapper">
-          <span class="input-prefix">S/</span>
-          <input 
-            type="number" 
-            step="0.01" 
-            id="costo" 
-            formControlName="costo" 
-            class="form-control" 
-            placeholder="0.00" 
-            min="0" />
-        </div>
-        <div class="error" *ngIf="form.get('costo')?.touched && form.get('costo')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El costo es obligatorio.</span>
-        </div>
-        <div class="error" *ngIf="form.get('costo')?.touched && form.get('costo')?.errors?.['min']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El costo no puede ser negativo.</span>
-        </div>
-      </div>
+      <mat-form-field appearance="outline">
+        <mat-label>Costo de Compra</mat-label>
+        <input 
+          matInput 
+          type="number" 
+          step="0.01" 
+          formControlName="costo" 
+          placeholder="0.00" 
+          min="0" />
+        <span matPrefix>S/&nbsp;</span>
+        <mat-error *ngIf="form.get('costo')?.hasError('required')">El costo es obligatorio.</mat-error>
+        <mat-error *ngIf="form.get('costo')?.hasError('min')">El costo no puede ser negativo.</mat-error>
+      </mat-form-field>
 
       <!-- Precio de Venta -->
-      <div class="form-group">
-        <label class="form-label" for="precioVenta">Precio de Venta al Público</label>
-        <div class="input-addon-wrapper">
-          <span class="input-prefix">S/</span>
-          <input 
-            type="number" 
-            step="0.01" 
-            id="precioVenta" 
-            formControlName="precioVenta" 
-            class="form-control" 
-            placeholder="0.00" 
-            min="0.01" />
-        </div>
-        <div class="error" *ngIf="form.get('precioVenta')?.touched && form.get('precioVenta')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El precio de venta es obligatorio.</span>
-        </div>
-        <div class="error" *ngIf="form.get('precioVenta')?.touched && form.get('precioVenta')?.errors?.['min']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El precio de venta debe ser mayor a 0.</span>
-        </div>
-      </div>
+      <mat-form-field appearance="outline">
+        <mat-label>Precio de Venta</mat-label>
+        <input 
+          matInput 
+          type="number" 
+          step="0.01" 
+          formControlName="precioVenta" 
+          placeholder="0.00" 
+          min="0.01" />
+        <span matPrefix>S/&nbsp;</span>
+        <mat-error *ngIf="form.get('precioVenta')?.hasError('required')">El precio de venta es obligatorio.</mat-error>
+        <mat-error *ngIf="form.get('precioVenta')?.hasError('min')">El precio debe ser mayor a 0.</mat-error>
+      </mat-form-field>
 
       <!-- Stock Inicial -->
-      <div class="form-group">
-        <label class="form-label" for="stockActual">Stock Físico Inicial</label>
+      <mat-form-field appearance="outline">
+        <mat-label>Stock Inicial</mat-label>
         <input 
+          matInput 
           type="number" 
-          id="stockActual" 
           formControlName="stockActual" 
-          class="form-control" 
           placeholder="0" 
           min="0"
           step="1" />
-        <div class="error" *ngIf="form.get('stockActual')?.touched && form.get('stockActual')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El stock inicial es obligatorio.</span>
-        </div>
-        <div class="error" *ngIf="form.get('stockActual')?.touched && form.get('stockActual')?.errors?.['min']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El stock no puede ser negativo.</span>
-        </div>
-      </div>
+        <mat-icon matPrefix>warehouse</mat-icon>
+        <mat-error *ngIf="form.get('stockActual')?.hasError('required')">El stock inicial es obligatorio.</mat-error>
+        <mat-error *ngIf="form.get('stockActual')?.hasError('min')">El stock no puede ser negativo.</mat-error>
+      </mat-form-field>
 
       <!-- Stock Mínimo -->
-      <div class="form-group">
-        <label class="form-label" for="stockMinimo">Stock Mínimo (Alerta)</label>
+      <mat-form-field appearance="outline">
+        <mat-label>Stock Mínimo (Alerta)</mat-label>
         <input 
+          matInput 
           type="number" 
-          id="stockMinimo" 
           formControlName="stockMinimo" 
-          class="form-control" 
           placeholder="5" 
           min="0"
           step="1" />
-        <div class="error" *ngIf="form.get('stockMinimo')?.touched && form.get('stockMinimo')?.errors?.['required']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El stock mínimo es obligatorio.</span>
-        </div>
-        <div class="error" *ngIf="form.get('stockMinimo')?.touched && form.get('stockMinimo')?.errors?.['min']">
-          <span class="material-icons text-xs" style="font-size: 1rem;">error</span>
-          <span>El stock mínimo no puede ser negativo.</span>
-        </div>
-      </div>
+        <mat-icon matPrefix>notification_important</mat-icon>
+        <mat-error *ngIf="form.get('stockMinimo')?.hasError('required')">El stock mínimo es obligatorio.</mat-error>
+        <mat-error *ngIf="form.get('stockMinimo')?.hasError('min')">El stock mínimo no puede ser negativo.</mat-error>
+      </mat-form-field>
 
       <!-- Unidad de Medida -->
-      <div class="form-group form-group-full">
-        <label class="form-label" for="unidadMedida">Unidad de Medida</label>
-        <select id="unidadMedida" formControlName="unidadMedida" class="form-control">
-          <option value="UNIDAD">Unidad (Unidades enteras)</option>
-          <option value="KG">Kilogramo (Venta por peso)</option>
-          <option value="G">Gramo</option>
-          <option value="LITRO">Litro (Fluidos)</option>
-          <option value="ML">Mililitro</option>
-        </select>
-      </div>
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Unidad de Medida</mat-label>
+        <mat-select formControlName="unidadMedida">
+          <mat-option value="UNIDAD">Unidad (Unidades enteras)</mat-option>
+          <mat-option value="KG">Kilogramo (Venta por peso)</mat-option>
+          <mat-option value="G">Gramo</mat-option>
+          <mat-option value="LITRO">Litro (Fluidos)</mat-option>
+          <mat-option value="ML">Mililitro</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>scale</mat-icon>
+      </mat-form-field>
 
       <!-- Imagen del Producto -->
-      <div class="form-group form-group-full">
-        <label class="form-label">Imagen del Producto (Opcional)</label>
+      <div class="col-span-2">
+        <label class="form-label" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Imagen del Producto (Opcional)</label>
         
-        <div class="upload-container" style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
-          
-          <!-- Selector de archivo e Input de URL en un diseño limpio -->
+        <div class="upload-container" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
           <div class="upload-options" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
             
-            <!-- Botón de subida de archivo -->
-            <div class="file-upload-box" style="flex: 1; min-width: 200px; border: 2px dashed var(--color-border); border-radius: var(--border-radius-md); padding: 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s;" (click)="fileInput.click()">
+            <div 
+              class="file-upload-box" 
+              [class.has-image]="!!form.get('imagenUrl')?.value"
+              [class.dragging]="isDragging()"
+              (click)="fileInput.click()"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)">
+              
               <input 
                 type="file" 
                 #fileInput 
                 accept="image/*" 
                 style="display: none;" 
                 (change)="onFileSelected($event)" />
-              <span class="material-icons" style="font-size: 2rem; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">photo_camera</span>
-              <span class="text-sm font-semibold" style="color: var(--color-primary);">Subir desde dispositivo</span>
+
+              <ng-container *ngIf="form.get('imagenUrl')?.value; else sinImagen">
+                <img [src]="form.get('imagenUrl')?.value" alt="Previsualización" class="preview-img" />
+                <div class="preview-overlay">
+                  <span class="material-icons">photo_camera</span>
+                  <span>Cambiar / Arrastrar imagen</span>
+                </div>
+                <button 
+                  type="button" 
+                  class="btn-remove-image" 
+                  (click)="$event.stopPropagation(); removeImage()" 
+                  title="Quitar imagen">
+                  <span class="material-icons">close</span>
+                </button>
+              </ng-container>
+
+              <ng-template #sinImagen>
+                <span class="material-icons upload-icon">{{ isDragging() ? 'cloud_upload' : 'photo_camera' }}</span>
+                <span class="text-sm font-semibold upload-text">
+                  {{ isDragging() ? '¡Suelte la imagen aquí!' : 'Arrastra una imagen o sube desde el dispositivo' }}
+                </span>
+              </ng-template>
+
             </div>
             
-            <!-- Separador -->
             <div class="upload-separator" style="color: var(--color-text-muted); font-weight: 600; text-align: center; padding: 0 0.5rem;">O</div>
             
-            <!-- Entrada de URL de imagen -->
-            <div class="url-upload-box" style="flex: 1.5; min-width: 250px;">
-              <input 
-                type="text" 
-                id="imagenUrl" 
-                formControlName="imagenUrl" 
-                class="form-control" 
-                placeholder="Pegar URL de imagen (Ej. https://...)" />
-            </div>
+            <mat-form-field appearance="outline" style="flex: 1.5; min-width: 250px; margin-bottom: -1.25em;">
+              <mat-label>URL de imagen</mat-label>
+              <input matInput formControlName="imagenUrl" placeholder="Pegar URL (Ej. https://...)" />
+              <mat-icon matPrefix>link</mat-icon>
+            </mat-form-field>
           </div>
-          
-          <!-- Previsualización en vivo -->
-          <div class="image-preview-wrapper" *ngIf="form.get('imagenUrl')?.value" style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem; background-color: var(--color-bg-base); padding: 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--color-border); width: fit-content;">
-            <img [src]="form.get('imagenUrl')?.value" alt="Previsualización" style="width: 80px; height: 80px; object-fit: cover; border-radius: var(--border-radius-md); border: 1px solid var(--color-border);" />
-            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-              <span class="text-xs font-semibold" style="color: var(--color-text-dark);">Vista previa de la imagen</span>
-              <button type="button" class="btn-cancel" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: fit-content; background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; cursor: pointer; border-radius: var(--border-radius-sm);" (click)="removeImage()">
-                Quitar Imagen
-              </button>
-            </div>
-          </div>
-          
         </div>
       </div>
 
@@ -233,9 +204,7 @@
 
     <!-- Acciones de Formulario -->
     <div class="form-actions">
-      <a routerLink="/admin/productos" class="btn-cancel">
-        Cancelar
-      </a>
+      <button type="button" class="btn-secondary" (click)="cerrar()">Cancelar</button>
       <button 
         type="submit" 
         class="btn-primary btn-submit" 

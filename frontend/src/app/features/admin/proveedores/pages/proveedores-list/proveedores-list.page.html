@@ -9,12 +9,22 @@
       <span class="material-icons">file_download</span>
       <span>{{ (excelService.exportando() && excelService.tablaActual() === 'proveedores') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
     </button>
-    <a routerLink="/admin/proveedores/nuevo" class="btn-primary">
+    <button (click)="abrirModalForm()" class="btn-primary">
       <span class="material-icons">add_business</span>
       <span>Nuevo Proveedor</span>
-    </a>
+    </button>
   </div>
 </app-page-header>
+
+<!-- Filtros y Ordenamiento -->
+<app-table-filter
+  [options]="sortOptions"
+  [selectedValue]="ordenarPor()"
+  [searchValue]="busqueda()"
+  placeholderSearch="Buscar proveedor por nombre o contacto..."
+  (searchChange)="buscar($event)"
+  (sortChange)="cambiarOrden($event)">
+</app-table-filter>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
@@ -40,9 +50,9 @@
         <td class="text-muted">{{ prov.email || '-' }}</td>
         <td class="text-muted">{{ prov.direccion || '-' }}</td>
         <td class="actions-cell">
-          <a [routerLink]="['/admin/proveedores', prov.id, 'editar']" class="btn-action-icon btn-edit" title="Editar">
+          <button (click)="abrirModalForm(prov.id)" class="btn-action-icon btn-edit" title="Editar">
             <span class="material-icons">edit</span>
-          </a>
+          </button>
           <button (click)="eliminar(prov)" class="btn-action-icon btn-delete" title="Eliminar">
             <span class="material-icons">delete</span>
           </button>

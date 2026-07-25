@@ -13,6 +13,7 @@ import { LocalDbService } from '../../../offline/local-db.service';
 import { MetodoPago } from '../../../../../core/models/venta.model';
 import { Producto } from '../../../../../core/models/producto.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService } from '@shared/components';
+import { PromocionService } from '../../../../admin/promociones/services/promocion.service';
 
 @Component({
   selector: 'app-venta-page',
@@ -23,6 +24,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 })
 export class VentaPageComponent implements OnInit, OnDestroy {
   private carritoService = inject(CarritoService);
+  private promocionService = inject(PromocionService);
   private ventaService = inject(VentaService);
   private productoService = inject(ProductoService);
   private categoriaService = inject(CategoriaService);
@@ -35,6 +37,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
 
   items = this.carritoService.items;
   total = this.carritoService.total;
+  ahorroTotal = this.carritoService.ahorroTotal;
   cantidadTotal = this.carritoService.cantidadTotal;
 
   cargando = signal(false);

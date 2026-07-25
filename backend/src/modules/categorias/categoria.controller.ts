@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { categoriaService } from './categoria.service';
-import { crearCategoriaSchema, actualizarCategoriaSchema } from './categoria.validator';
+import { crearCategoriaSchema, actualizarCategoriaSchema, filtrarCategoriasSchema } from './categoria.validator';
 
 export class CategoriaController {
   async crear(req: Request, res: Response): Promise<void> {
@@ -12,7 +12,11 @@ export class CategoriaController {
   async listar(req: Request, res: Response): Promise<void> {
     const activoParam = req.query.activo;
     const activo = activoParam === 'true' ? true : activoParam === 'false' ? false : undefined;
-    const categorias = await categoriaService.listar(activo);
+    const filtrosValidados = filtrarCategoriasSchema.parse(req.query);
+    const categorias = await categoriaService.listar({
+      ...filtrosValidados,
+      activo,
+    });
     res.json({ success: true, data: categorias });
   }
 

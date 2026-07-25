@@ -61,6 +61,13 @@ enum EstadoTurno {
   CERRADO
 }
 
+enum TipoPromocion {
+  PORCENTAJE
+  PRECIO_FIJO
+  PROMO_NXM
+  VOLUMEN
+}
+
 // ============================================================
 // USUARIOS Y AUTENTICACIÓN
 // ============================================================
@@ -95,7 +102,8 @@ model Categoria {
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
 
-  productos Producto[]
+  productos   Producto[]
+  promociones Promocion[]
 
   @@map("categorias")
 }
@@ -120,10 +128,40 @@ model Producto {
   ventaDetalles         VentaDetalle[]
   compraDetalles        CompraDetalle[]
   movimientosInventario MovimientoInventario[]
+  promociones           Promocion[]
 
   @@index([codigoBarras])
   @@index([categoriaId])
   @@map("productos")
+}
+
+// ============================================================
+// OFERTAS Y PROMOCIONES
+// ============================================================
+
+model Promocion {
+  id             String        @id @default(uuid())
+  titulo         String
+  descripcion    String?
+  tipo           TipoPromocion
+  productoId     String?       @map("producto_id")
+  categoriaId    String?       @map("categoria_id")
+  valorDescuento Decimal?      @map("valor_descuento") @db.Decimal(10, 2)
+  cantidadMinima Int           @default(1) @map("cantidad_minima")
+  cantidadGratis Int?          @map("cantidad_gratis")
+  fechaInicio    DateTime      @map("fecha_inicio")
+  fechaFin       DateTime      @map("fecha_fin")
+  activo         Boolean       @default(true)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  producto  Producto?  @relation(fields: [productoId], references: [id])
+  categoria Categoria? @relation(fields: [categoriaId], references: [id])
+
+  @@index([productoId])
+  @@index([categoriaId])
+  @@index([fechaInicio, fechaFin])
+  @@map("promociones")
 }
 
 // ============================================================

@@ -14,14 +14,39 @@ export class ProveedorRepository {
     });
   }
 
-  async listar(filtros: { activo?: boolean } = {}) {
+  async listar(filtros: { busqueda?: string; ordenarPor?: string; activo?: boolean } = {}) {
+    const whereClause: any = {
+      activo: filtros.activo ?? true,
+    };
+
+    if (filtros.busqueda) {
+      whereClause.OR = [
+        { nombre: { contains: filtros.busqueda, mode: 'insensitive' } },
+        { contacto: { contains: filtros.busqueda, mode: 'insensitive' } },
+        { telefono: { contains: filtros.busqueda } },
+      ];
+    }
+
+    let orderByClause: any = { createdAt: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antiguo':
+        orderByClause = { createdAt: 'asc' };
+        break;
+      case 'nombre_asc':
+        orderByClause = { nombre: 'asc' };
+        break;
+      case 'nombre_desc':
+        orderByClause = { nombre: 'desc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { createdAt: 'desc' };
+        break;
+    }
+
     return prisma.proveedor.findMany({
-      where: {
-        activo: filtros.activo ?? true,
-      },
-      orderBy: {
-        nombre: 'asc',
-      },
+      where: whereClause,
+      orderBy: orderByClause,
     });
   }
 

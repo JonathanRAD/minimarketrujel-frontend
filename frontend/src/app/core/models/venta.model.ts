@@ -57,9 +57,15 @@ export interface ItemCarrito {
     codigoBarras: string;
     precioVenta: number;
     unidadMedida?: string;
+    categoriaId?: string | null;
   };
   cantidad: number;
+  precioOriginal: number;
+  precioUnitario: number;
+  precioEspecial?: number;
+  promocionTitulo?: string;
   subtotal: number;
+  ahorro: number;
 }
 
 export interface PaginatedVentas {

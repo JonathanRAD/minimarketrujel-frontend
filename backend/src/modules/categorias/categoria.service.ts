@@ -11,8 +11,8 @@ export class CategoriaService {
     return categoriaRepository.crear(data);
   }
 
-  async listar(activo?: boolean) {
-    return categoriaRepository.listar(activo !== undefined ? { activo } : {});
+  async listar(filtros: { busqueda?: string; ordenarPor?: string; activo?: boolean } = {}) {
+    return categoriaRepository.listar(filtros);
   }
 
   async obtenerPorId(id: string) {

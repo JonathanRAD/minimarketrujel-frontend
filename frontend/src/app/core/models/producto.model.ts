@@ -25,7 +25,7 @@ export type CrearProductoDto = Omit<
   'id' | 'activo' | 'createdAt' | 'updatedAt'
 >;
 
-export type ActualizarProductoDto = Partial<CrearProductoDto>;
+export type ActualizarProductoDto = Partial<CrearProductoDto> & { activo?: boolean };
 
 export interface PaginatedProductos {
   productos: Producto[];

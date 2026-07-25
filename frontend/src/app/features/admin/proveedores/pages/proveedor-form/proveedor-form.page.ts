@@ -1,16 +1,36 @@
-// Componente de formulario de proveedor para creaciÃ³n y ediciÃ³n
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, Optional, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ProveedorService } from '../../services/proveedor.service';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent } from '@shared/components';
 import { UppercaseDirective, OnlyNumbersDirective } from '@shared/directives';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-proveedor-form-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, UppercaseDirective, OnlyNumbersDirective],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    SpinnerComponent,
+    ErrorAlertComponent,
+    EmptyStateComponent,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    UppercaseDirective,
+    OnlyNumbersDirective,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+  ],
   templateUrl: './proveedor-form.page.html',
   styleUrl: './proveedor-form.page.scss'
 })
@@ -19,6 +39,9 @@ export class ProveedorFormPageComponent implements OnInit {
   private proveedorService = inject(ProveedorService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  @Optional() public dialogRef = inject(MatDialogRef<ProveedorFormPageComponent>, { optional: true });
+  @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: { proveedorId?: string } | null = inject(MAT_DIALOG_DATA, { optional: true });
 
   modoEditar = signal(false);
   proveedorId = signal<string | null>(null);
@@ -35,7 +58,7 @@ export class ProveedorFormPageComponent implements OnInit {
   });
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
+    const id = this.dialogData?.proveedorId || this.route.snapshot.paramMap.get('id');
     if (id) {
       this.modoEditar.set(true);
       this.proveedorId.set(id);
@@ -73,10 +96,10 @@ export class ProveedorFormPageComponent implements OnInit {
     const values = this.form.getRawValue();
     const payload = {
       nombre: values.nombre.trim(),
-      contacto: values.contacto?.trim() || undefined,
-      telefono: values.telefono?.trim() || undefined,
-      email: values.email?.trim() || undefined,
-      direccion: values.direccion?.trim() || undefined,
+      contacto: values.contacto ? values.contacto.trim() : undefined,
+      telefono: values.telefono ? values.telefono.trim() : undefined,
+      email: values.email ? values.email.trim() : undefined,
+      direccion: values.direccion ? values.direccion.trim() : undefined,
     };
 
     const request$ = this.modoEditar()
@@ -86,7 +109,11 @@ export class ProveedorFormPageComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.router.navigate(['/admin/proveedores']);
+        if (this.dialogRef) {
+          this.dialogRef.close(true);
+        } else {
+          this.router.navigate(['/admin/proveedores']);
+        }
       },
       error: (err) => {
         this.guardando.set(false);
@@ -94,5 +121,12 @@ export class ProveedorFormPageComponent implements OnInit {
       }
     });
   }
-}
 
+  cerrar() {
+    if (this.dialogRef) {
+      this.dialogRef.close(false);
+    } else {
+      this.router.navigate(['/admin/proveedores']);
+    }
+  }
+}

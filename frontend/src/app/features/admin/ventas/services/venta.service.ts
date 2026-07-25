@@ -15,7 +15,7 @@ export class VentaService {
 
   constructor(private http: HttpClient) { }
 
-  listar(filtros?: { desde?: string; hasta?: string; limite?: number; pagina?: number }): Observable<PaginatedVentas> {
+  listar(filtros?: { desde?: string; hasta?: string; limite?: number; pagina?: number; ordenarPor?: string }): Observable<PaginatedVentas> {
     let params = new HttpParams();
     if (filtros?.desde) {
       params = params.set('desde', filtros.desde);
@@ -28,6 +28,9 @@ export class VentaService {
     }
     if (filtros?.pagina) {
       params = params.set('pagina', filtros.pagina.toString());
+    }
+    if (filtros?.ordenarPor) {
+      params = params.set('ordenarPor', filtros.ordenarPor);
     }
 
     return this.http

@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { VentaService } from '../../services/venta.service';
 import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Venta, MetodoPago } from '../../../../../core/models/venta.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BadgeVariant, PaginationComponent, ConfirmModalService } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BadgeVariant, PaginationComponent, ConfirmModalService, TableFilterComponent, SortOption } from '@shared/components';
 
 @Component({
   selector: 'app-ventas-list-page',
@@ -19,7 +19,8 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
     EmptyStateComponent,
     PageHeaderComponent,
     StatusBadgeComponent,
-    PaginationComponent
+    PaginationComponent,
+    TableFilterComponent
   ],
   templateUrl: './ventas-list.page.html',
   styleUrl: './ventas-list.page.scss'
@@ -40,9 +41,17 @@ export class VentasListPageComponent implements OnInit {
   total = signal<number>(0);
   paginas = signal<number>(1);
 
-  // Filtros de fecha
+  // Filtros de fecha y ordenamiento
   filtroDesde = signal<string>('');
   filtroHasta = signal<string>('');
+  ordenarPor = signal<string>('reciente');
+
+  sortOptions: SortOption[] = [
+    { label: 'Más reciente', value: 'reciente', icon: 'schedule' },
+    { label: 'Más antigua', value: 'antigua', icon: 'history' },
+    { label: 'Mayor monto', value: 'monto_desc', icon: 'attach_money' },
+    { label: 'Menor monto', value: 'monto_asc', icon: 'money_off' },
+  ];
 
   // Detalle de ticket seleccionado
   ventaSeleccionada = signal<Venta | null>(null);
@@ -66,6 +75,7 @@ export class VentasListPageComponent implements OnInit {
       hasta: filtros.hasta?.toISOString(),
       pagina: this.pagina(),
       limite: this.limite(),
+      ordenarPor: this.ordenarPor(),
     };
 
     this.ventaService.listar(payload).subscribe({
@@ -89,9 +99,16 @@ export class VentasListPageComponent implements OnInit {
     this.cargarVentas();
   }
 
+  cambiarOrden(orden: string) {
+    this.ordenarPor.set(orden);
+    this.pagina.set(1);
+    this.cargarVentas();
+  }
+
   limpiarFiltros() {
     this.filtroDesde.set('');
     this.filtroHasta.set('');
+    this.ordenarPor.set('reciente');
     this.pagina.set(1);
     this.cargarVentas();
   }

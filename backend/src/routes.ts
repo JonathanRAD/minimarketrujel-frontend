@@ -9,6 +9,7 @@ import compraRoutes from './modules/compras/compra.routes';
 import inventarioRoutes from './modules/inventario/inventario.routes';
 import turnoCajaRoutes from './modules/turnos-caja/turno-caja.routes';
 import reporteRoutes from './modules/reportes/reporte.routes';
+import promocionRoutes from './modules/promociones/promocion.routes';
 // A medida que implementes los demás módulos (categorias, clientes, compras,
 // proveedores, inventario, turnos-caja, reportes), impórtalos aquí siguiendo
 // el mismo patrón que productos y ventas.
@@ -25,5 +26,6 @@ router.use('/compras', compraRoutes);
 router.use('/inventario', inventarioRoutes);
 router.use('/turnos-caja', turnoCajaRoutes);
 router.use('/reportes', reporteRoutes);
+router.use('/promociones', promocionRoutes);
 
 export default router;

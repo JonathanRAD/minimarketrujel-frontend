@@ -20,13 +20,14 @@ export class ProductoService {
 
   constructor(private http: HttpClient) {}
 
-  listar(filtros?: { categoriaId?: string; busqueda?: string; limite?: number; pagina?: number; todo?: boolean }): Observable<PaginatedProductos> {
+  listar(filtros?: { categoriaId?: string; busqueda?: string; limite?: number; pagina?: number; todo?: boolean; ordenarPor?: string }): Observable<PaginatedProductos> {
     const params: any = {};
     if (filtros?.categoriaId) params.categoriaId = filtros.categoriaId;
     if (filtros?.busqueda) params.busqueda = filtros.busqueda;
     if (filtros?.limite) params.limite = filtros.limite.toString();
     if (filtros?.pagina) params.pagina = filtros.pagina.toString();
     if (filtros?.todo) params.todo = 'true';
+    if (filtros?.ordenarPor) params.ordenarPor = filtros.ordenarPor;
 
     return this.http
       .get<ApiResponse<PaginatedProductos>>(this.baseUrl, { params })

@@ -34,6 +34,7 @@ export interface FiltrarMovimientosDto {
   fechaFin?: string;
   limite?: number;
   pagina?: number;
+  ordenarPor?: string;
 }
 
 export interface PaginatedMovimientos {

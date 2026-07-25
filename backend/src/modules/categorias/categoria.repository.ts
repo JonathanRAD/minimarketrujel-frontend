@@ -12,12 +12,38 @@ export class CategoriaRepository {
     });
   }
 
-  async listar(filtros: { activo?: boolean } = {}) {
+  async listar(filtros: { busqueda?: string; ordenarPor?: string; activo?: boolean } = {}) {
+    const whereClause: any = {};
+    if (filtros.activo !== undefined) {
+      whereClause.activo = filtros.activo;
+    }
+    if (filtros.busqueda) {
+      whereClause.OR = [
+        { nombre: { contains: filtros.busqueda, mode: 'insensitive' } },
+        { descripcion: { contains: filtros.busqueda, mode: 'insensitive' } },
+      ];
+    }
+
+    let orderByClause: any = { createdAt: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antiguo':
+        orderByClause = { createdAt: 'asc' };
+        break;
+      case 'nombre_asc':
+        orderByClause = { nombre: 'asc' };
+        break;
+      case 'nombre_desc':
+        orderByClause = { nombre: 'desc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { createdAt: 'desc' };
+        break;
+    }
+
     return prisma.categoria.findMany({
-      where: filtros.activo !== undefined ? { activo: filtros.activo } : undefined,
-      orderBy: {
-        nombre: 'asc',
-      },
+      where: whereClause,
+      orderBy: orderByClause,
     });
   }
 

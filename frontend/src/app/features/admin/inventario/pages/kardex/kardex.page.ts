@@ -9,12 +9,12 @@ import { VentaService } from '../../../ventas/services/venta.service';
 import { CompraService } from '../../../compras/services/compra.service';
 import { MovimientoInventario } from '../../../../../core/models/inventario.model';
 import { Producto } from '../../../../../core/models/producto.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent } from '@shared/components';
+import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent, TableFilterComponent, SortOption } from '@shared/components';
 
 @Component({
   selector: 'app-kardex-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent, TableFilterComponent],
   templateUrl: './kardex.page.html',
   styleUrl: './kardex.page.scss'
 })
@@ -29,6 +29,14 @@ export class KardexPageComponent implements OnInit {
   movimientos = signal<MovimientoInventario[]>([]);
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
+  ordenarPor = signal<string>('reciente');
+
+  sortOptions: SortOption[] = [
+    { label: 'Más reciente', value: 'reciente', icon: 'schedule' },
+    { label: 'Más antiguo', value: 'antiguo', icon: 'history' },
+    { label: 'Mayor cantidad', value: 'cantidad_desc', icon: 'format_list_numbered' },
+    { label: 'Menor cantidad', value: 'cantidad_asc', icon: 'filter_list' },
+  ];
 
   // Paginación
   pagina = signal<number>(1);
@@ -61,6 +69,7 @@ export class KardexPageComponent implements OnInit {
       fechaFin: values.fechaFin || undefined,
       pagina: this.pagina(),
       limite: this.limite(),
+      ordenarPor: this.ordenarPor(),
     };
 
     this.inventarioService.listar(filtros).subscribe({
@@ -77,6 +86,12 @@ export class KardexPageComponent implements OnInit {
         this.errorMessage.set(err.error?.message || 'Error al cargar los movimientos del Kardex');
       }
     });
+  }
+
+  cambiarOrden(orden: string) {
+    this.ordenarPor.set(orden);
+    this.pagina.set(1);
+    this.cargarMovimientos();
   }
 
   aplicarFiltros() {

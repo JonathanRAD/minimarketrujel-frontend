@@ -9,7 +9,11 @@ import { Proveedor } from '../../../../../core/models/proveedor.model';
 import { Producto } from '../../../../../core/models/producto.model';
 import { EstadoCompra, CrearCompraDetalleDto } from '../../../../../core/models/compra.model';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent } from '@shared/components';
-
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 interface ItemCompraTemporal {
   producto: Producto;
   cantidad: number;
@@ -20,7 +24,22 @@ interface ItemCompraTemporal {
 @Component({
   selector: 'app-compra-form-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BuscadorProductoComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    SpinnerComponent,
+    ErrorAlertComponent,
+    EmptyStateComponent,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    BuscadorProductoComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   templateUrl: './compra-form.page.html',
   styleUrl: './compra-form.page.scss'
 })

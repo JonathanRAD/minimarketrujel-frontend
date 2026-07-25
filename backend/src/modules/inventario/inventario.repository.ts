@@ -24,6 +24,23 @@ export class InventarioRepository {
       }
     }
 
+    let orderByClause: any = { fecha: 'desc' };
+    switch (filtros.ordenarPor) {
+      case 'antiguo':
+        orderByClause = { fecha: 'asc' };
+        break;
+      case 'cantidad_desc':
+        orderByClause = { cantidad: 'desc' };
+        break;
+      case 'cantidad_asc':
+        orderByClause = { cantidad: 'asc' };
+        break;
+      case 'reciente':
+      default:
+        orderByClause = { fecha: 'desc' };
+        break;
+    }
+
     const limite = filtros.limite ?? 10;
     const pagina = filtros.pagina ?? 1;
     const skip = (pagina - 1) * limite;
@@ -45,9 +62,7 @@ export class InventarioRepository {
             },
           },
         },
-        orderBy: {
-          fecha: 'desc',
-        },
+        orderBy: orderByClause,
         skip,
         take: limite,
       })

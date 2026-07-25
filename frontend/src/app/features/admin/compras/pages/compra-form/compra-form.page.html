@@ -20,26 +20,26 @@
 <div class="compra-grid">
   <div class="card form-card">
     <form [formGroup]="form" (ngSubmit)="guardar()">
-      <div class="form-group">
-        <label class="form-label" for="proveedorId">Proveedor</label>
-        <select id="proveedorId" formControlName="proveedorId" class="form-control">
-          <option value="">-- Selecciona un proveedor --</option>
-          <option *ngFor="let p of proveedores()" [value]="p.id">
+      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+        <mat-label>Proveedor</mat-label>
+        <mat-select formControlName="proveedorId">
+          <mat-option value="">-- Selecciona un proveedor --</mat-option>
+          <mat-option *ngFor="let p of proveedores()" [value]="p.id">
             {{ p.nombre }}
-          </option>
-        </select>
-        <div class="error" *ngIf="form.get('proveedorId')?.touched && form.get('proveedorId')?.errors?.['required']">
-          El proveedor es obligatorio.
-        </div>
-      </div>
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>local_shipping</mat-icon>
+        <mat-error *ngIf="form.get('proveedorId')?.hasError('required')">El proveedor es obligatorio.</mat-error>
+      </mat-form-field>
 
-      <div class="form-group">
-        <label class="form-label" for="estado">Estado de Ingreso</label>
-        <select id="estado" formControlName="estado" class="form-control">
-          <option value="RECIBIDA">Recibida (Ingresa stock e inventario al instante)</option>
-          <option value="PENDIENTE">Pendiente (No incrementa stock hasta marcarse como Recibida)</option>
-        </select>
-      </div>
+      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 0.5rem;">
+        <mat-label>Estado de Ingreso</mat-label>
+        <mat-select formControlName="estado">
+          <mat-option value="RECIBIDA">Recibida (Ingresa stock e inventario al instante)</mat-option>
+          <mat-option value="PENDIENTE">Pendiente (No incrementa stock hasta recibirse)</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>fact_check</mat-icon>
+      </mat-form-field>
 
       <app-buscador-producto
         label="Añadir Productos a la Compra"

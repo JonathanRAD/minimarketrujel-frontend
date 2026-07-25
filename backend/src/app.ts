@@ -2,12 +2,16 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import { env } from './config/env';
 import routes from './routes';
 import { errorHandler } from './common/middlewares/errorHandler';
 
 export function createApp(): Application {
   const app = express();
+
+  // Compresión Gzip para todas las respuestas HTTP (reduce peso hasta 80-90%)
+  app.use(compression());
 
   app.use(helmet());
   app.use(
