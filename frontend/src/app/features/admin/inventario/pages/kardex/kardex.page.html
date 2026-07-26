@@ -83,7 +83,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let mov of movimientos()">
+      <tr *ngFor="let mov of movimientos(); trackBy: trackById">
         <td class="text-muted">{{ mov.fecha | date: 'dd/MM/yyyy, hh:mm a' }}</td>
         <td class="font-semibold">{{ mov.producto?.nombre }}</td>
         <td class="text-muted">{{ mov.producto?.codigoBarras }}</td>

@@ -110,4 +110,8 @@ export class CategoriasListPageComponent implements OnInit {
       error: (err) => this.errorMessage.set(err.error?.message || 'Error al eliminar la categoría'),
     });
   }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
 }

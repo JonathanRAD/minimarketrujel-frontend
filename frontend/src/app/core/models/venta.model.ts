@@ -64,6 +64,7 @@ export interface ItemCarrito {
   precioUnitario: number;
   precioEspecial?: number;
   promocionTitulo?: string;
+  desglosePromo?: string;
   subtotal: number;
   ahorro: number;
 }

@@ -83,5 +83,9 @@ export class ComprasListPageComponent implements OnInit {
   exportarExcel(): void {
     this.excelService.descargarExcel('compras', 'Reporte_Compras.xlsx');
   }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
 }
 

@@ -95,7 +95,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
   mostrarModalPeso = signal(false);
   productoParaPeso = signal<Producto | null>(null);
   pesoIngresado = signal<number | null>(null);
-  ultimoProducto = signal<{ nombre: string; cantidad: number; precio: number; unidad: string } | null>(null);
+  ultimoProducto = signal<{ nombre: string; cantidad: number; precio: number; unidad: string; subtotal?: number } | null>(null);
 
   ngOnInit() {
     this.verificarTurnoCaja();
@@ -212,12 +212,14 @@ export class VentaPageComponent implements OnInit, OnDestroy {
     // Buscar si el producto ya existe en el carrito para mostrar la cantidad total acumulada
     const itemCarrito = this.items().find((item) => item.producto.id === producto.id);
     const cantidadTotal = itemCarrito ? itemCarrito.cantidad : cantidad;
+    const subtotalActual = itemCarrito ? itemCarrito.subtotal : Number(producto.precioVenta) * cantidad;
 
     this.ultimoProducto.set({
       nombre: producto.nombre,
       cantidad: cantidadTotal,
       precio: Number(producto.precioVenta),
       unidad: producto.unidadMedida,
+      subtotal: subtotalActual,
     });
   }
 
@@ -232,6 +234,14 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       return (palabras[0][0] + (palabras[1][0] || '')).toUpperCase();
     }
     return nombre.substring(0, 2).toUpperCase();
+  }
+
+  trackByProductoId(index: number, prod: Producto): string {
+    return prod.id;
+  }
+
+  trackByItemId(index: number, item: any): string {
+    return item.producto.id;
   }
 
   obtenerColorFallback(nombre: string): string {
@@ -415,6 +425,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
   ultimaVentaId = signal<string | null>(null);
   ultimoMetodoPago = signal<string | null>(null);
   ultimoTotal = signal<number>(0);
+  ultimoAhorroTotal = signal<number>(0);
   ultimoCarrito = signal<any[]>([]);
   fechaVentaActual = signal<Date>(new Date());
   clienteSeleccionadoVenta = signal<any | null>(null);
@@ -446,11 +457,22 @@ export class VentaPageComponent implements OnInit, OnDestroy {
     this.cerrarModalQr();
   }
 
+  reiniciarEstadoPOS(): void {
+    this.carritoService.limpiar();
+    this.ultimoProducto.set(null);
+    this.clienteSeleccionado.set(null);
+    this.busquedaCatalogo.set('');
+    this.busquedaCliente.set('');
+    this.mensajeError.set(null);
+  }
+
   cerrarModalExito(): void {
     this.mostrarModalExito.set(false);
     this.ultimaVentaId.set(null);
     this.ultimoMetodoPago.set(null);
     this.ultimoTotal.set(0);
+    this.ultimoAhorroTotal.set(0);
+    this.reiniciarEstadoPOS();
   }
 
   onEfectivoChange(val: string): void {
@@ -513,13 +535,13 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       this.ultimaVentaId.set(resultado.id);
       this.ultimoMetodoPago.set(mostrarComo || metodoPago);
       this.ultimoTotal.set(totalVenta);
+      this.ultimoAhorroTotal.set(this.ahorroTotal());
       this.ultimoCarrito.set([...this.items()]);
       this.fechaVentaActual.set(new Date());
       this.clienteSeleccionadoVenta.set(this.clienteSeleccionado());
 
       this.procesandoCobro.set(false);
-      this.carritoService.limpiar();
-      this.clienteSeleccionado.set(null); // Limpiar cliente asociado
+      this.reiniciarEstadoPOS();
       this.actualizarVentasPendientes(); // Forzar actualización de IndexedDB badge
       this.cerrarModalMixto();
       this.mostrarModalExito.set(true); // Abrir confirmación

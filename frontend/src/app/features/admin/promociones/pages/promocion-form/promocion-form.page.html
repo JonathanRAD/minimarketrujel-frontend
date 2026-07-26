@@ -102,10 +102,20 @@
         <mat-icon matPrefix>percent</mat-icon>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'PRECIO_FIJO' || form.value.tipo === 'VOLUMEN'">
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'PRECIO_FIJO'">
         <mat-label>Precio Especial de Oferta (S/)</mat-label>
-        <input matInput type="number" min="0" step="0.1" formControlName="valorDescuento" />
+        <input matInput type="number" min="0" step="0.01" formControlName="valorDescuento" />
         <span matPrefix>S/&nbsp;</span>
+      </mat-form-field>
+
+      <!-- Para VOLUMEN: valorDescuento = precio unitario de la oferta (ej: 0.33 para "3 por 1 Sol") -->
+      <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'VOLUMEN'">
+        <mat-label>Precio Unitario de la Oferta (S/ por unidad)</mat-label>
+        <input matInput type="number" min="0" step="0.01" formControlName="valorDescuento" />
+        <span matPrefix>S/&nbsp;</span>
+        <mat-hint *ngIf="form.value.cantidadMinima && form.value.valorDescuento">
+          Pack de {{ form.value.cantidadMinima }} unidades = S/ {{ (form.value.cantidadMinima * form.value.valorDescuento) | number: '1.2-2' }}
+        </mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="outline" *ngIf="form.value.tipo === 'VOLUMEN'">

@@ -121,4 +121,8 @@ export class ProveedoresListPageComponent implements OnInit {
       error: (err) => this.errorMessage.set(err.error?.message || 'Error al eliminar el proveedor')
     });
   }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
 }

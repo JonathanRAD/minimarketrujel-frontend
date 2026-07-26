@@ -35,7 +35,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let promo of promociones()">
+      <tr *ngFor="let promo of promociones(); trackBy: trackById">
         <td>
           <div class="promo-info-cell">
             <span class="material-icons promo-icon">local_offer</span>

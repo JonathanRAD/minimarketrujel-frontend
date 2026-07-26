@@ -42,7 +42,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let turno of turnos()" (click)="seleccionarTurno(turno)" style="cursor: pointer;" title="Hacer clic para ver auditoría del arqueo">
+      <tr *ngFor="let turno of turnos(); trackBy: trackById" (click)="seleccionarTurno(turno)" style="cursor: pointer;" title="Hacer clic para ver auditoría del arqueo">
         <td class="font-semibold text-muted">{{ turno.fechaApertura | date: 'dd/MM/yyyy, hh:mm a' }}</td>
         <td class="text-muted">
           {{ turno.fechaCierre ? (turno.fechaCierre | date: 'dd/MM/yyyy, hh:mm a') : 'Abierto actualmente' }}

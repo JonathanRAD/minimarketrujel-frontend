@@ -12,7 +12,6 @@
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
-<app-spinner *ngIf="cargando() && ventas().length === 0" message="Cargando historial de ventas..." />
 
 <!-- Ordenamiento de Ventas -->
 <app-table-filter
@@ -21,6 +20,8 @@
   [showSearch]="false"
   (sortChange)="cambiarOrden($event)">
 </app-table-filter>
+
+<app-spinner *ngIf="cargando() && ventas().length === 0" message="Cargando historial de ventas..." />
 
 <!-- Panel de Filtros por Fecha -->
 <div class="card filter-card" *ngIf="!cargando() || ventas().length > 0">
@@ -76,7 +77,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let venta of ventas()" [class.row-anulada]="venta.estado === 'ANULADA'">
+      <tr *ngFor="let venta of ventas(); trackBy: trackById" [class.row-anulada]="venta.estado === 'ANULADA'">
         <td class="font-semibold text-truncate" [title]="venta.id">
           <span class="ticket-id" (click)="verDetalle(venta)">
             #{{ venta.id.substring(0, 8) }}
@@ -133,8 +134,15 @@
   </button>
 </app-empty-state>
 
+<!-- Modal de carga del detalle -->
+<div class="modal-backdrop" *ngIf="cargandoDetalle()" style="display: flex; align-items: center; justify-content: center;">
+  <div class="modal-content" style="max-width: 300px; padding: 2.5rem 2rem; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+    <app-spinner message="Cargando detalle..." />
+  </div>
+</div>
+
 <!-- Modal de Detalle (Ticket Digital) -->
-<div class="modal-backdrop" *ngIf="ventaSeleccionada()" (click)="cerrarDetalle()">
+<div class="modal-backdrop" *ngIf="ventaSeleccionada() && !cargandoDetalle()" (click)="cerrarDetalle()">
   <div class="modal-content ticket-modal" (click)="$event.stopPropagation()">
     <div class="ticket-header">
       <span class="material-icons ticket-icon">storefront</span>

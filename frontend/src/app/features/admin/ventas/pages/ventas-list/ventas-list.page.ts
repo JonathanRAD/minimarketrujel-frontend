@@ -32,6 +32,7 @@ export class VentasListPageComponent implements OnInit {
 
   ventas = signal<Venta[]>([]);
   cargando = signal(true);
+  cargandoDetalle = signal(false);
   guardando = signal(false);
   errorMessage = signal<string | null>(null);
 
@@ -126,14 +127,14 @@ export class VentasListPageComponent implements OnInit {
   }
 
   verDetalle(venta: Venta) {
-    this.cargando.set(true);
+    this.cargandoDetalle.set(true);
     this.ventaService.obtenerPorId(venta.id).subscribe({
       next: (detallada) => {
         this.ventaSeleccionada.set(detallada);
-        this.cargando.set(false);
+        this.cargandoDetalle.set(false);
       },
       error: (err) => {
-        this.cargando.set(false);
+        this.cargandoDetalle.set(false);
         this.errorMessage.set(err.error?.message || 'Error al obtener el detalle de la venta');
       }
     });
@@ -198,5 +199,9 @@ export class VentasListPageComponent implements OnInit {
 
   exportarExcel(): void {
     this.excelService.descargarExcel('ventas', 'Reporte_Ventas.xlsx');
+  }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
   }
 }

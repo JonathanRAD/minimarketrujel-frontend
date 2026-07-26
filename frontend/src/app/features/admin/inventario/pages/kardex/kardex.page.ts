@@ -209,5 +209,9 @@ export class KardexPageComponent implements OnInit {
   exportarExcel(): void {
     this.excelService.descargarExcel('inventario', 'Reporte_Inventario_Kardex.xlsx');
   }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
 }
 

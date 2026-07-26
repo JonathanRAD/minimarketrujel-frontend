@@ -132,4 +132,8 @@ export class ClientesListPageComponent implements OnInit {
       error: (err) => this.errorMessage.set(err.error?.message || 'Error al eliminar el cliente')
     });
   }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
 }

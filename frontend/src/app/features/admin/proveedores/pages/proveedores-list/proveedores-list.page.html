@@ -43,7 +43,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let prov of proveedores()">
+      <tr *ngFor="let prov of proveedores(); trackBy: trackById">
         <td class="font-semibold">{{ prov.nombre }}</td>
         <td class="text-muted">{{ prov.contacto || '-' }}</td>
         <td class="text-muted">{{ prov.telefono || '-' }}</td>

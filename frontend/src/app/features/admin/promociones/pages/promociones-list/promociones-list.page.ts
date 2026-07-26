@@ -132,4 +132,8 @@ export class PromocionesListPageComponent implements OnInit {
     const fin = new Date(promo.fechaFin);
     return ahora >= inicio && ahora <= fin;
   }
+
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
 }

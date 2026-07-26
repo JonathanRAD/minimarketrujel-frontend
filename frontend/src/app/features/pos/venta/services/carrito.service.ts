@@ -120,6 +120,7 @@ export class CarritoService {
     let precioFinalUnitario = precioBase;
     let subtotalFinal = cant * precioBase;
     let ahorroFinal = 0;
+    let desgloseText: string | undefined = undefined;
 
     switch (promo.tipo) {
       case 'PORCENTAJE': {
@@ -127,19 +128,42 @@ export class CarritoService {
         precioFinalUnitario = Number((precioBase * (1 - pct / 100)).toFixed(2));
         subtotalFinal = Number((cant * precioFinalUnitario).toFixed(2));
         ahorroFinal = Number(((precioBase - precioFinalUnitario) * cant).toFixed(2));
+        desgloseText = `${pct}% de descuento directo`;
         break;
       }
       case 'PRECIO_FIJO': {
         precioFinalUnitario = Number(promo.valorDescuento || precioBase);
         subtotalFinal = Number((cant * precioFinalUnitario).toFixed(2));
         ahorroFinal = Number(((precioBase - precioFinalUnitario) * cant).toFixed(2));
+        desgloseText = `Precio especial oferta S/ ${precioFinalUnitario.toFixed(2)}`;
         break;
       }
       case 'VOLUMEN': {
         if (cant >= promo.cantidadMinima) {
-          precioFinalUnitario = Number(promo.valorDescuento || precioBase);
-          subtotalFinal = Number((cant * precioFinalUnitario).toFixed(2));
-          ahorroFinal = Number(((precioBase - precioFinalUnitario) * cant).toFixed(2));
+          // precioOferta = precio unitario de la oferta (ej: 0.33 para "3 por 1 Sol")
+          const precioOferta = Number(promo.valorDescuento || precioBase);
+
+          const bloquesCompleto = Math.floor(cant / promo.cantidadMinima);
+          const unidadesSueltas = cant % promo.cantidadMinima;
+
+          // Redondear el precio de UN SOLO bundle al 10avo más cercano (0.1 sol)
+          // ANTES de multiplicar por bloques. Esto convierte 3×0.33=0.99 → 1.0
+          // y luego 6 × 1.0 = 6.00 exacto (en vez del antiguo round(5.94)=5.9 ❌)
+          const rawBundle = promo.cantidadMinima * precioOferta;
+          const singleBundlePrice = Math.round(rawBundle * 10) / 10;
+
+          const subtotalPacks = Number((bloquesCompleto * singleBundlePrice).toFixed(2));
+          const subtotalSueltas = Number((unidadesSueltas * precioBase).toFixed(2));
+
+          subtotalFinal = Number((subtotalPacks + subtotalSueltas).toFixed(2));
+          precioFinalUnitario = precioOferta;
+          ahorroFinal = Number(((precioBase * cant) - subtotalFinal).toFixed(2));
+
+          if (unidadesSueltas > 0) {
+            desgloseText = `${bloquesCompleto} Pack(s) de ${promo.cantidadMinima} + ${unidadesSueltas} suelta(s) a S/ ${precioBase.toFixed(2)}`;
+          } else {
+            desgloseText = `${bloquesCompleto} Pack(s) de ${promo.cantidadMinima} u.`;
+          }
         } else {
           subtotalFinal = Number((cant * precioBase).toFixed(2));
         }
@@ -150,8 +174,11 @@ export class CarritoService {
           const bloques = Math.floor(cant / promo.cantidadMinima);
           const unidadesGratis = bloques * promo.cantidadGratis;
           const unidadesCobradas = Math.max(0, cant - unidadesGratis);
+          
           subtotalFinal = Number((unidadesCobradas * precioBase).toFixed(2));
+          precioFinalUnitario = Number((subtotalFinal / cant).toFixed(2));
           ahorroFinal = Number((unidadesGratis * precioBase).toFixed(2));
+          desgloseText = `${unidadesGratis} unidad(es) GRATIS incluida(s)`;
         } else {
           subtotalFinal = Number((cant * precioBase).toFixed(2));
         }
@@ -164,6 +191,7 @@ export class CarritoService {
       precioUnitario: precioFinalUnitario,
       precioEspecial: precioFinalUnitario < precioBase ? precioFinalUnitario : undefined,
       promocionTitulo: promo.titulo,
+      desglosePromo: desgloseText,
       subtotal: Math.max(0, subtotalFinal),
       ahorro: Math.max(0, ahorroFinal),
     };

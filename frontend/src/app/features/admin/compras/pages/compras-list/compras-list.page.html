@@ -41,7 +41,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let compra of compras()">
+      <tr *ngFor="let compra of compras(); trackBy: trackById">
         <td class="font-semibold text-truncate" [title]="compra.id">
           <a [routerLink]="['/admin/compras', compra.id, 'detalle']" class="compra-link">
             #{{ compra.id.substring(0, 8) }}

@@ -131,5 +131,8 @@ export class TurnosCajaListPageComponent implements OnInit {
   exportarExcel(): void {
     this.excelService.descargarExcel('turnos-caja', 'Reporte_Turnos_Caja.xlsx');
   }
-}
 
+  trackById(index: number, item: { id: string }): string {
+    return item.id;
+  }
+}

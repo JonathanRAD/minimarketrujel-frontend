@@ -1573,9 +1573,16 @@
 }
 
 @media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
   body {
     background-color: white !important;
     color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   // Ocultar todo lo de atrás
@@ -1594,13 +1601,15 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 80mm;
-    max-width: 80mm;
+    width: 78mm;
+    max-width: 78mm;
     background-color: white !important;
     box-shadow: none !important;
     border: none !important;
     margin: 0 !important;
-    padding: 0 4mm 0 4mm !important;
+    padding: 3mm 4mm !important;
+    font-size: 11px;
+    line-height: 1.25;
   }
 
   // Estilos del ticket impreso
@@ -1609,24 +1618,22 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    margin-bottom: 1rem;
-
-    .ticket-icon {
-      display: none !important;
-    }
+    margin-bottom: 0.35rem;
 
     .ticket-title {
-      font-size: 1.3rem !important;
+      font-size: 1.15rem !important;
       font-weight: 800;
       color: black;
       margin: 0;
+      letter-spacing: -0.02em;
     }
 
     .ticket-subtitle {
-      font-size: 0.8rem !important;
+      font-size: 0.75rem !important;
+      font-weight: 700;
       text-transform: uppercase;
       color: black;
-      margin: 0.2rem 0 0 0;
+      margin: 0.15rem 0 0 0;
     }
   }
 
@@ -1634,29 +1641,23 @@
     display: block;
     width: 100%;
     height: 1px;
-    border-top: 1px dashed black;
-    margin: 0.8rem 0;
+    border-top: 1px dashed #000;
+    margin: 0.4rem 0;
   }
 
   .ticket-meta {
-    font-size: 0.8rem !important;
+    font-size: 0.75rem !important;
     color: black;
     
     .meta-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.15rem;
     }
   }
 
   .ticket-body {
-    margin-top: 0.5rem;
-
-    .body-title {
-      font-size: 0.85rem;
-      margin: 0 0 0.5rem 0;
-      font-weight: 700;
-    }
+    margin-top: 0.25rem;
   }
 
   .ticket-table {
@@ -1664,49 +1665,67 @@
     border-collapse: collapse;
 
     th {
-      font-size: 0.75rem !important;
+      font-size: 0.7rem !important;
       font-weight: 700;
       border-bottom: 1px dashed black;
-      padding: 4px;
+      padding: 2px;
       color: black;
       text-transform: uppercase;
     }
 
     td {
-      font-size: 0.75rem !important;
-      padding: 6px 4px;
+      font-size: 0.725rem !important;
+      padding: 3px 2px;
       vertical-align: top;
       color: black;
     }
 
     .product-name {
       font-weight: 600;
+      font-size: 0.75rem;
+      line-height: 1.15;
+      text-transform: uppercase;
     }
 
-    .product-code {
-      font-size: 0.65rem !important;
-      color: #333;
+    .product-promo-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #000;
+      margin-top: 1px;
     }
   }
 
   .ticket-footer {
-    margin-top: 0.5rem;
-    text-align: center;
+    margin-top: 0.35rem;
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem !important;
+      margin-bottom: 2px;
+      color: black;
+
+      &.discount-row {
+        font-weight: 700;
+      }
+    }
 
     .footer-total-row {
       display: flex;
       justify-content: space-between;
-      font-size: 1rem !important;
+      font-size: 0.95rem !important;
       font-weight: 800;
       border-top: 1px dashed black;
-      padding-top: 0.5rem;
+      padding-top: 0.35rem;
+      margin-top: 0.25rem;
       color: black;
     }
 
     .footer-thanks {
-      font-size: 0.75rem !important;
+      font-size: 0.725rem !important;
       font-style: italic;
-      margin-top: 0.8rem;
+      margin-top: 0.5rem;
+      text-align: center;
       color: black;
     }
   }

@@ -19,7 +19,7 @@
 
 <!-- POS Activo -->
 <div class="pos-container" *ngIf="!cargandoTurno() && turnoActivo()">
-  
+
   <!-- Cabecera del POS -->
   <header class="pos-header">
     <div class="pos-header-info">
@@ -34,13 +34,14 @@
           <span>Ventas Turno: S/ {{ turnoActivo()?.ventasEfectivo | number: '1.2-2' }}</span>
         </span>
         <!-- Indicador de Sincronización Offline -->
-        <span class="badge" [class.badge-sync-online]="ventasPendientesConteo() === 0" [class.badge-sync-pending]="ventasPendientesConteo() > 0">
+        <span class="badge" [class.badge-sync-online]="ventasPendientesConteo() === 0"
+          [class.badge-sync-pending]="ventasPendientesConteo() > 0">
           <span class="material-icons text-xs">{{ ventasPendientesConteo() === 0 ? 'cloud_done' : 'cloud_sync' }}</span>
           <span>{{ ventasPendientesConteo() === 0 ? 'Sincronizado' : 'Pendientes: ' + ventasPendientesConteo() }}</span>
         </span>
       </div>
     </div>
-    
+
     <div class="pos-header-actions">
       <app-scanner-input (codigoEscaneado)="onCodigoEscaneado($event)" />
     </div>
@@ -57,33 +58,30 @@
 
   <!-- Navegación de Pestañas Móviles -->
   <div class="pos-mobile-tabs">
-    <button 
-      type="button" 
-      class="mobile-tab-btn"
-      [class.active]="vistaActiva() === 'CATALOGO'"
+    <button type="button" class="mobile-tab-btn" [class.active]="vistaActiva() === 'CATALOGO'"
       (click)="vistaActiva.set('CATALOGO')">
       <span class="material-icons">grid_view</span>
       <span>Catálogo</span>
     </button>
-    <button 
-      type="button" 
-      class="mobile-tab-btn"
-      [class.active]="vistaActiva() === 'CARRITO'"
+    <button type="button" class="mobile-tab-btn" [class.active]="vistaActiva() === 'CARRITO'"
       (click)="vistaActiva.set('CARRITO')">
       <div class="cart-tab-label-wrapper" style="position: relative; display: inline-flex;">
         <span class="material-icons">shopping_cart</span>
-        <span class="mobile-cart-badge" *ngIf="cantidadTotal() > 0" style="position: absolute; top: -6px; right: -10px; background-color: var(--color-danger); color: white; border-radius: 50%; font-size: 0.65rem; padding: 2px 5px; font-weight: bold; line-height: 1;">{{ cantidadTotal() }}</span>
+        <span class="mobile-cart-badge" *ngIf="cantidadTotal() > 0"
+          style="position: absolute; top: -6px; right: -10px; background-color: var(--color-danger); color: white; border-radius: 50%; font-size: 0.65rem; padding: 2px 5px; font-weight: bold; line-height: 1;">{{
+          cantidadTotal() }}</span>
       </div>
       <span style="margin-left: 0.25rem;">Carrito & Pago</span>
     </button>
   </div>
 
   <!-- Contenido Principal: Dos Columnas -->
-  <div class="pos-workspace" [class.show-catalogo]="vistaActiva() === 'CATALOGO'" [class.show-carrito]="vistaActiva() === 'CARRITO'">
-    
+  <div class="pos-workspace" [class.show-catalogo]="vistaActiva() === 'CATALOGO'"
+    [class.show-carrito]="vistaActiva() === 'CARRITO'">
+
     <!-- Columna Izquierda: Carrito de Compras & Pago -->
     <div class="pos-left-column">
-      
+
       <!-- Detalle de la Venta (Carrito) -->
       <div class="pos-cart-panel card flex-1">
         <div class="cart-header">
@@ -92,10 +90,7 @@
             <span class="cart-count">
               {{ cantidadTotal() }} artículos
             </span>
-            <button 
-              type="button" 
-              class="btn-clear-cart" 
-              (click)="limpiarCarrito()"
+            <button type="button" class="btn-clear-cart" (click)="limpiarCarrito()"
               title="Vaciar todo el carrito de la venta actual">
               <span class="material-icons btn-clear-icon">remove_shopping_cart</span>
               <span>Limpiar Carrito</span>
@@ -107,7 +102,8 @@
         <div class="visor-ultimo-escaneo" *ngIf="ultimoProducto()">
           <div class="visor-detalles">
             <span class="visor-unidad">
-              {{ ultimoProducto()?.cantidad | number: '1.0-3' }} {{ ultimoProducto()?.unidad === 'UNIDAD' ? 'UN' : ultimoProducto()?.unidad }}
+              {{ ultimoProducto()?.cantidad | number: '1.0-3' }} {{ ultimoProducto()?.unidad === 'UNIDAD' ? 'UN' :
+              ultimoProducto()?.unidad }}
             </span>
             <span class="visor-multiplicador">X</span>
             <span class="visor-precio">S/ {{ ultimoProducto()?.precio | number: '1.2-2' }}</span>
@@ -116,7 +112,7 @@
             {{ ultimoProducto()?.nombre }}
           </div>
           <div class="visor-total">
-            S/ {{ (ultimoProducto()!.cantidad * ultimoProducto()!.precio) | number: '1.2-2' }}
+            S/ {{ (ultimoProducto()?.subtotal || 0) | number: '1.2-2' }}
           </div>
         </div>
 
@@ -126,11 +122,13 @@
             <span class="material-icons pill-icon">person</span>
             <div class="client-pill-info">
               <span class="client-pill-name">{{ clienteSeleccionado().nombre }}</span>
-              <span class="client-pill-limit" *ngIf="clienteSeleccionado().limiteCredito && clienteSeleccionado().limiteCredito > 0">
+              <span class="client-pill-limit"
+                *ngIf="clienteSeleccionado().limiteCredito && clienteSeleccionado().limiteCredito > 0">
                 Crédito: S/ {{ clienteSeleccionado().limiteCredito | number: '1.2-2' }}
               </span>
             </div>
-            <button type="button" class="btn-clear-client" (click)="removerClienteSeleccionado()" title="Remover cliente">
+            <button type="button" class="btn-clear-client" (click)="removerClienteSeleccionado()"
+              title="Remover cliente">
               <span class="material-icons">close</span>
             </button>
           </div>
@@ -138,23 +136,16 @@
           <ng-template #searchClientTpl>
             <div class="client-search-wrapper">
               <span class="material-icons search-icon">person_search</span>
-              <input
-                type="text"
-                placeholder="Asociar cliente (DNI, RUC o Nombre)..."
-                class="client-search-input"
-                [value]="busquedaCliente()"
-                (input)="onBusquedaClienteChange(clientQuery.value)"
-                #clientQuery />
-              <button type="button" class="btn-clear-search-client" *ngIf="busquedaCliente()" (click)="clientQuery.value = ''; onBusquedaClienteChange('')">
+              <input type="text" placeholder="Asociar cliente (DNI, RUC o Nombre)..." class="client-search-input"
+                [value]="busquedaCliente()" (input)="onBusquedaClienteChange(clientQuery.value)" #clientQuery />
+              <button type="button" class="btn-clear-search-client" *ngIf="busquedaCliente()"
+                (click)="clientQuery.value = ''; onBusquedaClienteChange('')">
                 <span class="material-icons">close</span>
               </button>
 
               <!-- Resultados de búsqueda rápidos -->
               <div class="client-dropdown-results" *ngIf="clientesFiltrados().length > 0">
-                <button
-                  type="button"
-                  class="client-result-item"
-                  *ngFor="let c of clientesFiltrados()"
+                <button type="button" class="client-result-item" *ngFor="let c of clientesFiltrados()"
                   (click)="seleccionarCliente(c)">
                   <span class="material-icons">person</span>
                   <div class="client-result-info">
@@ -190,45 +181,41 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let item of items()">
+                <tr *ngFor="let item of items(); trackBy: trackByItemId">
                   <td>
                     <div class="cart-product-cell">
                       <span class="font-semibold product-name">{{ item.producto.nombre }}</span>
                       <span class="text-xs text-muted">Cod: {{ item.producto.codigoBarras }}</span>
-                      <span class="badge-oferta-chip text-xs" *ngIf="item.promocionTitulo" style="color: #2563eb; font-weight: 600; display: block;">
-                        🏷️ {{ item.promocionTitulo }}
+                      <span class="badge-oferta-chip text-xs" *ngIf="item.promocionTitulo"
+                        style="color: #2563eb; font-weight: 600; display: block; margin-top: 0.15rem;">
+                        [Oferta] {{ item.promocionTitulo }}
+                        <span *ngIf="item.desglosePromo"
+                          style="font-weight: 400; color: #4b5563; display: block; font-size: 0.725rem;">
+                          ({{ item.desglosePromo }})
+                        </span>
                       </span>
                     </div>
                   </td>
                   <td>
                     <div class="quantity-control-wrapper">
-                      <button 
-                        type="button" 
-                        class="btn-qty" 
-                        (click)="decrementar(item.producto.id, item.cantidad)">
+                      <button type="button" class="btn-qty" (click)="decrementar(item.producto.id, item.cantidad)">
                         <span class="material-icons qty-icon">remove</span>
                       </button>
-                      <input 
-                        type="number" 
-                        [id]="'qty-' + item.producto.id"
-                        class="qty-input font-semibold"
+                      <input type="number" [id]="'qty-' + item.producto.id" class="qty-input font-semibold"
                         [step]="item.producto.unidadMedida === 'KG' || item.producto.unidadMedida === 'G' ? '0.001' : '1'"
-                        [value]="item.cantidad"
-                        (change)="cambiarCantidadDirecto(item.producto.id, qtyInput.value)"
-                        (keyup.enter)="qtyInput.blur()"
-                        #qtyInput />
-                      <button 
-                        type="button" 
-                        class="btn-qty" 
-                        (click)="incrementar(item.producto.id, item.cantidad)">
+                        [value]="item.cantidad" (change)="cambiarCantidadDirecto(item.producto.id, qtyInput.value)"
+                        (keyup.enter)="qtyInput.blur()" #qtyInput />
+                      <button type="button" class="btn-qty" (click)="incrementar(item.producto.id, item.cantidad)">
                         <span class="material-icons qty-icon">add</span>
                       </button>
                     </div>
                   </td>
                   <td style="text-align: right;" class="text-muted text-sm">
                     <ng-container *ngIf="item.precioEspecial">
-                      <s class="text-xs text-muted" style="text-decoration: line-through; display: block;">S/ {{ item.precioOriginal | number: '1.2-2' }}</s>
-                      <span class="font-semibold" style="color: #10b981;">S/ {{ item.precioUnitario | number: '1.2-2' }}</span>
+                      <s class="text-xs text-muted" style="text-decoration: line-through; display: block;">S/ {{
+                        item.precioOriginal | number: '1.2-2' }}</s>
+                      <span class="font-semibold" style="color: #10b981;">S/ {{ item.precioUnitario | number: '1.2-2'
+                        }}</span>
                     </ng-container>
                     <ng-container *ngIf="!item.precioEspecial">
                       S/ {{ item.precioOriginal | number: '1.2-2' }}
@@ -238,7 +225,8 @@
                     S/ {{ item.subtotal | number: '1.2-2' }}
                   </td>
                   <td style="text-align: center;">
-                    <button type="button" class="btn-remove-item" (click)="quitar(item.producto.id)" title="Quitar Artículo">
+                    <button type="button" class="btn-remove-item" (click)="quitar(item.producto.id)"
+                      title="Quitar Artículo">
                       <span class="material-icons text-sm" style="font-size: 1.15rem;">delete_outline</span>
                     </button>
                   </td>
@@ -256,17 +244,15 @@
             <span class="summary-label">Total a Cobrar</span>
             <strong class="summary-total">S/ {{ total() | number: '1.2-2' }}</strong>
           </div>
-          <div class="summary-row ahorro-row" *ngIf="ahorroTotal() > 0" style="color: #10b981; font-weight: 600; font-size: 0.9rem; margin-top: 0.35rem; display: flex; justify-content: space-between;">
-            <span>🎉 Ahorro en Ofertas:</span>
+          <div class="summary-row ahorro-row" *ngIf="ahorroTotal() > 0"
+            style="color: #10b981; font-weight: 600; font-size: 0.9rem; margin-top: 0.35rem; display: flex; justify-content: space-between;">
+            <span>Ahorro en Ofertas:</span>
             <span>- S/ {{ ahorroTotal() | number: '1.2-2' }}</span>
           </div>
         </div>
 
         <div class="payment-actions">
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-cash" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-cash" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="cobrar('EFECTIVO')">
             <span class="material-icons btn-pay-icon">payments</span>
             <div class="btn-pay-text">
@@ -275,10 +261,7 @@
             </div>
           </button>
 
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-card" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-card" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="cobrar('TARJETA')">
             <span class="material-icons btn-pay-icon">credit_card</span>
             <div class="btn-pay-text">
@@ -287,10 +270,7 @@
             </div>
           </button>
 
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-qr" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-qr" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="abrirModalQr()">
             <span class="material-icons btn-pay-icon">qr_code_2</span>
             <div class="btn-pay-text">
@@ -299,10 +279,7 @@
             </div>
           </button>
 
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-mixed" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-mixed" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="abrirCobroMixto()">
             <span class="material-icons btn-pay-icon">sync_alt</span>
             <div class="btn-pay-text">
@@ -317,40 +294,30 @@
 
     <!-- Columna Derecha: Catálogo & Pago -->
     <div class="pos-right-column">
-      
+
       <!-- Catálogo Táctil de Productos -->
       <div class="pos-catalog-panel card">
-        
+
         <!-- Buscador Local Táctil -->
         <div class="catalog-search-wrapper">
           <span class="material-icons search-icon">search</span>
-          <input 
-            type="text" 
-            placeholder="Buscar producto en el catálogo por nombre o código..." 
-            class="form-control catalog-search-input"
-            [value]="busquedaCatalogo()"
-            (input)="onBusquedaCatalogoChange(localQuery.value)"
-            #localQuery />
-          <button class="btn-clear-search" *ngIf="busquedaCatalogo()" (click)="localQuery.value = ''; onBusquedaCatalogoChange('')">
+          <input type="text" placeholder="Buscar producto en el catálogo por nombre o código..."
+            class="form-control catalog-search-input" [value]="busquedaCatalogo()"
+            (input)="onBusquedaCatalogoChange(localQuery.value)" #localQuery />
+          <button class="btn-clear-search" *ngIf="busquedaCatalogo()"
+            (click)="localQuery.value = ''; onBusquedaCatalogoChange('')">
             <span class="material-icons">close</span>
           </button>
         </div>
 
         <!-- Barra de Categorías Horizontal -->
         <div class="catalog-categories-tabs">
-          <button 
-            type="button" 
-            class="category-tab"
-            [class.active]="categoriaSeleccionadaId() === 'TODAS'"
+          <button type="button" class="category-tab" [class.active]="categoriaSeleccionadaId() === 'TODAS'"
             (click)="seleccionarCategoria('TODAS')">
             Todos
           </button>
-          <button 
-            type="button" 
-            class="category-tab"
-            *ngFor="let cat of categorias()"
-            [class.active]="categoriaSeleccionadaId() === cat.id"
-            (click)="seleccionarCategoria(cat.id)">
+          <button type="button" class="category-tab" *ngFor="let cat of categorias()"
+            [class.active]="categoriaSeleccionadaId() === cat.id" (click)="seleccionarCategoria(cat.id)">
             {{ cat.nombre }}
           </button>
         </div>
@@ -363,29 +330,19 @@
           </div>
 
           <div class="products-grid" *ngIf="catalogoFiltrado().length > 0">
-            
-            <button 
-              type="button" 
-              class="product-card" 
-              *ngFor="let prod of catalogoFiltrado()"
-              [disabled]="obtenerStockDisponible(prod) <= 0"
-              (click)="agregarAlCarrito(prod)">
-              
+
+            <button type="button" class="product-card" *ngFor="let prod of catalogoFiltrado(); trackBy: trackByProductoId"
+              [disabled]="obtenerStockDisponible(prod) <= 0" (click)="agregarAlCarrito(prod)">
+
               <!-- Imagen / Fallback -->
               <div class="product-card-img-container">
-                <img 
-                  *ngIf="prod.imagenUrl" 
-                  [src]="prod.imagenUrl" 
-                  [alt]="prod.nombre" 
-                  class="product-card-img" />
-                
-                <div 
-                  *ngIf="!prod.imagenUrl" 
-                  class="product-card-img-fallback" 
+                <img *ngIf="prod.imagenUrl" [src]="prod.imagenUrl" [alt]="prod.nombre" loading="lazy" decoding="async" class="product-card-img" />
+
+                <div *ngIf="!prod.imagenUrl" class="product-card-img-fallback"
                   [style.background]="obtenerColorFallback(prod.nombre)">
                   {{ obtenerIniciales(prod.nombre) }}
                 </div>
-                
+
                 <!-- Badge de Precio flotante -->
                 <span class="product-card-price">S/ {{ prod.precioVenta | number: '1.2-2' }}</span>
               </div>
@@ -394,12 +351,11 @@
               <div class="product-card-body">
                 <span class="product-card-title">{{ prod.nombre }}</span>
                 <div class="product-card-stock-row">
-                  <span 
-                    class="product-card-stock" 
-                    [class.out-of-stock]="obtenerStockDisponible(prod) <= 0"
+                  <span class="product-card-stock" [class.out-of-stock]="obtenerStockDisponible(prod) <= 0"
                     [class.low-stock]="obtenerStockDisponible(prod) > 0 && obtenerStockDisponible(prod) <= prod.stockMinimo">
-                    {{ obtenerStockDisponible(prod) <= 0 ? 'Sin Stock' : ('Stock: ' + (obtenerStockDisponible(prod) | number: '1.0-2') + ' ' + prod.unidadMedida.toLowerCase()) }}
-                  </span>
+                    {{ obtenerStockDisponible(prod) <= 0 ? 'Sin Stock' :
+                      ('Stock: ' + (obtenerStockDisponible(prod) | number: '1.0-2') + ' ' +
+                      prod.unidadMedida.toLowerCase()) }} </span>
                 </div>
               </div>
 
@@ -420,10 +376,7 @@
         </div>
 
         <div class="payment-actions">
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-cash" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-cash" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="cobrar('EFECTIVO')">
             <span class="material-icons btn-pay-icon">payments</span>
             <div class="btn-pay-text">
@@ -432,10 +385,7 @@
             </div>
           </button>
 
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-card" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-card" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="cobrar('TARJETA')">
             <span class="material-icons btn-pay-icon">credit_card</span>
             <div class="btn-pay-text">
@@ -444,10 +394,7 @@
             </div>
           </button>
 
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-qr" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-qr" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="abrirModalQr()">
             <span class="material-icons btn-pay-icon">qr_code_2</span>
             <div class="btn-pay-text">
@@ -456,10 +403,7 @@
             </div>
           </button>
 
-          <button 
-            type="button" 
-            class="btn-pay btn-pay-mixed" 
-            [disabled]="items().length === 0 || procesandoCobro()"
+          <button type="button" class="btn-pay btn-pay-mixed" [disabled]="items().length === 0 || procesandoCobro()"
             (click)="abrirCobroMixto()">
             <span class="material-icons btn-pay-icon">sync_alt</span>
             <div class="btn-pay-text">
@@ -487,7 +431,8 @@
         </button>
       </div>
 
-      <div class="modal-body text-center" style="display: flex; flex-direction: column; gap: 1.25rem; align-items: center; padding: 1.5rem;">
+      <div class="modal-body text-center"
+        style="display: flex; flex-direction: column; gap: 1.25rem; align-items: center; padding: 1.5rem;">
         <span class="peso-product-name font-bold text-lg text-dark" style="text-transform: uppercase;">
           {{ productoParaPeso()?.nombre }}
         </span>
@@ -497,17 +442,9 @@
 
         <!-- Input de peso principal -->
         <div class="peso-input-wrapper">
-          <input
-            type="number"
-            step="0.001"
-            id="pesoInput"
-            [value]="pesoIngresado() ?? ''"
-            (input)="onPesoInputChange($event)"
-            class="form-control peso-field"
-            placeholder="0.000"
-            (keyup.enter)="confirmarPeso()"
-            min="0.001"
-            required />
+          <input type="number" step="0.001" id="pesoInput" [value]="pesoIngresado() ?? ''"
+            (input)="onPesoInputChange($event)" class="form-control peso-field" placeholder="0.000"
+            (keyup.enter)="confirmarPeso()" min="0.001" required />
           <span class="peso-unit-label font-bold">KG</span>
         </div>
 
@@ -542,10 +479,7 @@
 
       <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
         <button class="btn-cancel" (click)="cerrarModalPeso()">Cancelar</button>
-        <button
-          class="btn-primary"
-          [disabled]="!pesoIngresado() || pesoIngresado()! <= 0"
-          (click)="confirmarPeso()">
+        <button class="btn-primary" [disabled]="!pesoIngresado() || pesoIngresado()! <= 0" (click)="confirmarPeso()">
           <span class="material-icons">done</span>
           <span>Confirmar</span>
         </button>
@@ -574,15 +508,8 @@
             <label class="form-label" for="mixtoEfectivo">Monto en Efectivo (S/)</label>
             <div class="input-addon-wrapper">
               <span class="input-prefix">S/</span>
-              <input
-                type="number"
-                step="0.01"
-                id="mixtoEfectivo"
-                [value]="montoEfectivoMixto()"
-                (input)="onEfectivoChange(efectivoInput.value)"
-                #efectivoInput
-                class="form-control"
-                placeholder="0.00"
+              <input type="number" step="0.01" id="mixtoEfectivo" [value]="montoEfectivoMixto()"
+                (input)="onEfectivoChange(efectivoInput.value)" #efectivoInput class="form-control" placeholder="0.00"
                 min="0" />
             </div>
           </div>
@@ -591,15 +518,8 @@
             <label class="form-label" for="mixtoTarjeta">Monto con Tarjeta (S/)</label>
             <div class="input-addon-wrapper">
               <span class="input-prefix">S/</span>
-              <input
-                type="number"
-                step="0.01"
-                id="mixtoTarjeta"
-                [value]="montoTarjetaMixto()"
-                (input)="onTarjetaChange(tarjetaInput.value)"
-                #tarjetaInput
-                class="form-control"
-                placeholder="0.00"
+              <input type="number" step="0.01" id="mixtoTarjeta" [value]="montoTarjetaMixto()"
+                (input)="onTarjetaChange(tarjetaInput.value)" #tarjetaInput class="form-control" placeholder="0.00"
                 min="0" />
             </div>
           </div>
@@ -611,16 +531,15 @@
             {{ esMontoMixtoValido() ? 'check_circle' : 'info' }}
           </span>
           <span>
-            {{ esMontoMixtoValido() ? 'Las cantidades coinciden con el total' : 'La suma de efectivo y tarjeta debe igualar el total' }}
+            {{ esMontoMixtoValido() ? 'Las cantidades coinciden con el total' : 'La suma de efectivo y tarjeta debe
+            igualar el total' }}
           </span>
         </div>
       </div>
 
       <div class="modal-footer">
         <button class="btn-cancel" (click)="cerrarModalMixto()">Cancelar</button>
-        <button
-          class="btn-primary"
-          [disabled]="!esMontoMixtoValido() || procesandoCobro()"
+        <button class="btn-primary" [disabled]="!esMontoMixtoValido() || procesandoCobro()"
           (click)="confirmarCobroMixto()">
           <span class="material-icons" *ngIf="!procesandoCobro()">done</span>
           <span>{{ procesandoCobro() ? 'Procesando...' : 'Confirmar Cobro' }}</span>
@@ -639,33 +558,39 @@
         </button>
       </div>
 
-      <div class="modal-body text-center" style="display: flex; flex-direction: column; align-items: center; padding: 2rem; gap: 1.25rem; text-align: center;">
+      <div class="modal-body text-center"
+        style="display: flex; flex-direction: column; align-items: center; padding: 2rem; gap: 1.25rem; text-align: center;">
         <div class="qr-total-header" style="font-size: 1.15rem; color: var(--color-text-dark);">
           Monto a Yapear / Plinear:
-          <strong style="font-size: 2rem; color: #742274; font-weight: 800; display: block; margin-top: 0.5rem;">S/ {{ total() | number: '1.2-2' }}</strong>
+          <strong style="font-size: 2rem; color: #742274; font-weight: 800; display: block; margin-top: 0.5rem;">S/ {{
+            total() | number: '1.2-2' }}</strong>
         </div>
 
-        <div class="qr-image-wrapper" style="border: 2px dashed #8b5cf6; padding: 0.75rem; border-radius: var(--border-radius-lg); background-color: #f5f3ff; display: inline-block;">
-          <img src="assets/qr_yape_plin.jpg" alt="QR Yape Plin" style="max-width: 200px; height: auto; border-radius: var(--border-radius-md); display: block;" />
+        <div class="qr-image-wrapper"
+          style="border: 2px dashed #8b5cf6; padding: 0.75rem; border-radius: var(--border-radius-lg); background-color: #f5f3ff; display: inline-block;">
+          <img src="assets/qr_yape_plin.jpg" alt="QR Yape Plin"
+            style="max-width: 200px; height: auto; border-radius: var(--border-radius-md); display: block;" />
         </div>
 
         <p style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0; max-width: 320px; line-height: 1.4;">
           Pídele al cliente que escanee el código QR con su aplicación de Yape o Plin y digite el monto indicado.
         </p>
 
-        <div class="mixto-balance-status valid" style="background-color: #f5f3ff; border-color: rgba(139, 92, 246, 0.2); color: #6d28d9; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; border-radius: var(--border-radius-md); font-size: 0.85rem; font-weight: 500; margin: 0 auto; box-sizing: border-box;">
+        <div class="mixto-balance-status valid"
+          style="background-color: #f5f3ff; border-color: rgba(139, 92, 246, 0.2); color: #6d28d9; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; border-radius: var(--border-radius-md); font-size: 0.85rem; font-weight: 500; margin: 0 auto; box-sizing: border-box;">
           <span class="material-icons" style="font-size: 1.25rem;">info</span>
           <span>Verifica el mensaje de confirmación en tu celular.</span>
         </div>
       </div>
 
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); background-color: var(--color-bg-base);">
-        <button class="btn-cancel" style="height: 40px; padding: 0 1.25rem; border-radius: var(--border-radius-md); border: 1px solid var(--color-border); background-color: white; color: var(--color-text-dark); cursor: pointer; font-weight: 600;" (click)="cerrarModalQr()">Cancelar</button>
-        <button
-          class="btn-primary"
+      <div class="modal-footer"
+        style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); background-color: var(--color-bg-base);">
+        <button class="btn-cancel"
+          style="height: 40px; padding: 0 1.25rem; border-radius: var(--border-radius-md); border: 1px solid var(--color-border); background-color: white; color: var(--color-text-dark); cursor: pointer; font-weight: 600;"
+          (click)="cerrarModalQr()">Cancelar</button>
+        <button class="btn-primary"
           style="background-color: #8b5cf6; border-color: #8b5cf6; height: 40px; padding: 0 1.25rem; border-radius: var(--border-radius-md); color: white; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;"
-          [disabled]="procesandoCobro()"
-          (click)="confirmarPagoQr()">
+          [disabled]="procesandoCobro()" (click)="confirmarPagoQr()">
           <span class="material-icons" style="font-size: 1.25rem;" *ngIf="!procesandoCobro()">done</span>
           <span>{{ procesandoCobro() ? 'Procesando...' : 'Confirmar Cobro' }}</span>
         </button>
@@ -676,8 +601,9 @@
   <!-- Modal de Venta Exitosa -->
   <div class="modal-overlay modal-overlay-success" *ngIf="mostrarModalExito()">
     <div class="modal-card success-modal-card">
-      <div class="modal-body text-center" style="padding: 2.5rem 2rem; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
-        
+      <div class="modal-body text-center"
+        style="padding: 2.5rem 2rem; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
+
         <!-- Animación de Check Icon -->
         <div class="success-animation-wrapper">
           <div class="success-icon-circle">
@@ -702,16 +628,21 @@
           </div>
           <div class="success-detail-row total-row-detail">
             <span class="detail-label font-bold text-lg">Total Cobrado:</span>
-            <strong class="detail-value text-xl font-extrabold color-primary">S/ {{ ultimoTotal() | number: '1.2-2' }}</strong>
+            <strong class="detail-value text-xl font-extrabold color-primary">S/ {{ ultimoTotal() | number: '1.2-2'
+              }}</strong>
           </div>
         </div>
 
         <div class="success-modal-actions" style="display: flex; gap: 0.75rem; width: 100%;">
-          <button class="btn-secondary" style="flex: 1; height: 48px; border-radius: var(--border-radius-md); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: 1px solid var(--color-border); background-color: white; cursor: pointer; color: var(--color-text-dark); transition: all 0.2s;" (click)="imprimirTicket()">
+          <button class="btn-secondary"
+            style="flex: 1; height: 48px; border-radius: var(--border-radius-md); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: 1px solid var(--color-border); background-color: white; cursor: pointer; color: var(--color-text-dark); transition: all 0.2s;"
+            (click)="imprimirTicket()">
             <span class="material-icons">print</span>
             <span>Imprimir</span>
           </button>
-          <button class="btn-primary btn-success-action" style="flex: 1; margin: 0; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;" (click)="cerrarModalExito()">
+          <button class="btn-primary btn-success-action"
+            style="flex: 1; margin: 0; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;"
+            (click)="cerrarModalExito()">
             <span class="material-icons">shopping_bag</span>
             <span>Nueva Venta</span>
           </button>
@@ -721,23 +652,22 @@
     </div>
   </div>
 
-  <!-- Elemento Oculto en pantalla, visible solo al Imprimir (Ticket Térmico de 80mm) -->
+  <!-- Elemento Oculto en pantalla, visible solo al Imprimir (Ticket Térmico Compacto 80mm) -->
   <div class="print-only-ticket">
     <div class="ticket-header">
-      <span class="material-icons ticket-icon">storefront</span>
       <h3 class="ticket-title">MINIMARKET RUJEL</h3>
-      <p class="ticket-subtitle">Comprobante de Venta</p>
-      <span class="ticket-divider"></span>
+      <p class="ticket-subtitle">COMPROBANTE DE VENTA</p>
+      <div class="ticket-divider"></div>
     </div>
 
     <div class="ticket-meta">
       <div class="meta-row">
-        <span>Transacción:</span>
-        <strong class="text-mono">#{{ ultimaVentaId() }}</strong>
+        <span>N° Venta:</span>
+        <strong class="text-mono">#{{ (ultimaVentaId() || '').substring(0, 8).toUpperCase() }}</strong>
       </div>
       <div class="meta-row">
         <span>Fecha:</span>
-        <span>{{ fechaVentaActual() | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+        <span>{{ fechaVentaActual() | date: 'dd/MM/yyyy hh:mm a' }}</span>
       </div>
       <div class="meta-row">
         <span>Cajero:</span>
@@ -751,40 +681,52 @@
         <span>Método Pago:</span>
         <span class="font-semibold">{{ ultimoMetodoPago() }}</span>
       </div>
-      <span class="ticket-divider"></span>
+      <div class="ticket-divider"></div>
     </div>
 
     <div class="ticket-body">
-      <h4 class="body-title">Artículos</h4>
       <table class="ticket-table">
         <thead>
           <tr>
-            <th style="text-align: left;">Descripción</th>
-            <th style="width: 50px; text-align: center;">Cant.</th>
-            <th style="width: 70px; text-align: right;">Unit.</th>
-            <th style="width: 80px; text-align: right;">Total</th>
+            <th style="text-align: left;">DESCRIPCIÓN</th>
+            <th style="width: 35px; text-align: center;">CANT</th>
+            <th style="width: 50px; text-align: right;">P.UNIT</th>
+            <th style="width: 55px; text-align: right;">TOTAL</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of ultimoCarrito()">
             <td>
               <div class="product-name">{{ item.producto.nombre }}</div>
-              <div class="product-code">Cod: {{ item.producto.codigoBarras }}</div>
+              <div class="product-promo-tag" *ngIf="item.promocionTitulo" style="font-size: 0.65rem; font-weight: 600;">
+                Oferta: {{ item.promocionTitulo }}
+              </div>
             </td>
             <td style="text-align: center;" class="text-mono">{{ item.cantidad }}</td>
-            <td style="text-align: right;" class="text-mono">S/ {{ item.producto.precioVenta | number: '1.2-2' }}</td>
+            <td style="text-align: right;" class="text-mono">S/ {{ item.precioUnitario | number: '1.2-2' }}</td>
             <td style="text-align: right;" class="text-mono font-semibold">S/ {{ item.subtotal | number: '1.2-2' }}</td>
           </tr>
         </tbody>
       </table>
-      <span class="ticket-divider"></span>
+      <div class="ticket-divider"></div>
     </div>
 
     <div class="ticket-footer">
+      <div class="footer-row" *ngIf="ultimoAhorroTotal() > 0"
+        style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 2px;">
+        <span>Subtotal Regular:</span>
+        <span>S/ {{ (ultimoTotal() + ultimoAhorroTotal()) | number: '1.2-2' }}</span>
+      </div>
+      <div class="footer-row discount-row" *ngIf="ultimoAhorroTotal() > 0"
+        style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">
+        <span>Descuento Ofertas:</span>
+        <span>- S/ {{ ultimoAhorroTotal() | number: '1.2-2' }}</span>
+      </div>
       <div class="footer-total-row">
-        <span>TOTAL COBRADO:</span>
+        <span>TOTAL PAGADO:</span>
         <strong class="total-amount">S/ {{ ultimoTotal() | number: '1.2-2' }}</strong>
       </div>
+      <div class="ticket-divider" style="margin-top: 4px;"></div>
       <p class="footer-thanks">¡Gracias por su compra!</p>
     </div>
   </div>

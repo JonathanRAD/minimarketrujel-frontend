@@ -42,7 +42,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let cliente of clientes()">
+      <tr *ngFor="let cliente of clientes(); trackBy: trackById">
         <td>
           <a [routerLink]="['/admin/clientes', cliente.id, 'detalle']" class="cliente-link font-semibold">
             {{ cliente.nombre }}

@@ -41,7 +41,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let cat of categorias()">
+      <tr *ngFor="let cat of categorias(); trackBy: trackById">
         <td class="font-semibold">{{ cat.nombre }}</td>
         <td class="text-muted">{{ cat.descripcion || '-' }}</td>
         <td>
