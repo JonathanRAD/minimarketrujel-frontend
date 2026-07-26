@@ -100,11 +100,17 @@ export class PromocionRepository {
    * Obtiene todas las promociones activas cuya ventana temporal englobe la fecha actual
    */
   async obtenerPromocionesVigentes(fecha: Date = new Date()) {
+    const inicioDia = new Date(fecha);
+    inicioDia.setHours(0, 0, 0, 0);
+
+    const finDia = new Date(fecha);
+    finDia.setHours(23, 59, 59, 999);
+
     return prisma.promocion.findMany({
       where: {
         activo: true,
-        fechaInicio: { lte: fecha },
-        fechaFin: { gte: fecha },
+        fechaInicio: { lte: finDia },
+        fechaFin: { gte: inicioDia },
       },
       include: {
         producto: { select: { id: true, nombre: true, codigoBarras: true, precioVenta: true, categoriaId: true } },

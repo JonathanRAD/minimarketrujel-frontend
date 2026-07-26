@@ -100,6 +100,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.verificarTurnoCaja();
     this.cargarCatalogo();
+    this.cargarPromocionesVigentes();
     this.cargarClientes();
     this.actualizarVentasPendientes();
 
@@ -111,6 +112,15 @@ export class VentaPageComponent implements OnInit, OnDestroy {
     if (this.syncIntervalId) {
       clearInterval(this.syncIntervalId);
     }
+  }
+
+  cargarPromocionesVigentes() {
+    this.promocionService.obtenerVigentes().subscribe({
+      next: (promos) => {
+        this.carritoService.cargarPromociones(promos);
+      },
+      error: (err) => console.error('Error al cargar promociones en POS:', err)
+    });
   }
 
   cargarCatalogo() {
