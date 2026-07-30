@@ -1,108 +1,21 @@
 <app-page-header
-  title="Gestión de Ofertas & Promociones"
-  subtitle="Crea y administra ofertas especiales, descuentos por volumen y promociones 3x2/2x1 para el POS">
+  title="Ofertas y Promociones"
+  subtitle="Crea y gestiona descuentos, combos y ofertas especiales para tus clientes">
   <button (click)="abrirModalForm()" class="btn-primary">
-    <span class="material-icons">add_alert</span>
+    <span class="material-icons">local_offer</span>
     <span>Nueva Oferta</span>
   </button>
 </app-page-header>
 
-<!-- Filtros y Ordenamiento -->
-<app-table-filter
-  [options]="sortOptions"
-  [selectedValue]="ordenarPor()"
-  [searchValue]="busqueda()"
-  placeholderSearch="Buscar por título de oferta, producto o categoría..."
-  (searchChange)="buscar($event)"
-  (sortChange)="cambiarOrden($event)">
-</app-table-filter>
-
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
-<app-spinner *ngIf="cargando()" message="Cargando catálogo de promociones..." />
-
-<div class="table-container" *ngIf="!cargando() && promociones().length > 0">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Oferta / Promoción</th>
-        <th>Tipo</th>
-        <th>Aplica a</th>
-        <th>Descuento / Regla</th>
-        <th>Vigencia</th>
-        <th>Estado</th>
-        <th class="text-right">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let promo of promociones(); trackBy: trackById">
-        <td>
-          <div class="promo-info-cell">
-            <span class="material-icons promo-icon">local_offer</span>
-            <div class="promo-meta">
-              <span class="promo-title font-semibold">{{ promo.titulo }}</span>
-              <span class="promo-desc text-muted text-xs" *ngIf="promo.descripcion">{{ promo.descripcion }}</span>
-            </div>
-          </div>
-        </td>
-        <td>
-          <span class="badge-type" [ngClass]="promo.tipo.toLowerCase()">
-            {{ promo.tipo === 'PORCENTAJE' ? 'Porcentaje %' : promo.tipo === 'PRECIO_FIJO' ? 'Precio Fijo' : promo.tipo === 'PROMO_NXM' ? 'Promoción NxM' : 'Por Volumen' }}
-          </span>
-        </td>
-        <td>
-          <span class="font-medium" *ngIf="promo.producto">📦 {{ promo.producto.nombre }}</span>
-          <span class="font-medium text-purple" *ngIf="promo.categoria && !promo.producto">🏷️ Cat: {{ promo.categoria.nombre }}</span>
-        </td>
-        <td>
-          <div class="rule-detail font-semibold">
-            <span *ngIf="promo.tipo === 'PORCENTAJE'">-{{ promo.valorDescuento }}% OFF</span>
-            <span *ngIf="promo.tipo === 'PRECIO_FIJO'">Precio: S/ {{ promo.valorDescuento | number:'1.2-2' }}</span>
-            <span *ngIf="promo.tipo === 'PROMO_NXM'">Llevas {{ promo.cantidadMinima }}, {{ promo.cantidadGratis }} Gratis</span>
-            <span *ngIf="promo.tipo === 'VOLUMEN'">Min {{ promo.cantidadMinima }} un. ➔ S/ {{ promo.valorDescuento | number:'1.2-2' }} c/u</span>
-          </div>
-        </td>
-        <td class="text-xs text-muted">
-          <div><span class="font-medium">Inicio:</span> {{ promo.fechaInicio | date:'dd/MM/yyyy' }}</div>
-          <div><span class="font-medium">Fin:</span> {{ promo.fechaFin | date:'dd/MM/yyyy' }}</div>
-        </td>
-        <td>
-          <span class="status-badge-chip" [class.active]="esVigente(promo)" [class.inactive]="!esVigente(promo)">
-            {{ esVigente(promo) ? 'VIGENTE' : (promo.activo ? 'VENCIDA' : 'INACTIVA') }}
-          </span>
-        </td>
-        <td class="actions-cell text-right">
-          <button (click)="toggleEstado(promo)" class="btn-action-icon" [title]="promo.activo ? 'Desactivar' : 'Activar'">
-            <span class="material-icons">{{ promo.activo ? 'toggle_on' : 'toggle_off' }}</span>
-          </button>
-          <button (click)="abrirModalForm(promo.id)" class="btn-action-icon btn-edit" title="Editar">
-            <span class="material-icons">edit</span>
-          </button>
-          <button (click)="eliminar(promo)" class="btn-action-icon btn-delete" title="Eliminar">
-            <span class="material-icons">delete</span>
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Paginación -->
-  <app-pagination
-    [pagina]="pagina()"
-    [limite]="limite()"
-    [total]="total()"
-    [paginas]="paginas()"
-    (paginaChange)="irAPagina($event)">
-  </app-pagination>
-</div>
-
-<app-empty-state
-  *ngIf="!cargando() && promociones().length === 0"
-  icon="local_offer"
-  title="No hay promociones registradas"
-  description="Crea ofertas y descuentos por temporada para incentivar las ventas en tu minimarket.">
-  <a routerLink="/admin/ofertas/nuevo" class="btn-primary">
-    <span class="material-icons">add_alert</span>
-    <span>Crear primera Oferta</span>
-  </a>
-</app-empty-state>
+<app-generic-table
+  [data]="promociones()"
+  [columns]="columns"
+  [loading]="cargando()"
+  [showActions]="true"
+  searchPlaceholder="Buscar promociones por título..."
+  (edit)="abrirModalForm($event.id)"
+  (delete)="eliminar($event)"
+>
+</app-generic-table>

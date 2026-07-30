@@ -59,15 +59,31 @@ export class VentaPageComponent implements OnInit, OnDestroy {
   // Contador de Ventas Pendientes de Sincronizar
   ventasPendientesConteo = signal<number>(0);
 
+  private removeAccents(str: string): string {
+    return str
+      ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      : '';
+  }
+
   clientesFiltrados = computed(() => {
-    const query = this.busquedaCliente().toLowerCase().trim();
+    const rawQuery = this.busquedaCliente();
     const list = this.clientes();
-    if (!query) return [];
-    return list.filter((c) => 
-      c.nombre.toLowerCase().includes(query) || 
-      (c.telefono && c.telefono.includes(query)) ||
-      (c.dniRuc && c.dniRuc.includes(query))
-    );
+    const normalizedQuery = this.removeAccents(rawQuery.trim());
+    const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    if (terms.length === 0) return [];
+
+    return list.filter((c) => {
+      const normNombre = this.removeAccents(c.nombre);
+      const normTelefono = (c.telefono || '').toLowerCase();
+      const normDni = (c.dniRuc || '').toLowerCase();
+
+      return terms.every((term) =>
+        normNombre.includes(term) ||
+        normTelefono.includes(term) ||
+        normDni.includes(term)
+      );
+    });
   });
 
   // Catálogo Visual
@@ -78,16 +94,24 @@ export class VentaPageComponent implements OnInit, OnDestroy {
 
   catalogoFiltrado = computed(() => {
     const catId = this.categoriaSeleccionadaId();
-    const query = this.busquedaCatalogo().toLowerCase().trim();
+    const rawQuery = this.busquedaCatalogo();
     const prods = this.productos();
+
+    const normalizedQuery = this.removeAccents(rawQuery.trim());
+    const terms = normalizedQuery.split(/\s+/).filter(Boolean);
 
     return prods.filter((p) => {
       const matchesCat = catId === 'TODAS' || p.categoriaId === catId;
-      const matchesQuery = 
-        !query || 
-        p.nombre.toLowerCase().includes(query) || 
-        p.codigoBarras.includes(query);
-      return matchesCat && matchesQuery && p.activo;
+      if (!matchesCat || !p.activo) return false;
+      if (terms.length === 0) return true;
+
+      const normName = this.removeAccents(p.nombre);
+      const normBarcode = (p.codigoBarras || '').toLowerCase();
+
+      return terms.every((term) =>
+        normName.includes(term) ||
+        normBarcode.includes(term)
+      );
     });
   });
 

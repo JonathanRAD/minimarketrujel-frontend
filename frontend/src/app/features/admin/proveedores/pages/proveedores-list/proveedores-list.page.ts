@@ -4,16 +4,29 @@ import { RouterLink } from '@angular/router';
 import { ProveedorService } from '../../services/proveedor.service';
 import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Proveedor } from '../../../../../core/models/proveedor.model';
-import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, ConfirmModalService, PaginationComponent, TableFilterComponent, SortOption } from '@shared/components';
+import {
+  ErrorAlertComponent,
+  PageHeaderComponent,
+  ConfirmModalService,
+  GenericTableComponent,
+  TableColumn,
+} from '@shared/components';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ProveedorFormPageComponent } from '../proveedor-form/proveedor-form.page';
 
 @Component({
   selector: 'app-proveedores-list-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, PaginationComponent, TableFilterComponent, MatDialogModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    ErrorAlertComponent,
+    PageHeaderComponent,
+    GenericTableComponent,
+    MatDialogModule,
+  ],
   templateUrl: './proveedores-list.page.html',
-  styleUrl: './proveedores-list.page.scss'
+  styleUrl: './proveedores-list.page.scss',
 })
 export class ProveedoresListPageComponent implements OnInit {
   private proveedorService = inject(ProveedorService);
@@ -24,19 +37,25 @@ export class ProveedoresListPageComponent implements OnInit {
   proveedores = signal<Proveedor[]>([]);
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
-  busqueda = signal('');
-  ordenarPor = signal('reciente');
 
-  sortOptions: SortOption[] = [
-    { label: 'Más reciente', value: 'reciente', icon: 'schedule' },
-    { label: 'Más antiguo', value: 'antiguo', icon: 'history' },
-    { label: 'Nombre A-Z', value: 'nombre_asc', icon: 'sort_by_alpha' },
+  columns: TableColumn<Proveedor>[] = [
+    { key: 'nombre', header: 'Proveedor / Razón Social', sortable: true },
+    { key: 'contacto', header: 'Contacto', sortable: true, cellFn: (p) => p.contacto || '-' },
+    { key: 'telefono', header: 'Teléfono', sortable: true, cellFn: (p) => p.telefono || '-' },
+    { key: 'email', header: 'Correo Electrónico', sortable: true, cellFn: (p) => p.email || '-' },
+    { key: 'direccion', header: 'Dirección', sortable: true, cellFn: (p) => p.direccion || '-' },
+    {
+      key: 'activo',
+      header: 'Estado',
+      type: 'badge',
+      sortable: true,
+      align: 'center',
+      badgeMap: {
+        true: { label: 'ACTIVO', class: 'badge-active' },
+        false: { label: 'INACTIVO', class: 'badge-inactive' },
+      },
+    },
   ];
-
-  pagina = signal<number>(1);
-  limite = signal<number>(10);
-  total = signal<number>(0);
-  paginas = signal<number>(1);
 
   ngOnInit() {
     this.cargarProveedores();
@@ -45,11 +64,7 @@ export class ProveedoresListPageComponent implements OnInit {
   cargarProveedores() {
     this.cargando.set(true);
     this.errorMessage.set(null);
-
-    this.proveedorService.listar({
-      busqueda: this.busqueda() || undefined,
-      ordenarPor: this.ordenarPor(),
-    }).subscribe({
+    this.proveedorService.listar().subscribe({
       next: (data) => {
         this.proveedores.set(data);
         this.cargando.set(false);
@@ -57,26 +72,8 @@ export class ProveedoresListPageComponent implements OnInit {
       error: (err) => {
         this.cargando.set(false);
         this.errorMessage.set(err.error?.message || 'Error al cargar la lista de proveedores');
-      }
+      },
     });
-  }
-
-  buscar(valor: string): void {
-    this.busqueda.set(valor);
-    this.pagina.set(1);
-    this.cargarProveedores();
-  }
-
-  cambiarOrden(orden: string): void {
-    this.ordenarPor.set(orden);
-    this.pagina.set(1);
-    this.cargarProveedores();
-  }
-
-  irAPagina(p: number) {
-    if (p < 1 || p > this.paginas()) return;
-    this.pagina.set(p);
-    this.cargarProveedores();
   }
 
   abrirModalForm(proveedorId?: string) {
@@ -92,12 +89,6 @@ export class ProveedoresListPageComponent implements OnInit {
         this.cargarProveedores();
       }
     });
-  }
-
-  cambiarLimite(limite: number): void {
-    this.limite.set(limite);
-    this.pagina.set(1);
-    this.cargarProveedores();
   }
 
   exportarExcel(): void {
@@ -118,11 +109,7 @@ export class ProveedoresListPageComponent implements OnInit {
 
     this.proveedorService.eliminar(prov.id).subscribe({
       next: () => this.cargarProveedores(),
-      error: (err) => this.errorMessage.set(err.error?.message || 'Error al eliminar el proveedor')
+      error: (err) => this.errorMessage.set(err.error?.message || 'Error al eliminar el proveedor'),
     });
-  }
-
-  trackById(index: number, item: { id: string }): string {
-    return item.id;
   }
 }

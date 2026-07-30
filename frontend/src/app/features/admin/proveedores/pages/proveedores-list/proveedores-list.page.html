@@ -1,6 +1,6 @@
 <app-page-header
-  title="Proveedores"
-  subtitle="Gestiona las empresas y contactos que surten al minimarket">
+  title="Proveedores y Distribuidores"
+  subtitle="Gestiona tu directorio de proveedores, contactos y datos para órdenes de compra">
   <div style="display: flex; gap: 0.75rem; align-items: center;">
     <button
       class="btn-excel"
@@ -16,59 +16,15 @@
   </div>
 </app-page-header>
 
-<!-- Filtros y Ordenamiento -->
-<app-table-filter
-  [options]="sortOptions"
-  [selectedValue]="ordenarPor()"
-  [searchValue]="busqueda()"
-  placeholderSearch="Buscar proveedor por nombre o contacto..."
-  (searchChange)="buscar($event)"
-  (sortChange)="cambiarOrden($event)">
-</app-table-filter>
-
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
 
-<app-spinner *ngIf="cargando()" message="Cargando proveedores..." />
-
-<div class="table-container" *ngIf="!cargando() && proveedores().length > 0">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Contacto</th>
-        <th>Teléfono</th>
-        <th>Email</th>
-        <th>Dirección</th>
-        <th class="text-right">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let prov of proveedores(); trackBy: trackById">
-        <td class="font-semibold">{{ prov.nombre }}</td>
-        <td class="text-muted">{{ prov.contacto || '-' }}</td>
-        <td class="text-muted">{{ prov.telefono || '-' }}</td>
-        <td class="text-muted">{{ prov.email || '-' }}</td>
-        <td class="text-muted">{{ prov.direccion || '-' }}</td>
-        <td class="actions-cell">
-          <button (click)="abrirModalForm(prov.id)" class="btn-action-icon btn-edit" title="Editar">
-            <span class="material-icons">edit</span>
-          </button>
-          <button (click)="eliminar(prov)" class="btn-action-icon btn-delete" title="Eliminar">
-            <span class="material-icons">delete</span>
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<app-empty-state
-  *ngIf="!cargando() && proveedores().length === 0"
-  icon="local_shipping"
-  title="Sin proveedores"
-  message="Aún no has registrado proveedores en tu catálogo.">
-  <a routerLink="/admin/proveedores/nuevo" class="btn-secondary">
-    <span class="material-icons">add_business</span>
-    <span>Registrar el primero</span>
-  </a>
-</app-empty-state>
+<app-generic-table
+  [data]="proveedores()"
+  [columns]="columns"
+  [loading]="cargando()"
+  [showActions]="true"
+  searchPlaceholder="Buscar proveedores por nombre, contacto o teléfono..."
+  (edit)="abrirModalForm($event.id)"
+  (delete)="eliminar($event)"
+>
+</app-generic-table>
