@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
 import { CrearCompraDto, FiltrarComprasDto } from './compra.validator';
 import { EstadoCompra, TipoMovimientoInventario } from '@prisma/client';
+import { parseFechaInicio, parseFechaFin } from '../../common/utils/date.utils';
 
 export class CompraRepository {
   async listar(filtros: Partial<FiltrarComprasDto> = {}) {
@@ -12,8 +13,8 @@ export class CompraRepository {
 
     if (filtros.desde || filtros.hasta) {
       whereClause.fecha = {};
-      if (filtros.desde) whereClause.fecha.gte = new Date(filtros.desde);
-      if (filtros.hasta) whereClause.fecha.lte = new Date(filtros.hasta);
+      if (filtros.desde) whereClause.fecha.gte = parseFechaInicio(filtros.desde);
+      if (filtros.hasta) whereClause.fecha.lte = parseFechaFin(filtros.hasta);
     }
 
     let orderByClause: any = { fecha: 'desc' };

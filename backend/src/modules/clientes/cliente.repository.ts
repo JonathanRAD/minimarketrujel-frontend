@@ -129,6 +129,9 @@ export class ClienteRepository {
       where: {
         clienteId,
         pagado: false,
+        venta: {
+          estado: 'COMPLETADA',
+        },
       },
       include: {
         venta: {
@@ -162,6 +165,9 @@ export class ClienteRepository {
       where: {
         clienteId,
         pagado: false,
+        venta: {
+          estado: 'COMPLETADA',
+        },
       },
       _sum: {
         monto: true,

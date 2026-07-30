@@ -110,6 +110,9 @@ export class ReporteRepository {
     const fiadosNoPagados = await prisma.fiado.aggregate({
       where: {
         pagado: false,
+        venta: {
+          estado: 'COMPLETADA',
+        },
       },
       _sum: {
         monto: true,
@@ -122,6 +125,9 @@ export class ReporteRepository {
       by: ['clienteId'],
       where: {
         pagado: false,
+        venta: {
+          estado: 'COMPLETADA',
+        },
       },
     });
 

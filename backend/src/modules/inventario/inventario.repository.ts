@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
 import { CrearAjusteDto, FiltrarMovimientosDto } from './inventario.validator';
 import { TipoMovimientoInventario } from '@prisma/client';
+import { parseFechaInicio, parseFechaFin } from '../../common/utils/date.utils';
 
 export class InventarioRepository {
   async listar(filtros: Partial<FiltrarMovimientosDto> = {}) {
@@ -17,10 +18,10 @@ export class InventarioRepository {
     if (filtros.fechaInicio || filtros.fechaFin) {
       whereClause.fecha = {};
       if (filtros.fechaInicio) {
-        whereClause.fecha.gte = new Date(filtros.fechaInicio);
+        whereClause.fecha.gte = parseFechaInicio(filtros.fechaInicio);
       }
       if (filtros.fechaFin) {
-        whereClause.fecha.lte = new Date(filtros.fechaFin);
+        whereClause.fecha.lte = parseFechaFin(filtros.fechaFin);
       }
     }
 

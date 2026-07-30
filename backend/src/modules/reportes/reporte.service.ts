@@ -2,28 +2,12 @@ import { Response } from 'express';
 import { prisma } from '../../config/prisma';
 import { excelService } from '../../common/services/excel.service';
 import { reporteRepository } from './reporte.repository';
+import { parseFechaInicio, parseFechaFin } from '../../common/utils/date.utils';
 
 export class ReporteService {
   async obtenerDashboard(fechaInicioStr?: string, fechaFinStr?: string) {
-    let inicio: Date;
-    let fin: Date;
-
-    if (fechaInicioStr) {
-      inicio = new Date(fechaInicioStr);
-      inicio.setHours(0, 0, 0, 0);
-    } else {
-      inicio = new Date();
-      inicio.setDate(inicio.getDate() - 30);
-      inicio.setHours(0, 0, 0, 0);
-    }
-
-    if (fechaFinStr) {
-      fin = new Date(fechaFinStr);
-      fin.setHours(23, 59, 59, 999);
-    } else {
-      fin = new Date();
-      fin.setHours(23, 59, 59, 999);
-    }
+    const inicio = parseFechaInicio(fechaInicioStr);
+    const fin = parseFechaFin(fechaFinStr);
 
     const [resumenFinanciero, topProductos, estadoFiados] = await Promise.all([
       reporteRepository.obtenerResumenFinanciero(inicio, fin),

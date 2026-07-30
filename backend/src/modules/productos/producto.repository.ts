@@ -7,7 +7,13 @@ import { CrearProductoDto, ActualizarProductoDto, FiltrarProductosDto } from './
  */
 export class ProductoRepository {
   async crear(data: CrearProductoDto) {
-    return prisma.producto.create({ data });
+    return prisma.producto.create({
+      data: {
+        ...data,
+        codigoBarras: data.codigoBarras!,
+        categoriaId: data.categoriaId || undefined,
+      },
+    });
   }
 
   async listar(filtros: Partial<FiltrarProductosDto> & { activo?: boolean } = {}) {

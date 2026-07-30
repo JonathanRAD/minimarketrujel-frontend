@@ -56,6 +56,7 @@ export class ProductoFormPageComponent implements OnInit {
 
   form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+    sinCodigoBarras: [false],
     codigoBarras: ['', [Validators.required, Validators.pattern('^[0-9]{8,13}$')]],
     precioVenta: [0, [Validators.required, Validators.min(0.01)]],
     costo: [0, [Validators.required, Validators.min(0)]],
@@ -65,6 +66,21 @@ export class ProductoFormPageComponent implements OnInit {
     categoriaId: ['', Validators.required],
     imagenUrl: [''],
   });
+
+  toggleSinCodigoBarras(checked?: boolean): void {
+    const isSinCodigo = checked !== undefined ? checked : this.form.get('sinCodigoBarras')?.value;
+    const codigoControl = this.form.get('codigoBarras');
+
+    if (isSinCodigo) {
+      codigoControl?.clearValidators();
+      codigoControl?.setValue('');
+      codigoControl?.disable();
+    } else {
+      codigoControl?.setValidators([Validators.required, Validators.pattern('^[0-9]{8,13}$')]);
+      codigoControl?.enable();
+    }
+    codigoControl?.updateValueAndValidity();
+  }
 
   ngOnInit(): void {
     this.cargarCategorias();
@@ -86,9 +102,11 @@ export class ProductoFormPageComponent implements OnInit {
   cargarProducto(id: string): void {
     this.productoService.obtenerPorId(id).subscribe({
       next: (prod) => {
+        const esSinCodigo = prod.codigoBarras ? /^SC-\d{6}$/.test(prod.codigoBarras) : false;
         this.form.patchValue({
           nombre: prod.nombre,
-          codigoBarras: prod.codigoBarras,
+          sinCodigoBarras: esSinCodigo,
+          codigoBarras: esSinCodigo ? '' : prod.codigoBarras,
           precioVenta: Number(prod.precioVenta),
           costo: Number(prod.costo),
           stockActual: Number(prod.stockActual),
@@ -97,6 +115,9 @@ export class ProductoFormPageComponent implements OnInit {
           categoriaId: prod.categoriaId || '',
           imagenUrl: prod.imagenUrl || '',
         });
+        if (esSinCodigo) {
+          this.toggleSinCodigoBarras(true);
+        }
       },
       error: () => this.error.set('No se pudo cargar la información del producto.'),
     });
@@ -188,8 +209,10 @@ export class ProductoFormPageComponent implements OnInit {
     const payload = {
       ...formVal,
       nombre: formVal.nombre.trim(),
+      codigoBarras: formVal.sinCodigoBarras ? '' : (formVal.codigoBarras || '').trim(),
       imagenUrl: formVal.imagenUrl || undefined,
     };
+    delete (payload as any).sinCodigoBarras;
 
     const id = this.productoId();
     const request$ = id

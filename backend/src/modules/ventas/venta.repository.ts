@@ -2,12 +2,11 @@ import { prisma } from '../../config/prisma';
 import { Prisma } from '@prisma/client';
 import { ValidationError, NotFoundError } from '../../common/errors/AppError';
 import { FiltrarVentasDto } from './venta.validator';
+import { parseFechaInicio, parseFechaFin } from '../../common/utils/date.utils';
 
 export class VentaRepository {
   async listar(filtros: Partial<FiltrarVentasDto> = {}) {
-    const whereClause: any = {
-      estado: 'COMPLETADA',
-    };
+    const whereClause: any = {};
 
     if (filtros.usuarioId) {
       whereClause.usuarioId = filtros.usuarioId;
@@ -15,8 +14,8 @@ export class VentaRepository {
 
     if (filtros.desde || filtros.hasta) {
       whereClause.fecha = {};
-      if (filtros.desde) whereClause.fecha.gte = new Date(filtros.desde);
-      if (filtros.hasta) whereClause.fecha.lte = new Date(filtros.hasta);
+      if (filtros.desde) whereClause.fecha.gte = parseFechaInicio(filtros.desde);
+      if (filtros.hasta) whereClause.fecha.lte = parseFechaFin(filtros.hasta);
     }
 
     let orderByClause: any = { fecha: 'desc' };
@@ -175,6 +174,11 @@ export class VentaRepository {
           },
         });
       }
+
+      // Eliminar fiado asociado a la venta si existe para limpiar las cuentas por cobrar
+      await tx.fiado.deleteMany({
+        where: { ventaId: id }
+      });
 
       return venta;
     });

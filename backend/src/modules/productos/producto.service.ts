@@ -8,12 +8,28 @@ import { prisma } from '../../config/prisma';
  * solo usa el repositorio. Esto la hace fácil de testear.
  */
 export class ProductoService {
-  async crear(data: CrearProductoDto) {
-    const existente = await productoRepository.obtenerPorCodigoBarras(data.codigoBarras);
-    if (existente) {
-      throw new ConflictError('Ya existe un producto con ese código de barras');
+  private async generarCodigoInterno(): Promise<string> {
+    let codigo = '';
+    let existe = true;
+    while (existe) {
+      const randomNum = Math.floor(100000 + Math.random() * 900000);
+      codigo = `SC-${randomNum}`;
+      const p = await productoRepository.obtenerPorCodigoBarras(codigo);
+      if (!p) existe = false;
     }
-    return productoRepository.crear(data);
+    return codigo;
+  }
+
+  async crear(data: CrearProductoDto) {
+    if (!data.codigoBarras || data.codigoBarras.trim() === '') {
+      data.codigoBarras = await this.generarCodigoInterno();
+    } else {
+      const existente = await productoRepository.obtenerPorCodigoBarras(data.codigoBarras);
+      if (existente) {
+        throw new ConflictError('Ya existe un producto con ese código de barras');
+      }
+    }
+    return productoRepository.crear(data as any);
   }
 
   async listar(filtros: Partial<FiltrarProductosDto> = {}) {
@@ -35,7 +51,7 @@ export class ProductoService {
 
   async actualizar(id: string, data: ActualizarProductoDto) {
     await this.obtenerPorId(id); // valida que exista
-    if (data.codigoBarras) {
+    if (data.codigoBarras && data.codigoBarras.trim() !== '') {
       const conflicto = await productoRepository.obtenerPorCodigoBarras(data.codigoBarras);
       if (conflicto && conflicto.id !== id) {
         throw new ConflictError('Ese código de barras ya está en uso por otro producto');

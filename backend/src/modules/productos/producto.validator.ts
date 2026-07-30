@@ -4,7 +4,7 @@ export const crearProductoSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   descripcion: z.string().optional(),
   categoriaId: z.string().nullable().optional(),
-  codigoBarras: z.string().min(3, 'Código de barras inválido'),
+  codigoBarras: z.string().optional().or(z.literal('')),
   precioVenta: z.number().positive('El precio debe ser mayor a 0'),
   costo: z.number().nonnegative('El costo no puede ser negativo'),
   stockActual: z.number().nonnegative().default(0),

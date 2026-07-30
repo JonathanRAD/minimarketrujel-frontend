@@ -42,8 +42,24 @@
         <mat-error *ngIf="form.get('nombre')?.hasError('minlength')">El nombre debe tener al menos 3 caracteres.</mat-error>
       </mat-form-field>
 
-      <!-- Código de Barras -->
-      <mat-form-field appearance="outline">
+      <!-- Opción Sin Código de Barras -->
+      <div class="col-span-2 sin-codigo-option-card">
+        <label class="sin-codigo-label">
+          <input 
+            type="checkbox" 
+            formControlName="sinCodigoBarras" 
+            (change)="toggleSinCodigoBarras()" />
+          <div class="sin-codigo-text">
+            <span class="sin-codigo-title font-bold">📦 Producto sin código de barras (A granel / Suelto)</span>
+            <span class="sin-codigo-desc">
+              Marca esta casilla para productos sueltos (ej. Gelatina suelta, pan, frutas/verduras). Se generará un código interno automáticamente (SC-XXXXXX) para su venta e inventario.
+            </span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Código de Barras (Si aplica) -->
+      <mat-form-field appearance="outline" *ngIf="!form.get('sinCodigoBarras')?.value">
         <mat-label>Código de Barras</mat-label>
         <input 
           matInput
@@ -55,6 +71,12 @@
         <mat-error *ngIf="form.get('codigoBarras')?.hasError('required')">El código de barras es obligatorio.</mat-error>
         <mat-error *ngIf="form.get('codigoBarras')?.hasError('pattern')">Debe ser un código numérico válido de 8 a 13 dígitos.</mat-error>
       </mat-form-field>
+
+      <!-- Badge informativo cuando es sin código -->
+      <div class="col-span-1 info-sin-codigo-badge" *ngIf="form.get('sinCodigoBarras')?.value">
+        <mat-icon class="info-icon">auto_awesome</mat-icon>
+        <span>Se asignará un código automático <strong>SC-XXXXXX</strong>. Aparecerá en el catálogo visual para venderlo y registrará todos sus movimientos.</span>
+      </div>
 
       <!-- Categoría -->
       <mat-form-field appearance="outline">

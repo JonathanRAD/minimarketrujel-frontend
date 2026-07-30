@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
 import { EstadoTurno } from '@prisma/client';
 import { FiltrarTurnosDto } from './turno-caja.validator';
+import { parseFechaInicio, parseFechaFin } from '../../common/utils/date.utils';
 
 export class TurnoCajaRepository {
   async obtenerActivo(usuarioId: string) {
@@ -47,8 +48,8 @@ export class TurnoCajaRepository {
 
     if (filtros.desde || filtros.hasta) {
       whereClause.fechaApertura = {};
-      if (filtros.desde) whereClause.fechaApertura.gte = new Date(filtros.desde);
-      if (filtros.hasta) whereClause.fechaApertura.lte = new Date(filtros.hasta);
+      if (filtros.desde) whereClause.fechaApertura.gte = parseFechaInicio(filtros.desde);
+      if (filtros.hasta) whereClause.fechaApertura.lte = parseFechaFin(filtros.hasta);
     }
 
     let orderByClause: any = { fechaApertura: 'desc' };
