@@ -1,6 +1,8 @@
 import { prisma } from '../../config/prisma';
 import { CrearCategoriaDto, ActualizarCategoriaDto } from './categoria.validator';
 
+import { buildMultiTermWhere } from '../../common/utils/search.utils';
+
 export class CategoriaRepository {
   async crear(data: CrearCategoriaDto) {
     return prisma.categoria.create({
@@ -18,10 +20,10 @@ export class CategoriaRepository {
       whereClause.activo = filtros.activo;
     }
     if (filtros.busqueda) {
-      whereClause.OR = [
-        { nombre: { contains: filtros.busqueda, mode: 'insensitive' } },
-        { descripcion: { contains: filtros.busqueda, mode: 'insensitive' } },
-      ];
+      const searchWhere = buildMultiTermWhere(filtros.busqueda, ['nombre', 'descripcion']);
+      if (searchWhere) {
+        whereClause.AND = searchWhere;
+      }
     }
 
     let orderByClause: any = { createdAt: 'desc' };

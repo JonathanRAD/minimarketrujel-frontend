@@ -5,6 +5,8 @@ import { CrearProductoDto, ActualizarProductoDto, FiltrarProductosDto } from './
  * Capa de acceso a datos. Solo esta capa conoce Prisma directamente.
  * Si mañana cambias de ORM, solo tocas este archivo.
  */
+import { buildMultiTermWhere } from '../../common/utils/search.utils';
+
 export class ProductoRepository {
   async crear(data: CrearProductoDto) {
     return prisma.producto.create({
@@ -26,10 +28,10 @@ export class ProductoRepository {
     }
 
     if (filtros.busqueda) {
-      whereClause.OR = [
-        { nombre: { contains: filtros.busqueda, mode: 'insensitive' } },
-        { codigoBarras: { contains: filtros.busqueda } },
-      ];
+      const searchWhere = buildMultiTermWhere(filtros.busqueda, ['nombre', 'codigoBarras']);
+      if (searchWhere) {
+        whereClause.AND = searchWhere;
+      }
     }
 
     let orderByClause: any = { createdAt: 'desc' };

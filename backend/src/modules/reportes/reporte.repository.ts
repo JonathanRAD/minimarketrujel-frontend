@@ -42,10 +42,14 @@ export class ReporteRepository {
         metodosPagoConsolidado[venta.metodoPago] += totalVenta;
       }
 
-      // Calcular costo de los productos vendidos
+      // Calcular costo de los productos vendidos usando el costo histórico registrado en la venta
       for (const detalle of venta.detalles) {
         const cantidad = Number(detalle.cantidad);
-        const costoUnitario = Number(detalle.producto.costo);
+        // Fallback: si es una venta antigua sin costoUnitario guardado, se usa el costo actual del producto
+        const costoUnitario = detalle.costoUnitario !== null && detalle.costoUnitario !== undefined
+          ? Number(detalle.costoUnitario)
+          : Number(detalle.producto.costo);
+
         costoTotalVentas += cantidad * costoUnitario;
       }
     }

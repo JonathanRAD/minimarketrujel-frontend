@@ -1,6 +1,8 @@
 import { prisma } from '../../config/prisma';
 import { CrearProveedorDto, ActualizarProveedorDto } from './proveedor.validator';
 
+import { buildMultiTermWhere } from '../../common/utils/search.utils';
+
 export class ProveedorRepository {
   async crear(data: CrearProveedorDto) {
     return prisma.proveedor.create({
@@ -20,11 +22,10 @@ export class ProveedorRepository {
     };
 
     if (filtros.busqueda) {
-      whereClause.OR = [
-        { nombre: { contains: filtros.busqueda, mode: 'insensitive' } },
-        { contacto: { contains: filtros.busqueda, mode: 'insensitive' } },
-        { telefono: { contains: filtros.busqueda } },
-      ];
+      const searchWhere = buildMultiTermWhere(filtros.busqueda, ['nombre', 'contacto', 'telefono', 'email']);
+      if (searchWhere) {
+        whereClause.AND = searchWhere;
+      }
     }
 
     let orderByClause: any = { createdAt: 'desc' };

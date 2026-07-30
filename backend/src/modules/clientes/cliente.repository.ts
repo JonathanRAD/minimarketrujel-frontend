@@ -1,6 +1,8 @@
 import { prisma } from '../../config/prisma';
 import { CrearClienteDto, ActualizarClienteDto, FiltrarClientesDto } from './cliente.validator';
 
+import { buildMultiTermWhere } from '../../common/utils/search.utils';
+
 export class ClienteRepository {
   async crear(data: CrearClienteDto) {
     return prisma.cliente.create({
@@ -19,10 +21,10 @@ export class ClienteRepository {
     };
 
     if (filtros.busqueda) {
-      whereClause.OR = [
-        { nombre: { contains: filtros.busqueda, mode: 'insensitive' } },
-        { telefono: { contains: filtros.busqueda } },
-      ];
+      const searchWhere = buildMultiTermWhere(filtros.busqueda, ['nombre', 'telefono', 'dniRuc']);
+      if (searchWhere) {
+        whereClause.AND = searchWhere;
+      }
     }
 
     let orderByClause: any = { createdAt: 'desc' };

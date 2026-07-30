@@ -84,7 +84,9 @@ export class VentaRepository {
     detalles: { productoId: string; cantidad: number; precioUnitario: number }[];
   }) {
     return prisma.$transaction(async (tx) => {
-      // 1. Validar existencias y stock dentro de la transacción atómica
+      // 1. Validar existencias, stock y capturar costo actual dentro de la transacción atómica
+      const costoMap = new Map<string, number>();
+
       for (const detalle of params.detalles) {
         const producto = await tx.producto.findUnique({
           where: { id: detalle.productoId }
@@ -97,6 +99,7 @@ export class VentaRepository {
             `Stock insuficiente para "${producto.nombre}" (disponible: ${producto.stockActual}, solicitado: ${detalle.cantidad})`
           );
         }
+        costoMap.set(producto.id, Number(producto.costo));
       }
 
       const total = params.detalles.reduce(
@@ -115,12 +118,19 @@ export class VentaRepository {
           montoTarjeta: new Prisma.Decimal(params.montoTarjeta),
           total: new Prisma.Decimal(total),
           detalles: {
-            create: params.detalles.map((d) => ({
-              productoId: d.productoId,
-              cantidad: d.cantidad,
-              precioUnitario: d.precioUnitario,
-              subtotal: d.cantidad * d.precioUnitario,
-            })),
+            create: params.detalles.map((d) => {
+              const costo = costoMap.get(d.productoId);
+              if (costo === undefined) {
+                throw new Error(`No se encontró el costo del producto ${d.productoId} al registrar la venta`);
+              }
+              return {
+                productoId: d.productoId,
+                cantidad: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                costoUnitario: costo,
+                subtotal: d.cantidad * d.precioUnitario,
+              };
+            }),
           },
         },
         include: { detalles: true },

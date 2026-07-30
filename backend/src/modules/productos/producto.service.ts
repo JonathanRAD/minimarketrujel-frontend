@@ -8,6 +8,15 @@ import { prisma } from '../../config/prisma';
  * solo usa el repositorio. Esto la hace fácil de testear.
  */
 export class ProductoService {
+  private normalizarNombre(nombre: string): string {
+    return nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
   private async generarCodigoInterno(): Promise<string> {
     let codigo = '';
     let existe = true;
@@ -29,6 +38,18 @@ export class ProductoService {
         throw new ConflictError('Ya existe un producto con ese código de barras');
       }
     }
+
+    // Validación de nombre duplicado (normalización: sin acentos, mayúsculas, espacios simples)
+    // NOTA FUTURA: Si el catálogo crece a miles de registros, conviene mover esta comparación
+    // a la base de datos con una columna normalizada indexada (`nombre_normalizado`) en vez de
+    // traer los nombres a memoria en el servidor.
+    const nombreNorm = this.normalizarNombre(data.nombre);
+    const productosExistentes = await prisma.producto.findMany({ select: { id: true, nombre: true } });
+    const conflictoNombre = productosExistentes.find((p) => this.normalizarNombre(p.nombre) === nombreNorm);
+    if (conflictoNombre) {
+      throw new ConflictError(`Ya existe un producto registrado con un nombre equivalente ("${conflictoNombre.nombre}")`);
+    }
+
     return productoRepository.crear(data as any);
   }
 
@@ -57,6 +78,19 @@ export class ProductoService {
         throw new ConflictError('Ese código de barras ya está en uso por otro producto');
       }
     }
+
+    if (data.nombre && data.nombre.trim() !== '') {
+      const nombreNorm = this.normalizarNombre(data.nombre);
+      const otrosProductos = await prisma.producto.findMany({
+        where: { id: { not: id } },
+        select: { id: true, nombre: true },
+      });
+      const conflictoNombre = otrosProductos.find((p) => this.normalizarNombre(p.nombre) === nombreNorm);
+      if (conflictoNombre) {
+        throw new ConflictError(`Ya existe otro producto registrado con un nombre equivalente ("${conflictoNombre.nombre}")`);
+      }
+    }
+
     return productoRepository.actualizar(id, data);
   }
 

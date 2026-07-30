@@ -282,12 +282,13 @@ model Venta {
 }
 
 model VentaDetalle {
-  id             String  @id @default(uuid())
-  ventaId        String  @map("venta_id")
-  productoId     String  @map("producto_id")
-  cantidad       Decimal @db.Decimal(10, 2)
-  precioUnitario Decimal @map("precio_unitario") @db.Decimal(10, 2)
-  subtotal       Decimal @db.Decimal(10, 2)
+  id             String   @id @default(uuid())
+  ventaId        String   @map("venta_id")
+  productoId     String   @map("producto_id")
+  cantidad       Decimal  @db.Decimal(10, 2)
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(10, 2)
+  costoUnitario  Decimal? @map("costo_unitario") @db.Decimal(10, 2)
+  subtotal       Decimal  @db.Decimal(10, 2)
 
   venta    Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
   producto Producto @relation(fields: [productoId], references: [id])

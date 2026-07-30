@@ -139,16 +139,34 @@ export class CompraRepository {
         },
       });
 
-      // 2. Aumentar stock de productos y registrar movimientos de inventario
+      // 2. Aumentar stock de productos (con costo promedio ponderado) y registrar movimientos de inventario
       for (const det of compra.detalles) {
-        // Aumentar stock
+        // Leer estado actual del producto dentro de la transacción para evitar condiciones de carrera
+        const prod = await tx.producto.findUnique({
+          where: { id: det.productoId },
+        });
+
+        const stockActual = prod ? Number(prod.stockActual) : 0;
+        const costoActual = prod ? Number(prod.costo) : Number(det.costoUnitario);
+        const cantComprada = Number(det.cantidad);
+        const costoCompra = Number(det.costoUnitario);
+
+        let nuevoCosto: number;
+        if (stockActual <= 0 || (stockActual + cantComprada) <= 0) {
+          nuevoCosto = costoCompra;
+        } else {
+          const costoCalculado = (stockActual * costoActual + cantComprada * costoCompra) / (stockActual + cantComprada);
+          nuevoCosto = Number(costoCalculado.toFixed(2));
+        }
+
+        // Aumentar stock y actualizar costo al promedio ponderado
         await tx.producto.update({
           where: { id: det.productoId },
           data: {
             stockActual: {
               increment: det.cantidad,
             },
-            costo: det.costoUnitario, // actualiza el costo al costo de la última compra
+            costo: nuevoCosto,
           },
         });
 
@@ -187,15 +205,32 @@ export class CompraRepository {
         data: { estado: EstadoCompra.RECIBIDA },
       });
 
-      // 3. Aumentar stock de productos y registrar auditorías
+      // 3. Aumentar stock de productos (con costo promedio ponderado) y registrar auditorías
       for (const det of compra.detalles) {
+        const prod = await tx.producto.findUnique({
+          where: { id: det.productoId },
+        });
+
+        const stockActual = prod ? Number(prod.stockActual) : 0;
+        const costoActual = prod ? Number(prod.costo) : Number(det.costoUnitario);
+        const cantComprada = Number(det.cantidad);
+        const costoCompra = Number(det.costoUnitario);
+
+        let nuevoCosto: number;
+        if (stockActual <= 0 || (stockActual + cantComprada) <= 0) {
+          nuevoCosto = costoCompra;
+        } else {
+          const costoCalculado = (stockActual * costoActual + cantComprada * costoCompra) / (stockActual + cantComprada);
+          nuevoCosto = Number(costoCalculado.toFixed(2));
+        }
+
         await tx.producto.update({
           where: { id: det.productoId },
           data: {
             stockActual: {
               increment: det.cantidad,
             },
-            costo: det.costoUnitario,
+            costo: nuevoCosto,
           },
         });
 
