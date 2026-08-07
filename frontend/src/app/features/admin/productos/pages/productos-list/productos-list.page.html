@@ -23,8 +23,10 @@
   [columns]="columns"
   [loading]="cargando()"
   [showActions]="true"
+  [showToggleStatus]="true"
   searchPlaceholder="Buscar por nombre o código de barras..."
   (edit)="abrirModalForm($event.id)"
+  (toggleStatus)="toggleEstado($event)"
   (delete)="eliminar($event)"
 >
 </app-generic-table>

@@ -65,6 +65,7 @@ export class ProductoFormPageComponent implements OnInit {
     unidadMedida: ['UNIDAD' as UnidadMedida, Validators.required],
     categoriaId: ['', Validators.required],
     imagenUrl: [''],
+    activo: [true],
   });
 
   toggleSinCodigoBarras(checked?: boolean): void {
@@ -114,6 +115,7 @@ export class ProductoFormPageComponent implements OnInit {
           unidadMedida: prod.unidadMedida,
           categoriaId: prod.categoriaId || '',
           imagenUrl: prod.imagenUrl || '',
+          activo: prod.activo ?? true,
         });
         if (esSinCodigo) {
           this.toggleSinCodigoBarras(true);

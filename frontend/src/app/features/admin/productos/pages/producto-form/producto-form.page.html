@@ -152,7 +152,7 @@
       </mat-form-field>
 
       <!-- Unidad de Medida -->
-      <mat-form-field appearance="outline" class="col-span-2">
+      <mat-form-field appearance="outline">
         <mat-label>Unidad de Medida</mat-label>
         <mat-select formControlName="unidadMedida">
           <mat-option value="UNIDAD">Unidad (Unidades enteras)</mat-option>
@@ -162,6 +162,17 @@
           <mat-option value="ML">Mililitro</mat-option>
         </mat-select>
         <mat-icon matPrefix>scale</mat-icon>
+      </mat-form-field>
+
+      <!-- Estado / Activo (POS) -->
+      <mat-form-field appearance="outline">
+        <mat-label>Estado del Producto</mat-label>
+        <mat-select formControlName="activo">
+          <mat-option [value]="true">🟢 Activo (Disponible en POS)</mat-option>
+          <mat-option [value]="false">🔴 Inactivo (Oculto en POS)</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>toggle_on</mat-icon>
+        <mat-hint>Los productos inactivos no aparecerán para venderse en el POS.</mat-hint>
       </mat-form-field>
 
       <!-- Imagen del Producto -->

@@ -71,7 +71,7 @@ export class ProductosListPageComponent implements OnInit {
   cargar(): void {
     this.cargando.set(true);
     this.errorMessage.set(null);
-    this.productoService.listar({ todo: true }).subscribe({
+    this.productoService.listar({ todo: true, incluirInactivos: true }).subscribe({
       next: (res) => {
         this.productos.set(res.productos);
         this.cargando.set(false);
@@ -100,6 +100,30 @@ export class ProductosListPageComponent implements OnInit {
 
   exportarExcel(): void {
     this.excelService.descargarExcel('productos');
+  }
+
+  async toggleEstado(producto: Producto) {
+    const nuevoEstado = !producto.activo;
+    const seguro = await this.confirmModal.confirm({
+      titulo: nuevoEstado ? '¿Activar Producto?' : '¿Desactivar Producto?',
+      mensaje: nuevoEstado
+        ? `¿Deseas activar "${producto.nombre}"?`
+        : `¿Deseas desactivar "${producto.nombre}"?`,
+      submensaje: nuevoEstado
+        ? 'El producto volverá a estar disponible para venderse en el POS.'
+        : 'El producto ya no aparecerá disponible para ventas en el POS.',
+      icono: nuevoEstado ? 'visibility' : 'visibility_off',
+      tipo: nuevoEstado ? 'info' : 'warning',
+      textoConfirmar: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      textoCancelar: 'Cancelar',
+    });
+
+    if (!seguro) return;
+
+    this.productoService.actualizar(producto.id, { activo: nuevoEstado }).subscribe({
+      next: () => this.cargar(),
+      error: (err) => this.errorMessage.set(err.error?.message || 'Error al cambiar el estado del producto'),
+    });
   }
 
   async eliminar(producto: Producto) {

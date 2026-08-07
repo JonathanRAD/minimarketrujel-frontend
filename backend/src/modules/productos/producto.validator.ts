@@ -11,6 +11,7 @@ export const crearProductoSchema = z.object({
   stockMinimo: z.number().nonnegative().default(5),
   unidadMedida: z.enum(['UNIDAD', 'KG', 'G', 'LITRO', 'ML']).default('UNIDAD'),
   imagenUrl: z.string().nullable().optional(),
+  activo: z.boolean().optional().default(true),
 });
 
 export const actualizarProductoSchema = crearProductoSchema.partial();
@@ -29,6 +30,8 @@ export const filtrarProductosSchema = z.object({
   pagina: z.coerce.number().optional().default(1),
   todo: z.preprocess((val) => val === 'true', z.boolean().optional()),
   ordenarPor: z.enum(['reciente', 'antiguo', 'stock_desc', 'stock_asc', 'precio_desc', 'precio_asc', 'nombre_asc', 'nombre_desc']).optional(),
+  activo: z.preprocess((val) => (val === 'true' ? true : val === 'false' ? false : undefined), z.boolean().optional()),
+  incluirInactivos: z.preprocess((val) => val === 'true', z.boolean().optional()),
 });
 
 export type FiltrarProductosDto = z.infer<typeof filtrarProductosSchema>;

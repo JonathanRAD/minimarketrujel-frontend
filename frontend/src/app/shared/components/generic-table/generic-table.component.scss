@@ -201,6 +201,22 @@
     }
   }
 
+  &.btn-toggle-deactivate {
+    color: #d97706;
+
+    &:hover {
+      background: #fef3c7;
+    }
+  }
+
+  &.btn-toggle-activate {
+    color: #16a34a;
+
+    &:hover {
+      background: #dcfce7;
+    }
+  }
+
   &.btn-delete {
     color: #dc2626;
 

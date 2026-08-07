@@ -19,9 +19,11 @@ export class ProductoRepository {
   }
 
   async listar(filtros: Partial<FiltrarProductosDto> & { activo?: boolean } = {}) {
-    const whereClause: any = {
-      activo: filtros.activo !== undefined ? filtros.activo : { not: false },
-    };
+    const whereClause: any = {};
+
+    if (filtros.activo !== undefined) {
+      whereClause.activo = filtros.activo;
+    }
 
     if (filtros.categoriaId) {
       whereClause.categoriaId = filtros.categoriaId;

@@ -71,13 +71,14 @@ export class GenericTableComponent<T = any> implements OnInit, OnChanges, AfterV
   @Input() pageSizeOptions: number[] = [10, 25, 50, 100];
   @Input() pageSize: number = 10;
   @Input() loading: boolean = false;
-
-  // Acciones por fila (Editar, Eliminar, etc.)
+  // Acciones por fila (Editar, Eliminar, Activar/Desactivar, etc.)
   @Input() showActions: boolean = false;
+  @Input() showToggleStatus: boolean = false;
   @Input() actionsHeader: string = 'Acciones';
 
   @Output() edit = new EventEmitter<T>();
   @Output() delete = new EventEmitter<T>();
+  @Output() toggleStatus = new EventEmitter<T>();
   @Output() rowClick = new EventEmitter<T>();
   @Output() search = new EventEmitter<string>();
 
@@ -197,6 +198,11 @@ export class GenericTableComponent<T = any> implements OnInit, OnChanges, AfterV
   onDeleteRow(row: T, event: MouseEvent): void {
     event.stopPropagation();
     this.delete.emit(row);
+  }
+
+  onToggleStatusRow(row: T, event: MouseEvent): void {
+    event.stopPropagation();
+    this.toggleStatus.emit(row);
   }
 
   onRowClick(row: T): void {

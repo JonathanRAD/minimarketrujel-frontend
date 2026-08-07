@@ -53,8 +53,12 @@ export class ProductoService {
     return productoRepository.crear(data as any);
   }
 
-  async listar(filtros: Partial<FiltrarProductosDto> = {}) {
-    return productoRepository.listar({ activo: true, ...filtros });
+  async listar(filtros: Partial<FiltrarProductosDto> & { activo?: boolean; incluirInactivos?: boolean } = {}) {
+    if (filtros.incluirInactivos) {
+      return productoRepository.listar(filtros);
+    }
+    const activoFiltro = filtros.activo !== undefined ? filtros.activo : true;
+    return productoRepository.listar({ ...filtros, activo: activoFiltro });
   }
 
   async obtenerPorId(id: string) {
@@ -66,7 +70,7 @@ export class ProductoService {
   /** Usado por la pantalla de venta: al escanear, se busca directo por código de barras */
   async buscarPorCodigoBarras(codigo: string) {
     const producto = await productoRepository.obtenerPorCodigoBarras(codigo);
-    if (!producto) throw new NotFoundError('Producto con ese código de barras');
+    if (!producto || !producto.activo) throw new NotFoundError('Producto con ese código de barras no encontrado o inactivo');
     return producto;
   }
 
