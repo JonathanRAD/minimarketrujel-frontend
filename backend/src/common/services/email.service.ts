@@ -432,6 +432,162 @@ export class EmailService {
       console.error(`❌ Error al enviar la alerta de stock mínimo a ${destinatario}:`, error);
     }
   }
+
+  /**
+   * Envía una notificación por correo electrónico cuando una venta ha sido editada.
+   * Destaca el usuario que editó la venta, el total anterior vs el nuevo total y el desglose de productos actualizados.
+   */
+  async enviarNotificacionEdicionVenta(
+    ventaOriginal: any,
+    ventaActualizada: any,
+    usuarioEdicionNombre?: string
+  ): Promise<void> {
+    const { adminRecipient, userEmail, clientId, clientSecret, refreshToken } = env.gmail;
+    if (!userEmail || !clientId || !clientSecret || !refreshToken) {
+      console.warn('⚠️ Servicio de Email (Gmail OAuth2) desactivado por falta de credenciales en el .env.');
+      return;
+    }
+
+    const destinatario = adminRecipient || userEmail;
+    if (!destinatario) return;
+
+    const fechaFormateada = new Date().toLocaleString('es-PE', {
+      timeZone: 'America/Lima',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+
+    const totalAnterior = Number(ventaOriginal.total || 0).toFixed(2);
+    const totalNuevo = Number(ventaActualizada.total || 0).toFixed(2);
+    const metodoPago = ventaActualizada.metodoPago;
+    const editor = escapeHtml(usuarioEdicionNombre || ventaActualizada.usuario?.nombre || 'Cajero');
+    const tipoComprobante = ventaActualizada.clienteId ? 'COMPROBANTE DE VENTA' : 'TICKET DE VENTA';
+
+    let filasDetalleHtml = '';
+    for (const detalle of ventaActualizada.detalles) {
+      const productoNombre = escapeHtml(detalle.producto?.nombre || 'Producto Desconocido');
+      const cantidad = Number(detalle.cantidad);
+      const precioUnitario = Number(detalle.precioUnitario).toFixed(2);
+      const subtotal = Number(detalle.subtotal).toFixed(2);
+
+      filasDetalleHtml += `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 12px 8px; text-align: left; color: #334155; font-size: 14px;">
+            <strong>${productoNombre}</strong>
+          </td>
+          <td style="padding: 12px 8px; text-align: center; color: #475569; font-size: 14px;">
+            ${cantidad}
+          </td>
+          <td style="padding: 12px 8px; text-align: right; color: #475569; font-size: 14px;">
+            S/ ${precioUnitario}
+          </td>
+          <td style="padding: 12px 8px; text-align: right; color: #0f172a; font-size: 14px; font-weight: 600;">
+            S/ ${subtotal}
+          </td>
+        </tr>
+      `;
+    }
+
+    const subject = `✏️ [VENTA EDITADA] ${tipoComprobante} #${ventaActualizada.id.substring(0, 8)} - Nuevo Total: S/ ${totalNuevo} (Antes S/ ${totalAnterior})`;
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Venta Editada</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b;-webkit-font-smoothing: antialiased;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f1f5f9; padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; border-top: 6px solid #d97706;">
+          <tr>
+            <td style="padding: 24px 30px; background-color: #d97706; text-align: center; color: #ffffff;">
+              <h1 style="margin: 0 0 5px 0; font-size: 22px; font-weight: 800; letter-spacing: 0.05em;">✏️ NOTIFICACIÓN DE VENTA EDITADA</h1>
+              <p style="margin: 0; font-size: 14px; opacity: 0.9;">Se ha modificado el contenido o monto de una venta registrada</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px;">
+              <div style="background-color: #fffbeb; border: 1.5px solid #fef08a; border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: #92400e; text-transform: uppercase;">Monto Anterior vs Nuevo Monto</p>
+                <div style="font-size: 20px; font-weight: 800; color: #b45309;">
+                  <span style="text-decoration: line-through; color: #94a3b8; margin-right: 10px;">S/ ${totalAnterior}</span>
+                  <span style="color: #15803d; font-size: 24px;">S/ ${totalNuevo}</span>
+                </div>
+              </div>
+              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+                <tr>
+                  <td style="padding: 4px 0; font-size: 14px; color: #475569;">
+                    <strong>ID Venta:</strong> #${ventaActualizada.id}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-size: 14px; color: #475569;">
+                    <strong>Editado por:</strong> ${editor}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-size: 14px; color: #475569;">
+                    <strong>Fecha de Edición:</strong> ${fechaFormateada}
+                  </td>
+                </tr>
+              </table>
+              <h3 style="margin: 25px 0 10px 0; font-size: 15px; color: #0f172a; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Detalle de la Venta Actualizado</h3>
+              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 25px;">
+                <thead>
+                  <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                    <th style="padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Producto</th>
+                    <th style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; width: 60px;">Cant.</th>
+                    <th style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; width: 100px;">P. Unit.</th>
+                    <th style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; width: 100px;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filasDetalleHtml}
+                </tbody>
+              </table>
+              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 8px; padding: 15px;">
+                <tr>
+                  <td style="padding: 4px 0; font-size: 14px; color: #475569;">
+                    Método de Pago:
+                  </td>
+                  <td align="right" style="padding: 4px 0; font-size: 14px; font-weight: 700; color: #334155; text-transform: uppercase;">
+                    ${metodoPago}
+                  </td>
+                </tr>
+                <tr style="border-top: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 0 0 0; font-size: 16px; font-weight: 700; color: #0f172a;">
+                    NUEVO TOTAL:
+                  </td>
+                  <td align="right" style="padding: 10px 0 0 0; font-size: 20px; font-weight: 800; color: #d97706;">
+                    S/ ${totalNuevo}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 20px 30px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px;">
+              Este es un correo de auditoría automático del sistema Minimarket POS. Por favor no respondas a este mensaje.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    try {
+      const res = await this.enviarMailViaGmailApi(destinatario, subject, htmlBody);
+      console.log(`✅ Notificación de venta editada enviada con éxito a ${destinatario} vía Gmail REST API. ID: ${res.id}`);
+    } catch (error) {
+      console.error(`❌ Error al enviar la notificación de edición de venta a ${destinatario}:`, error);
+    }
+  }
 }
 
 export const emailService = new EmailService();

@@ -2,9 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { VentaService } from '../../services/venta.service';
 import { ReporteExcelService } from '../../../../../core/services/reporte-excel.service';
 import { Venta, MetodoPago } from '../../../../../core/models/venta.model';
+import { VentaEditModalComponent } from '../../components/venta-edit-modal/venta-edit-modal.component';
 import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderComponent, StatusBadgeComponent, BadgeVariant, PaginationComponent, ConfirmModalService, TableFilterComponent, SortOption } from '@shared/components';
 
 @Component({
@@ -14,6 +16,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
     CommonModule,
     FormsModule,
     RouterLink,
+    MatDialogModule,
     SpinnerComponent,
     ErrorAlertComponent,
     EmptyStateComponent,
@@ -28,6 +31,7 @@ import { SpinnerComponent, ErrorAlertComponent, EmptyStateComponent, PageHeaderC
 export class VentasListPageComponent implements OnInit {
   private ventaService = inject(VentaService);
   private confirmModal = inject(ConfirmModalService);
+  private dialog = inject(MatDialog);
   public excelService = inject(ReporteExcelService);
 
   ventas = signal<Venta[]>([]);
@@ -142,6 +146,31 @@ export class VentasListPageComponent implements OnInit {
 
   cerrarDetalle() {
     this.ventaSeleccionada.set(null);
+  }
+
+  editarVenta(venta: Venta) {
+    this.cargandoDetalle.set(true);
+    this.ventaService.obtenerPorId(venta.id).subscribe({
+      next: (detallada) => {
+        this.cargandoDetalle.set(false);
+        const dialogRef = this.dialog.open(VentaEditModalComponent, {
+          width: '680px',
+          disableClose: true,
+          data: { venta: detallada },
+        });
+
+        dialogRef.afterClosed().subscribe((guardado) => {
+          if (guardado) {
+            this.cerrarDetalle();
+            this.cargarVentas();
+          }
+        });
+      },
+      error: (err) => {
+        this.cargandoDetalle.set(false);
+        this.errorMessage.set(err.error?.message || 'Error al obtener datos de la venta para edición');
+      },
+    });
   }
 
   async anularVenta(id: string) {

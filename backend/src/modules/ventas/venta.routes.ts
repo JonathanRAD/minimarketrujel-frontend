@@ -10,6 +10,7 @@ router.use(requireAuth);
 router.post('/', asyncHandler(ventaController.crear));
 router.get('/', asyncHandler(ventaController.listar));
 router.get('/:id', asyncHandler(ventaController.obtenerPorId));
+router.put('/:id', asyncHandler(ventaController.actualizar));
 router.post('/:id/anular', requireRole('ADMIN'), asyncHandler(ventaController.anular));
 
 export default router;

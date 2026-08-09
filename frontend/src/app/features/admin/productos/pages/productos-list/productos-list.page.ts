@@ -13,6 +13,7 @@ import {
 } from '@shared/components';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ProductoFormPageComponent } from '../producto-form/producto-form.page';
+import { ProductoImportModalComponent } from '../../components/producto-import-modal/producto-import-modal.component';
 
 @Component({
   selector: 'app-productos-list-page',
@@ -88,6 +89,20 @@ export class ProductosListPageComponent implements OnInit {
       width: '900px',
       maxWidth: '96vw',
       data: { productoId },
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((guardado) => {
+      if (guardado) {
+        this.cargar();
+      }
+    });
+  }
+
+  abrirModalImportarExcel() {
+    const dialogRef = this.dialog.open(ProductoImportModalComponent, {
+      width: '680px',
+      maxWidth: '96vw',
       disableClose: false,
     });
 

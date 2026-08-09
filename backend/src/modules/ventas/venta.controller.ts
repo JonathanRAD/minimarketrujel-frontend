@@ -20,6 +20,13 @@ export class VentaController {
     res.json({ success: true, data: venta });
   }
 
+  async actualizar(req: Request, res: Response): Promise<void> {
+    const data = crearVentaSchema.parse(req.body);
+    const usuarioNombre = (req as any).usuario?.nombre || (req as any).user?.nombre || 'Cajero';
+    const venta = await ventaService.actualizar(req.params.id, req.usuario!.id, data, usuarioNombre);
+    res.json({ success: true, data: venta });
+  }
+
   async anular(req: Request, res: Response): Promise<void> {
     const venta = await ventaService.anular(req.params.id, req.usuario!.id);
     res.json({ success: true, data: venta });

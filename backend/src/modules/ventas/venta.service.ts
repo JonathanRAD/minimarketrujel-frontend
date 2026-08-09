@@ -97,6 +97,59 @@ export class VentaService {
     return ventaAnulada;
   }
 
+  async actualizar(id: string, usuarioId: string, data: CrearVentaDto, usuarioNombre?: string) {
+    const ventaOriginal = await this.obtenerPorId(id);
+
+    let montoEfectivo = 0;
+    let montoTarjeta = 0;
+
+    const totalCalculado = data.detalles.reduce(
+      (acc, d) => acc + d.cantidad * d.precioUnitario,
+      0
+    );
+
+    if (data.metodoPago === 'MIXTO') {
+      if (data.montoEfectivo === undefined || data.montoTarjeta === undefined) {
+        throw new BadRequestError('Para un pago mixto debes especificar montoEfectivo y montoTarjeta');
+      }
+      const sumaMetodos = Number(data.montoEfectivo) + Number(data.montoTarjeta);
+      if (Math.abs(sumaMetodos - totalCalculado) > 0.01) {
+        throw new BadRequestError(
+          `La suma de efectivo (S/ ${data.montoEfectivo}) y tarjeta (S/ ${data.montoTarjeta}) debe ser igual al total de la venta (S/ ${totalCalculado.toFixed(2)})`
+        );
+      }
+      montoEfectivo = Number(data.montoEfectivo);
+      montoTarjeta = Number(data.montoTarjeta);
+    } else if (data.metodoPago === 'EFECTIVO') {
+      montoEfectivo = totalCalculado;
+      montoTarjeta = 0;
+    } else if (data.metodoPago === 'TARJETA') {
+      montoEfectivo = 0;
+      montoTarjeta = totalCalculado;
+    } else {
+      montoEfectivo = 0;
+      montoTarjeta = 0;
+    }
+
+    const ventaActualizada = await ventaRepository.actualizarConTransaccion(id, usuarioId, {
+      clienteId: data.clienteId,
+      metodoPago: data.metodoPago,
+      montoEfectivo,
+      montoTarjeta,
+      detalles: data.detalles,
+    });
+
+    emailService.enviarNotificacionEdicionVenta(ventaOriginal, ventaActualizada, usuarioNombre).catch((err) => {
+      console.error('Error al enviar la notificación de edición por email:', err);
+    });
+
+    this.verificarAlertasStock(data.detalles).catch((err) => {
+      console.error('Error al verificar alertas de stock:', err);
+    });
+
+    return ventaActualizada;
+  }
+
   private async enviarComprobantePorEmail(ventaId: string) {
     try {
       const ventaCompleta = await ventaRepository.obtenerPorId(ventaId);

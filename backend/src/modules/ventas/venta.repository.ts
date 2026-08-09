@@ -193,6 +193,138 @@ export class VentaRepository {
       return venta;
     });
   }
+
+  /**
+   * Actualiza una venta existente dentro de una transacción atómica:
+   * 1) Revierte el stock de los detalles originales
+   * 2) Elimina los detalles originales
+   * 3) Valida el nuevo stock y recalcula totales
+   * 4) Crea los nuevos detalles y actualiza la venta
+   * 5) Descuenta el nuevo stock y registra en Kardex
+   */
+  async actualizarConTransaccion(
+    id: string,
+    usuarioId: string,
+    params: {
+      clienteId?: string;
+      metodoPago: 'EFECTIVO' | 'TARJETA' | 'MIXTO' | 'FIADO';
+      montoEfectivo: number;
+      montoTarjeta: number;
+      detalles: { productoId: string; cantidad: number; precioUnitario: number }[];
+    }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Obtener la venta original
+      const ventaExistente = await tx.venta.findUnique({
+        where: { id },
+        include: { detalles: true },
+      });
+
+      if (!ventaExistente) {
+        throw new NotFoundError('Venta a editar no encontrada');
+      }
+
+      if (ventaExistente.estado === 'ANULADA') {
+        throw new ValidationError('No se puede editar una venta que ha sido anulada');
+      }
+
+      // 2. Revertir stock de los detalles originales
+      for (const detalle of ventaExistente.detalles) {
+        await tx.producto.update({
+          where: { id: detalle.productoId },
+          data: { stockActual: { increment: detalle.cantidad } },
+        });
+
+        await tx.movimientoInventario.create({
+          data: {
+            productoId: detalle.productoId,
+            tipo: 'DEVOLUCION',
+            cantidad: Number(detalle.cantidad),
+            usuarioId,
+            referenciaId: id,
+            motivo: `Reversión por edición de venta ${id}`,
+          },
+        });
+      }
+
+      // 3. Eliminar los detalles anteriores
+      await tx.ventaDetalle.deleteMany({
+        where: { ventaId: id },
+      });
+
+      // 4. Validar disponibilidad y capturar costos para el nuevo detalle
+      const costoMap = new Map<string, number>();
+      for (const d of params.detalles) {
+        const prod = await tx.producto.findUnique({
+          where: { id: d.productoId },
+        });
+        if (!prod) {
+          throw new NotFoundError(`Producto con ID ${d.productoId} no encontrado`);
+        }
+        if (Number(prod.stockActual) < d.cantidad) {
+          throw new ValidationError(
+            `Stock insuficiente para "${prod.nombre}" (disponible: ${prod.stockActual}, solicitado: ${d.cantidad})`
+          );
+        }
+        costoMap.set(prod.id, Number(prod.costo));
+      }
+
+      const nuevoTotal = params.detalles.reduce(
+        (acc, d) => acc + d.cantidad * d.precioUnitario,
+        0
+      );
+
+      // 5. Actualizar la venta con los nuevos valores y detalles
+      const ventaActualizada = await tx.venta.update({
+        where: { id },
+        data: {
+          clienteId: params.clienteId,
+          metodoPago: params.metodoPago,
+          montoEfectivo: new Prisma.Decimal(params.montoEfectivo),
+          montoTarjeta: new Prisma.Decimal(params.montoTarjeta),
+          total: new Prisma.Decimal(nuevoTotal),
+          detalles: {
+            create: params.detalles.map((d) => {
+              const costo = costoMap.get(d.productoId) || 0;
+              return {
+                productoId: d.productoId,
+                cantidad: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                costoUnitario: costo,
+                subtotal: d.cantidad * d.precioUnitario,
+              };
+            }),
+          },
+        },
+        include: {
+          detalles: { include: { producto: true } },
+          usuario: true,
+          cliente: true,
+        },
+      });
+
+      // 6. Aplicar descuento de stock de las nuevas cantidades
+      for (const d of params.detalles) {
+        await tx.producto.update({
+          where: { id: d.productoId },
+          data: { stockActual: { decrement: d.cantidad } },
+        });
+
+        await tx.movimientoInventario.create({
+          data: {
+            productoId: d.productoId,
+            tipo: 'VENTA',
+            cantidad: -d.cantidad,
+            usuarioId,
+            referenciaId: id,
+            motivo: `Venta editada ${id}`,
+          },
+        });
+      }
+
+      return ventaActualizada;
+    });
+  }
 }
 
 export const ventaRepository = new VentaRepository();

@@ -44,6 +44,12 @@ export class VentaService {
       .pipe(map((res) => res.data));
   }
 
+  actualizar(id: string, data: any): Observable<Venta> {
+    return this.http
+      .put<ApiResponse<Venta>>(`${this.baseUrl}/${id}`, data)
+      .pipe(map((res) => res.data));
+  }
+
   anular(id: string): Observable<Venta> {
     return this.http
       .post<ApiResponse<Venta>>(`${this.baseUrl}/${id}/anular`, {})

@@ -13,7 +13,9 @@ router.get('/stock-bajo', asyncHandler(productoController.listarStockBajo));
 router.get('/codigo-barras/:codigo', asyncHandler(productoController.buscarPorCodigoBarras));
 router.get('/:id', asyncHandler(productoController.obtenerPorId));
 
-// Solo ADMIN puede crear, editar o eliminar productos
+// Solo ADMIN puede crear, editar, eliminar o importar productos
+router.post('/preanalizar-excel', requireRole('ADMIN'), asyncHandler(productoController.preanalizarExcel));
+router.post('/importar-excel', requireRole('ADMIN'), asyncHandler(productoController.importarExcel));
 router.post('/', requireRole('ADMIN'), asyncHandler(productoController.crear));
 router.put('/:id', requireRole('ADMIN'), asyncHandler(productoController.actualizar));
 router.delete('/:id', requireRole('ADMIN'), asyncHandler(productoController.eliminar));

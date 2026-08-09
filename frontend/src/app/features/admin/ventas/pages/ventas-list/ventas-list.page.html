@@ -1,6 +1,6 @@
 <app-page-header
   title="Auditoría de Ventas (Historial)"
-  subtitle="Consulta boletas, tickets del POS y realiza anulaciones/devoluciones de inventario">
+  subtitle="Consulta boletas, tickets del POS, edita o anula ventas con actualización automática de stock">
   <button
     class="btn-excel"
     (click)="exportarExcel()"
@@ -11,7 +11,6 @@
 </app-page-header>
 
 <app-error-alert [message]="errorMessage()" (dismiss)="errorMessage.set(null)" />
-
 
 <!-- Ordenamiento de Ventas -->
 <app-table-filter
@@ -99,6 +98,16 @@
           </button>
           <button
             *ngIf="venta.estado === 'COMPLETADA'"
+            (click)="editarVenta(venta)"
+            [disabled]="guardando()"
+            class="btn-action-icon btn-edit"
+            title="Editar Venta (Agregar productos o modificar)"
+            style="color: #d97706;"
+          >
+            <span class="material-icons">edit</span>
+          </button>
+          <button
+            *ngIf="venta.estado === 'COMPLETADA'"
             (click)="anularVenta(venta.id)"
             [disabled]="guardando()"
             class="btn-action-icon btn-cancel"
@@ -155,7 +164,7 @@
       <div class="meta-row">
         <span>Transacción:</span>
         <strong class="text-mono" [title]="ventaSeleccionada()?.id || ''">
-          {{ ventaSeleccionada()?.id?.substring(0, 8) }}
+          #{{ ventaSeleccionada()?.id?.substring(0, 8) }}
         </strong>
       </div>
       <div class="meta-row">
@@ -237,6 +246,16 @@
       <button (click)="imprimirTicket()" class="btn-secondary" style="border: 1px solid var(--color-border); background-color: white; color: var(--color-text-dark); display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer;">
         <span class="material-icons" style="font-size: 1.1rem;">print</span>
         <span>Imprimir</span>
+      </button>
+      <button
+        *ngIf="ventaSeleccionada()?.estado === 'COMPLETADA'"
+        (click)="editarVenta(ventaSeleccionada()!)"
+        [disabled]="guardando()"
+        class="btn-secondary"
+        style="border: 1px solid #fde68a; background-color: #fffbeb; color: #b45309; display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer;"
+      >
+        <span class="material-icons" style="font-size: 1.1rem; color: #d97706;">edit</span>
+        <span>Editar Venta</span>
       </button>
       <button
         *ngIf="ventaSeleccionada()?.estado === 'COMPLETADA'"

@@ -1,0 +1,293 @@
+<div class="modal-header">
+  <h2 mat-dialog-title class="dialog-title font-bold">
+    <span class="material-icons title-icon">file_upload</span>
+    <span>Importar Productos desde Excel</span>
+  </h2>
+  <button type="button" class="btn-close-dialog" (click)="cerrar(!!resumenFinal())" title="Cerrar ventana">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="modal-body">
+  <!-- Alerta de Error -->
+  <app-error-alert [message]="error()" (dismiss)="error.set(null)" />
+
+  <!-- ESTADO 1: No hay vista previa ni resultado final -->
+  <div *ngIf="!preAnalisis() && !resumenFinal() && !analizando() && !procesando()" class="step-initial">
+    <div class="instructions-box">
+      <p class="instructions-text">
+        Selecciona tu lista de inventario en formato Excel. El sistema realizará un <strong>pre-análisis en tiempo real</strong> para mostrarte exactamente qué productos se crearán y cuáles se actualizarán.
+      </p>
+      <div class="column-hint-badge">
+        <span class="material-icons">info</span>
+        <span>Columnas reconocidas: <strong>Categoría, Producto, Marca, Descripción, Presentación, Cantidad, Costo, Precio Venta, Código de Barras</strong>.</span>
+      </div>
+    </div>
+
+    <!-- Dropzone de archivo -->
+    <div 
+      *ngIf="!archivoSeleccionado()" 
+      class="upload-dropzone" 
+      [class.dragging]="isDragging()"
+      (click)="fileInput.click()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      
+      <input 
+        type="file" 
+        #fileInput 
+        accept=".xlsx, .xls, .csv" 
+        style="display: none;" 
+        (change)="onFileSelected($event)" />
+
+      <span class="material-icons upload-icon">{{ isDragging() ? 'cloud_upload' : 'publish' }}</span>
+      <h3 class="upload-title">{{ isDragging() ? '¡Suelte el archivo aquí!' : 'Haz clic para seleccionar o arrastra tu archivo Excel' }}</h3>
+      <p class="upload-subtext">Archivos compatibles: Excel (.xlsx, .xls) hasta 20 MB</p>
+    </div>
+
+    <!-- Archivo Seleccionado -->
+    <div *ngIf="archivoSeleccionado()" class="selected-file-card">
+      <div class="file-info-left">
+        <span class="material-icons file-icon">description</span>
+        <div class="file-details">
+          <span class="file-name font-semibold">{{ archivoSeleccionado()?.name }}</span>
+          <span class="file-size">{{ (archivoSeleccionado()?.size || 0) / 1024 | number:'1.0-1' }} KB</span>
+        </div>
+      </div>
+      <button type="button" class="btn-remove" (click)="quitarArchivo()" title="Cambiar archivo">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Opciones de Filtro por Fecha y Modo de Stock -->
+    <div *ngIf="archivoSeleccionado()" class="import-options-box">
+      <!-- Filtro por Fecha de Registro Reciente -->
+      <div class="option-row cutoff-row">
+        <label class="cutoff-checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="usarFechaCorte()"
+            (change)="toggleUsarFechaCorte()" />
+          <div class="label-text">
+            <strong>Filtrar actualización por Fecha de Registro (Filtro de Límite)</strong>
+            <span>Omite facturas antiguas y procesa únicamente registros del Excel a partir de la fecha seleccionada.</span>
+          </div>
+        </label>
+
+        <div *ngIf="usarFechaCorte()" class="date-picker-wrap">
+          <label class="picker-label">Procesar registros desde:</label>
+          <input
+            type="date"
+            [value]="fechaCorte()"
+            (change)="onFechaCorteChange($event)"
+            class="date-picker-input" />
+        </div>
+      </div>
+
+      <!-- Modo de actualización de stock -->
+      <div class="option-row mode-row">
+        <label class="mode-label-title">Modo de actualización para productos existentes:</label>
+        <div class="mode-radio-group">
+          <label class="radio-chip" [class.active]="modoImportacion() === 'REEMPLAZAR'">
+            <input 
+              type="radio" 
+              name="modoImportacion" 
+              value="REEMPLAZAR" 
+              [checked]="modoImportacion() === 'REEMPLAZAR'" 
+              (change)="modoImportacion.set('REEMPLAZAR')" />
+            <span>Fijar Stock Exacto</span>
+          </label>
+          <label class="radio-chip" [class.active]="modoImportacion() === 'SUMAR'">
+            <input 
+              type="radio" 
+              name="modoImportacion" 
+              value="SUMAR" 
+              [checked]="modoImportacion() === 'SUMAR'" 
+              (change)="modoImportacion.set('SUMAR')" />
+            <span>Sumar al Stock Actual</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO 2: Cargando Pre-Análisis -->
+  <div *ngIf="analizando()" class="processing-box">
+    <app-spinner message="Analizando datos e identificando coincidencias en tiempo real..." />
+  </div>
+
+  <!-- ESTADO 3: VISTA PREVIA INTERACTIVA (Pre-Análisis) -->
+  <div *ngIf="preAnalisis() && !resumenFinal() && !procesando()" class="preview-container">
+    <!-- Header resumen badges -->
+    <div class="preview-summary-bar">
+      <div class="summary-badge new">
+        <span class="badge-count">{{ getConteoEfectivo('NUEVO') }}</span>
+        <span class="badge-label">Nuevos Productos a Crear</span>
+      </div>
+      <div class="summary-badge update">
+        <span class="badge-count">{{ getConteoEfectivo('ACTUALIZAR') }}</span>
+        <span class="badge-label">Coincidencias / Actualizaciones</span>
+      </div>
+      <div class="summary-badge total">
+        <span class="badge-count">{{ preAnalisis()?.totalProcesados }}</span>
+        <span class="badge-label">Total Válidos en Excel</span>
+      </div>
+    </div>
+
+    <!-- Navegación por pestañas -->
+    <div class="preview-tabs">
+      <button
+        type="button"
+        class="tab-btn new-tab"
+        [class.active]="pestanaActiva() === 'NUEVO'"
+        (click)="pestanaActiva.set('NUEVO')">
+        <span class="material-icons text-sm">add_circle</span>
+        <span>Productos Nuevos ({{ getConteoEfectivo('NUEVO') }})</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn update-tab"
+        [class.active]="pestanaActiva() === 'ACTUALIZAR'"
+        (click)="pestanaActiva.set('ACTUALIZAR')">
+        <span class="material-icons text-sm">sync</span>
+        <span>Coincidencias ({{ getConteoEfectivo('ACTUALIZAR') }})</span>
+      </button>
+    </div>
+
+    <!-- Pestaña 1: Productos Nuevos -->
+    <div *ngIf="pestanaActiva() === 'NUEVO'" class="tab-content">
+      <p class="tab-description">Los siguientes <strong>{{ getConteoEfectivo('NUEVO') }} productos</strong> se crearán como registros nuevos en tu catálogo:</p>
+      <div class="table-scroll-container">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Fila</th>
+              <th>Producto Completo (Excel)</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+              <th>Costo Unit.</th>
+              <th>P. Venta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of getItemsFiltrados('NUEVO')">
+              <td class="font-mono text-center col-fila">{{ item.fila }}</td>
+              <td class="col-nombre">
+                <span class="item-name font-semibold text-slate-800">{{ item.nombreExcel }}</span>
+                <span *ngIf="item.codigoBarras && !item.codigoBarras.startsWith('SC-AUTO')" class="item-code text-xs text-slate-400">Cod: {{ item.codigoBarras }}</span>
+              </td>
+              <td><span class="cat-pill">{{ item.categoria }}</span></td>
+              <td><strong>{{ item.stock }}</strong> {{ item.unidadMedida }}</td>
+              <td>S/ {{ item.costo | number:'1.2-2' }}</td>
+              <td class="font-bold text-emerald-700">S/ {{ item.precioVenta | number:'1.2-2' }}</td>
+            </tr>
+            <tr *ngIf="getItemsFiltrados('NUEVO').length === 0">
+              <td colspan="6" class="text-center py-6 text-slate-400">No hay productos nuevos clasificados en este filtro.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pestaña 2: Coincidencias / Actualizaciones -->
+    <div *ngIf="pestanaActiva() === 'ACTUALIZAR'" class="tab-content">
+      <p class="tab-description">Los siguientes <strong>{{ getConteoEfectivo('ACTUALIZAR') }} productos</strong> coincidieron con registros en tu BD. Si alguno no corresponde, haz clic en cambiar:</p>
+      <div class="table-scroll-container">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Fila</th>
+              <th>Producto en Excel</th>
+              <th>Coincide en BD con</th>
+              <th>Stock</th>
+              <th>Acción de Importación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of getItemsFiltrados('ACTUALIZAR')">
+              <td class="font-mono text-center col-fila">{{ item.fila }}</td>
+              <td class="col-nombre font-medium text-slate-800">{{ item.nombreExcel }}</td>
+              <td>
+                <div class="db-match-card">
+                  <span class="material-icons text-amber-500 text-sm">link</span>
+                  <span class="match-name font-semibold text-amber-900">{{ item.coincidenciaDb?.nombre }}</span>
+                </div>
+              </td>
+              <td><strong>{{ item.stock }}</strong> {{ item.unidadMedida }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-toggle-action"
+                  (click)="toggleAccionItem(item)"
+                  title="Cambiar acción para esta fila">
+                  <span class="material-icons text-xs">add_circle_outline</span>
+                  <span>Importar como Nuevo</span>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="getItemsFiltrados('ACTUALIZAR').length === 0">
+              <td colspan="5" class="text-center py-6 text-slate-400">No hay coincidencias en este filtro. Todos los registros se crearán como nuevos.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO 4: Cargando Importación Final -->
+  <div *ngIf="procesando()" class="processing-box">
+    <app-spinner message="Ejecutando importación y aplicando cambios en la base de datos..." />
+  </div>
+
+  <!-- ESTADO 5: Resumen de Resultados Final -->
+  <div *ngIf="resumenFinal()" class="results-container">
+    <div class="results-header success">
+      <span class="material-icons result-icon">check_circle</span>
+      <div class="result-header-text">
+        <h3 class="result-title font-bold">¡Importación Completada Exitosamente!</h3>
+        <p class="result-subtitle">Se procesaron {{ resumenFinal()?.totalProcesados }} filas del archivo Excel.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card created">
+        <span class="stat-value font-bold">{{ resumenFinal()?.creados }}</span>
+        <span class="stat-label">Nuevos Productos Creados</span>
+      </div>
+      <div class="stat-card updated">
+        <span class="stat-value font-bold">{{ resumenFinal()?.actualizados }}</span>
+        <span class="stat-label">Productos Existentes Actualizados</span>
+      </div>
+      <div class="stat-card total">
+        <span class="stat-value font-bold">{{ resumenFinal()?.totalProcesados }}</span>
+        <span class="stat-label">Total Registros Procesados</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-actions">
+  <button type="button" class="btn-secondary" (click)="cerrar(!!resumenFinal())">
+    {{ resumenFinal() ? 'Cerrar' : 'Cancelar' }}
+  </button>
+
+  <button 
+    *ngIf="archivoSeleccionado() && !preAnalisis() && !resumenFinal() && !analizando() && !procesando()" 
+    type="button" 
+    class="btn-primary" 
+    (click)="ejecutarPreAnalisis()">
+    <span class="material-icons">search</span>
+    <span>Ver Vista Previa de Productos</span>
+  </button>
+
+  <button 
+    *ngIf="preAnalisis() && !resumenFinal() && !procesando()" 
+    type="button" 
+    class="btn-primary btn-success" 
+    (click)="confirmarImportacion()">
+    <span class="material-icons">check</span>
+    <span>Confirmar e Importar {{ preAnalisis()?.totalProcesados }} Productos</span>
+  </button>
+</div>

@@ -14,6 +14,44 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export interface ItemPreAnalisisExcel {
+  fila: number;
+  codigoBarras: string;
+  nombreExcel: string;
+  categoria: string;
+  marca: string;
+  detalle: string;
+  tamano: string;
+  stock: number;
+  unidadMedida: string;
+  costo: number;
+  precioVenta: number;
+  fechaRegistro?: string;
+  tienda?: string;
+  tipoAccion: 'NUEVO' | 'ACTUALIZAR';
+  coincidenciaDb?: {
+    id: string;
+    nombre: string;
+    codigoBarras?: string;
+    stockActual: number;
+    puntaje: number;
+  };
+}
+
+export interface ResumenPreAnalisisExcel {
+  totalProcesados: number;
+  totalNuevos: number;
+  totalActualizar: number;
+  items: ItemPreAnalisisExcel[];
+}
+
+export interface ResumenImportacionExcel {
+  creados: number;
+  actualizados: number;
+  totalProcesados: number;
+  errores: Array<{ fila: number; error: string }>;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductoService {
   private readonly baseUrl = `${environment.apiUrl}/productos`;
@@ -63,6 +101,28 @@ export class ProductoService {
 
   eliminar(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  preanalizarExcel(fileBase64: string, fechaCorte?: string): Observable<ResumenPreAnalisisExcel> {
+    return this.http
+      .post<ApiResponse<ResumenPreAnalisisExcel>>(`${this.baseUrl}/preanalizar-excel`, { fileBase64, fechaCorte })
+      .pipe(map((res) => res.data));
+  }
+
+  importarExcel(
+    fileBase64: string,
+    modoImportacion: 'REEMPLAZAR' | 'SUMAR' = 'REEMPLAZAR',
+    fechaCorte?: string,
+    overrideAcciones?: { [fila: number]: 'NUEVO' | 'ACTUALIZAR' }
+  ): Observable<ResumenImportacionExcel> {
+    return this.http
+      .post<ApiResponse<ResumenImportacionExcel>>(`${this.baseUrl}/importar-excel`, {
+        fileBase64,
+        modoImportacion,
+        fechaCorte,
+        overrideAcciones,
+      })
+      .pipe(map((res) => res.data));
   }
 
   listarStockBajo(): Observable<Producto[]> {

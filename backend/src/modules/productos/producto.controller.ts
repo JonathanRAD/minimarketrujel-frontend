@@ -45,6 +45,35 @@ export class ProductoController {
     const productos = await productoService.listarStockBajo();
     res.json({ success: true, data: productos });
   }
+
+  async preanalizarExcel(req: Request, res: Response): Promise<void> {
+    const { fileBase64, fechaCorte } = req.body;
+    if (!fileBase64) {
+      res.status(400).json({ success: false, message: 'No se envió ningún archivo Excel en la solicitud' });
+      return;
+    }
+    const cleanBase64 = fileBase64.replace(/^data:.*;base64,/, '');
+    const buffer = Buffer.from(cleanBase64, 'base64');
+    const { importExcelService } = await import('./import-excel.service');
+    const resumen = await importExcelService.preanalizarExcel(buffer, fechaCorte);
+    res.json({ success: true, data: resumen });
+  }
+
+  async importarExcel(req: Request, res: Response): Promise<void> {
+    const { fileBase64, modoImportacion, fechaCorte, overrideAcciones } = req.body;
+    if (!fileBase64) {
+      res.status(400).json({ success: false, message: 'No se envió ningún archivo Excel en la solicitud' });
+      return;
+    }
+    const cleanBase64 = fileBase64.replace(/^data:.*;base64,/, '');
+    const buffer = Buffer.from(cleanBase64, 'base64');
+    const usuarioId = (req as any).usuario?.id || (req as any).user?.id || '';
+
+    const modo = modoImportacion === 'SUMAR' ? 'SUMAR' : 'REEMPLAZAR';
+    const { importExcelService } = await import('./import-excel.service');
+    const resumen = await importExcelService.procesarExcel(buffer, usuarioId, modo, fechaCorte, overrideAcciones);
+    res.json({ success: true, data: resumen });
+  }
 }
 
 export const productoController = new ProductoController();

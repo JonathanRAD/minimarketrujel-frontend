@@ -9,6 +9,14 @@
       <span class="material-icons">file_download</span>
       <span>{{ (excelService.exportando() && excelService.tablaActual() === 'productos') ? 'Generando Excel...' : 'Exportar a Excel' }}</span>
     </button>
+    <button
+      class="btn-secondary"
+      style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.1rem; border-radius: 10px; font-weight: 600; cursor: pointer;"
+      (click)="abrirModalImportarExcel()"
+      title="Importar productos desde Excel">
+      <span class="material-icons">file_upload</span>
+      <span>Importar Excel</span>
+    </button>
     <button (click)="abrirModalForm()" class="btn-primary">
       <span class="material-icons">add</span>
       <span>Nuevo Producto</span>

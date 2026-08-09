@@ -1,0 +1,145 @@
+<div class="modal-header">
+  <h2 mat-dialog-title class="dialog-title font-bold">
+    <span class="material-icons title-icon">edit_note</span>
+    <span>Editar Venta #{{ data.venta.id.substring(0, 8) }}</span>
+  </h2>
+  <button type="button" class="btn-close-dialog" (click)="cerrar()" title="Cerrar ventana">
+    <span class="material-icons">close</span>
+  </button>
+</div>
+
+<div class="modal-body">
+  <app-error-alert [message]="error()" (dismiss)="error.set(null)" />
+
+  <div *ngIf="guardando()" class="processing-box">
+    <app-spinner message="Actualizando inventario, recalculando venta y enviando correo de notificación a Gmail..." />
+  </div>
+
+  <div *ngIf="!guardando()" class="edit-flow-container">
+    <!-- Buscador de productos para agregar items faltantes -->
+    <div class="search-product-box">
+      <label class="search-label">
+        <span class="material-icons text-amber-600 text-sm">search</span>
+        <span>¿Olvidó agregar algún producto? Búscalo por nombre o código:</span>
+      </label>
+      <div class="search-input-wrap">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Escribe el nombre o escanea el código de barras..."
+          [ngModel]="busquedaProducto()"
+          (ngModelChange)="busquedaProducto.set($event); buscarProductos()" />
+        <span *ngIf="buscandoProductos()" class="material-icons animate-spin searching-spinner">sync</span>
+      </div>
+
+      <!-- Dropdown con resultados de búsqueda -->
+      <div *ngIf="resultadosBusqueda().length > 0" class="search-results-dropdown">
+        <div
+          *ngFor="let prod of resultadosBusqueda()"
+          class="search-result-item"
+          (click)="agregarProducto(prod)">
+          <div class="prod-info font-medium">
+            <span class="prod-name text-slate-800">{{ prod.nombre }}</span>
+            <span class="prod-sub text-xs text-slate-400">Cod: {{ prod.codigoBarras }} | Stock: {{ prod.stockActual }} {{ prod.unidadMedida }}</span>
+          </div>
+          <div class="prod-price font-bold text-amber-700">
+            S/ {{ prod.precioVenta | number:'1.2-2' }}
+            <span class="material-icons text-sm">add_circle</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Productos de la Venta -->
+    <div class="table-scroll-wrap">
+      <table class="edit-items-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="text-right">P. Unitario</th>
+            <th class="text-center">Cantidad</th>
+            <th class="text-right">Subtotal</th>
+            <th class="text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items()">
+            <td class="col-prod">
+              <span class="font-semibold text-slate-800">{{ item.nombre }}</span>
+              <span *ngIf="item.codigoBarras" class="text-xs text-slate-400 font-mono">Cod: {{ item.codigoBarras }}</span>
+            </td>
+            <td class="text-right font-medium">S/ {{ item.precioUnitario | number:'1.2-2' }}</td>
+            <td class="text-center">
+              <div class="qty-counter">
+                <button type="button" class="btn-qty" (click)="actualizarCantidad(item, item.cantidad - 1)">-</button>
+                <input
+                  type="number"
+                  min="1"
+                  class="qty-input"
+                  [ngModel]="item.cantidad"
+                  (ngModelChange)="actualizarCantidad(item, $event)" />
+                <button type="button" class="btn-qty" (click)="actualizarCantidad(item, item.cantidad + 1)">+</button>
+              </div>
+            </td>
+            <td class="text-right font-bold text-slate-900">S/ {{ item.subtotal | number:'1.2-2' }}</td>
+            <td class="text-center">
+              <button type="button" class="btn-delete" (click)="eliminarItem(item)" title="Quitar producto">
+                <span class="material-icons text-sm">delete_outline</span>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="items().length === 0">
+            <td colspan="5" class="text-center py-6 text-slate-400">No hay productos en esta venta. Agrega productos con el buscador.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Opciones de Pago y Total Final -->
+    <div class="edit-summary-box">
+      <div class="payment-methods-select">
+        <label class="pay-title font-semibold">Método de Pago:</label>
+        <div class="radio-chips">
+          <label class="chip" [class.active]="metodoPago() === 'EFECTIVO'">
+            <input type="radio" name="metodoPagoModal" value="EFECTIVO" [checked]="metodoPago() === 'EFECTIVO'" (change)="metodoPago.set('EFECTIVO')" />
+            <span>Efectivo</span>
+          </label>
+          <label class="chip" [class.active]="metodoPago() === 'TARJETA'">
+            <input type="radio" name="metodoPagoModal" value="TARJETA" [checked]="metodoPago() === 'TARJETA'" (change)="metodoPago.set('TARJETA')" />
+            <span>Tarjeta / Yape</span>
+          </label>
+          <label class="chip" [class.active]="metodoPago() === 'MIXTO'">
+            <input type="radio" name="metodoPagoModal" value="MIXTO" [checked]="metodoPago() === 'MIXTO'" (change)="metodoPago.set('MIXTO')" />
+            <span>Pago Mixto</span>
+          </label>
+        </div>
+
+        <div *ngIf="metodoPago() === 'MIXTO'" class="mixto-inputs">
+          <div class="monto-field">
+            <label>Monto Efectivo:</label>
+            <input type="number" step="0.5" [ngModel]="montoEfectivo()" (ngModelChange)="montoEfectivo.set($event)" />
+          </div>
+          <div class="monto-field">
+            <label>Monto Tarjeta:</label>
+            <input type="number" step="0.5" [ngModel]="montoTarjeta()" (ngModelChange)="montoTarjeta.set($event)" />
+          </div>
+        </div>
+      </div>
+
+      <div class="total-big-card">
+        <span class="total-label">NUEVO TOTAL VENTA</span>
+        <span class="total-value">S/ {{ totalCalculado | number:'1.2-2' }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-actions">
+  <button type="button" class="btn-secondary" (click)="cerrar()">
+    Cancelar
+  </button>
+  <button type="button" class="btn-primary btn-save" (click)="guardarCambios()" [disabled]="guardando()">
+    <span class="material-icons text-sm">save</span>
+    <span>Guardar Cambios y Notificar Gmail</span>
+  </button>
+</div>
