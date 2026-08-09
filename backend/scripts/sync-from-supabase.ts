@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
-const SUPABASE_URL = 'postgresql://postgres.deevblctrnsfeojehftu:Elmaspro_123@aws-1-us-east-2.pooler.supabase.com:5432/postgres';
+const SUPABASE_URL = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL || '';
 
 async function syncFromSupabase() {
   console.log('📡 Conectando a Supabase (Solo Lectura)...');

@@ -1,10 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-const localPrisma = new PrismaClient({
-  datasources: {
-    db: { url: 'postgresql://postgres:123456@localhost:5432/minimarketrujel?schema=public' },
-  },
-});
+const localPrisma = new PrismaClient();
 
 async function main() {
   console.log('=== Recuperando lista de productos desde la base de datos LOCAL ===\n');

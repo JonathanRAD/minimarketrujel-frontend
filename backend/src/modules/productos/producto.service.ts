@@ -75,11 +75,20 @@ export class ProductoService {
   }
 
   async actualizar(id: string, data: ActualizarProductoDto) {
-    await this.obtenerPorId(id); // valida que exista
-    if (data.codigoBarras && data.codigoBarras.trim() !== '') {
-      const conflicto = await productoRepository.obtenerPorCodigoBarras(data.codigoBarras);
-      if (conflicto && conflicto.id !== id) {
-        throw new ConflictError('Ese código de barras ya está en uso por otro producto');
+    const productoActual = await this.obtenerPorId(id); // valida que exista
+
+    if (data.codigoBarras !== undefined) {
+      if (!data.codigoBarras || data.codigoBarras.trim() === '') {
+        if (productoActual.codigoBarras && productoActual.codigoBarras.trim() !== '') {
+          data.codigoBarras = productoActual.codigoBarras;
+        } else {
+          data.codigoBarras = await this.generarCodigoInterno();
+        }
+      } else {
+        const conflicto = await productoRepository.obtenerPorCodigoBarras(data.codigoBarras);
+        if (conflicto && conflicto.id !== id) {
+          throw new ConflictError('Ese código de barras ya está en uso por otro producto');
+        }
       }
     }
 

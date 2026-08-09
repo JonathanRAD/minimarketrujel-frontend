@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 // URLs de conexión
-const LOCAL_DB_URL = 'postgresql://postgres:123456@localhost:5432/minimarketrujel?schema=public';
+const LOCAL_DB_URL = process.env.LOCAL_DATABASE_URL;
 const SUPABASE_DB_URL = process.env.DATABASE_URL;
 
 if (!SUPABASE_DB_URL) {

@@ -116,7 +116,14 @@ export class ProductoRepository {
   }
 
   async actualizar(id: string, data: ActualizarProductoDto) {
-    return prisma.producto.update({ where: { id }, data });
+    const updateData: any = { ...data };
+    if (updateData.categoriaId === '') {
+      updateData.categoriaId = null;
+    }
+    if (updateData.codigoBarras === '') {
+      delete updateData.codigoBarras;
+    }
+    return prisma.producto.update({ where: { id }, data: updateData });
   }
 
   async desactivar(id: string) {
