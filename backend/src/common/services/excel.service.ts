@@ -5,9 +5,20 @@ export interface ColumnaExcel {
   header: string;
   key: string;
   width?: number;
-  tipo?: 'texto' | 'moneda' | 'numero' | 'entero' | 'fecha' | 'booleano' | 'estado';
+  tipo?: 'texto' | 'moneda' | 'numero' | 'entero' | 'cantidad' | 'fecha' | 'booleano' | 'estado';
   alineacion?: 'left' | 'center' | 'right';
   esTotalizable?: boolean;
+}
+
+export interface HojaExcelConfig {
+  nombreHoja: string;
+  titulo: string;
+  subtitulo?: string;
+  columnas: ColumnaExcel[];
+  datos: any[];
+  mostrarTotales?: boolean;
+  columnaAgrupacion?: string; // Clave para agrupar en bloques (ej: 'codigoVenta')
+  columnasACombinar?: string[]; // Columnas que se combinan verticalmente por grupo (ej: ['codigoVenta', 'fecha', 'metodoPago', 'cajero'])
 }
 
 export interface OpcionesReporteExcel {
@@ -20,21 +31,64 @@ export interface OpcionesReporteExcel {
   mostrarTotales?: boolean;
 }
 
+export interface OpcionesReporteMultiHojas {
+  nombreArchivo: string;
+  hojas: HojaExcelConfig[];
+}
+
 export class ExcelService {
   /**
-   * Genera y transmite un reporte Excel profesional directamente en la respuesta HTTP Express.
+   * Genera y transmite un reporte Excel profesional con una sola hoja directamente en la respuesta HTTP Express.
    */
   async generarYEnviarReporte(res: Response, opciones: OpcionesReporteExcel): Promise<void> {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Sistema Minimarket POS';
     workbook.created = new Date();
 
-    const nombreHoja = opciones.nombreHoja || 'Reporte';
-    const worksheet = workbook.addWorksheet(nombreHoja, {
+    this.construirHoja(workbook, {
+      nombreHoja: opciones.nombreHoja || 'Reporte',
+      titulo: opciones.titulo,
+      subtitulo: opciones.subtitulo,
+      columnas: opciones.columnas,
+      datos: opciones.datos,
+      mostrarTotales: opciones.mostrarTotales,
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${opciones.nombreArchivo}"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
+
+  /**
+   * Genera y transmite un reporte Excel profesional con múltiples hojas (pestañas).
+   */
+  async generarYEnviarReporteMultiHojas(res: Response, opciones: OpcionesReporteMultiHojas): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema Minimarket POS';
+    workbook.created = new Date();
+
+    for (const hojaConfig of opciones.hojas) {
+      this.construirHoja(workbook, hojaConfig);
+    }
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${opciones.nombreArchivo}"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
+
+  /**
+   * Construye y formatea una hoja dentro del libro de trabajo con banner, cabecera, agrupaciones, filas cebra y totales.
+   */
+  public construirHoja(workbook: ExcelJS.Workbook, hoja: HojaExcelConfig): void {
+    const worksheet = workbook.addWorksheet(hoja.nombreHoja, {
       views: [{ showGridLines: true }],
     });
 
-    const colsCount = opciones.columnas.length;
+    const colsCount = hoja.columnas.length;
     const endColLetter = this.obtenerLetraColumna(colsCount);
 
     // ==========================================
@@ -45,7 +99,7 @@ export class ExcelService {
 
     worksheet.mergeCells(`A2:${endColLetter}2`);
     const cellTitulo = worksheet.getCell('A2');
-    cellTitulo.value = `MINIMARKET - ${opciones.titulo.toUpperCase()}`;
+    cellTitulo.value = `MINIMARKET - ${hoja.titulo.toUpperCase()}`;
     cellTitulo.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFF' } };
     cellTitulo.fill = {
       type: 'pattern',
@@ -55,10 +109,10 @@ export class ExcelService {
     cellTitulo.alignment = { horizontal: 'center', vertical: 'middle' };
     worksheet.getRow(2).height = 36;
 
-    if (opciones.subtitulo) {
+    if (hoja.subtitulo) {
       worksheet.mergeCells(`A3:${endColLetter}3`);
       const cellSub = worksheet.getCell('A3');
-      cellSub.value = opciones.subtitulo;
+      cellSub.value = hoja.subtitulo;
       cellSub.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'F8FAFC' } };
       cellSub.fill = {
         type: 'pattern',
@@ -69,11 +123,11 @@ export class ExcelService {
       worksheet.getRow(3).height = 24;
     }
 
-    const filaMetaNum = opciones.subtitulo ? 4 : 3;
+    const filaMetaNum = hoja.subtitulo ? 4 : 3;
     worksheet.mergeCells(`A${filaMetaNum}:${endColLetter}${filaMetaNum}`);
     const cellMeta = worksheet.getCell(`A${filaMetaNum}`);
     const fechaHora = new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' });
-    cellMeta.value = `Fecha de emisión: ${fechaHora}  |  Total registros: ${opciones.datos.length}`;
+    cellMeta.value = `Fecha de emisión: ${fechaHora}  |  Total registros: ${hoja.datos.length}`;
     cellMeta.font = { name: 'Calibri', size: 9.5, color: { argb: '475569' } };
     cellMeta.fill = {
       type: 'pattern',
@@ -91,7 +145,7 @@ export class ExcelService {
     // 2. TABLA: ENCABEZADOS DE COLUMNA
     // ==========================================
     const filaHeaderNum = filaSepNum + 1;
-    const headerRowValues = opciones.columnas.map((c) => c.header);
+    const headerRowValues = hoja.columnas.map((c) => c.header);
     const headerRow = worksheet.addRow(headerRowValues);
     headerRow.height = 28;
 
@@ -102,14 +156,14 @@ export class ExcelService {
         pattern: 'solid',
         fgColor: { argb: '2563EB' },
       };
-      const colDef = opciones.columnas[colIndex - 1];
-      const esNumerico = colDef?.tipo === 'moneda' || colDef?.tipo === 'numero' || colDef?.tipo === 'entero';
+      const colDef = hoja.columnas[colIndex - 1];
+      const esNumerico = colDef?.tipo === 'moneda' || colDef?.tipo === 'numero' || colDef?.tipo === 'entero' || colDef?.tipo === 'cantidad';
       const align = colDef?.alineacion || (esNumerico ? 'right' : (colDef?.tipo === 'fecha' || colDef?.tipo === 'booleano' || colDef?.tipo === 'estado' ? 'center' : 'left'));
 
       cell.alignment = { horizontal: align, vertical: 'middle', wrapText: true };
       cell.border = {
         top: { style: 'medium', color: { argb: '1D4ED8' } },
-        bottom: { style: 'medium', color: { argb: '1D4ED8' } },
+        bottom: { style: 'medium', color: { argb: '0F172A' } },
         left: { style: 'thin', color: { argb: '60A5FA' } },
         right: { style: 'thin', color: { argb: '60A5FA' } },
       };
@@ -121,87 +175,182 @@ export class ExcelService {
     };
 
     // ==========================================
-    // 3. DATOS Y FORMATO DE FILAS (EFECTO CEBRA)
+    // 3. AGRUPACIÓN Y RENDERIZADO DE DATOS
     // ==========================================
-    const startDataRow = filaHeaderNum + 1;
+    interface GrupoData {
+      clave: string;
+      items: any[];
+    }
 
-    opciones.datos.forEach((item, index) => {
-      const rowValues = opciones.columnas.map((col) => {
-        const val = item[col.key];
-        if (val === undefined || val === null) return '';
-        if (col.tipo === 'fecha' && val) {
-          return new Date(val);
+    const grupos: GrupoData[] = [];
+    if (hoja.columnaAgrupacion) {
+      hoja.datos.forEach((item) => {
+        const clave = String(item[hoja.columnaAgrupacion!] ?? '');
+        const ultimoGrupo = grupos[grupos.length - 1];
+        if (ultimoGrupo && ultimoGrupo.clave === clave) {
+          ultimoGrupo.items.push(item);
+        } else {
+          grupos.push({ clave, items: [item] });
         }
-        if (col.tipo === 'moneda' || col.tipo === 'numero' || col.tipo === 'entero') {
-          return Number(val) || 0;
-        }
-        if (col.tipo === 'booleano') {
-          return val ? 'SÍ' : 'NO';
-        }
-        return val;
       });
+    } else {
+      hoja.datos.forEach((item, idx) => {
+        grupos.push({ clave: String(idx), items: [item] });
+      });
+    }
 
-      const row = worksheet.addRow(rowValues);
-      row.height = 22;
+    let currentRowIndex = filaHeaderNum + 1;
 
-      const isEven = index % 2 === 0;
-      const bgArgb = isEven ? 'FFFFFF' : 'F8FAFC';
+    grupos.forEach((grupo, gIndex) => {
+      const isEvenGroup = gIndex % 2 === 0;
+      // Contraste visible y armónico entre bloques de venta
+      const bgArgb = isEvenGroup ? 'FFFFFF' : 'F1F5F9';
+      const startRowForGroup = currentRowIndex;
 
-      row.eachCell({ includeEmpty: true }, (cell, colIndex) => {
-        const colDef = opciones.columnas[colIndex - 1];
-        if (!colDef) return;
+      grupo.items.forEach((item, itemIdxInGroup) => {
+        const isFirstInGroup = itemIdxInGroup === 0;
+        const isLastInGroup = itemIdxInGroup === grupo.items.length - 1;
 
-        if (colDef.tipo === 'moneda') {
-          cell.numFmt = '"S/" #,##0.00;[Red]-"S/" #,##0.00;"S/" 0.00';
-        } else if (colDef.tipo === 'numero') {
-          cell.numFmt = '#,##0.00';
-        } else if (colDef.tipo === 'entero') {
-          cell.numFmt = '#,##0'; // Formato de entero sin decimales
-        } else if (colDef.tipo === 'fecha' && cell.value instanceof Date) {
-          cell.numFmt = 'DD/MM/YYYY HH:mm';
-        }
-
-        const esNumerico = colDef.tipo === 'moneda' || colDef.tipo === 'numero' || colDef.tipo === 'entero';
-        const align = colDef.alineacion || (esNumerico ? 'right' : (colDef.tipo === 'fecha' || colDef.tipo === 'booleano' || colDef.tipo === 'estado' ? 'center' : 'left'));
-
-        cell.alignment = { horizontal: align, vertical: 'middle' };
-        cell.font = { name: 'Calibri', size: 10, color: { argb: '1E293B' } };
-
-        if (colDef.tipo === 'estado') {
-          const textVal = String(cell.value || '').toUpperCase();
-          if (textVal.includes('ACTIVO') || textVal.includes('COMPLETADA') || textVal.includes('RECIBIDA') || textVal.includes('ABIERTO')) {
-            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: '166534' } };
-          } else if (textVal.includes('INACTIVO') || textVal.includes('ANULADA') || textVal.includes('CANCELADA') || textVal.includes('CERRADO')) {
-            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: '991B1B' } };
+        const rowValues = hoja.columnas.map((col) => {
+          const val = item[col.key];
+          if (val === undefined || val === null) return '';
+          if (col.tipo === 'fecha' && val) {
+            return new Date(val);
           }
-        }
+          if (col.tipo === 'moneda' || col.tipo === 'numero' || col.tipo === 'entero' || col.tipo === 'cantidad') {
+            return Number(val) || 0;
+          }
+          if (col.tipo === 'booleano') {
+            return val ? 'SÍ' : 'NO';
+          }
+          return val;
+        });
 
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: bgArgb },
-        };
+        const row = worksheet.addRow(rowValues);
+        row.height = 22;
 
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'E2E8F0' } },
-          bottom: { style: 'thin', color: { argb: 'E2E8F0' } },
-          left: { style: 'thin', color: { argb: 'E2E8F0' } },
-          right: { style: 'thin', color: { argb: 'E2E8F0' } },
-        };
+        row.eachCell({ includeEmpty: true }, (cell, colIndex) => {
+          const colDef = hoja.columnas[colIndex - 1];
+          if (!colDef) return;
+
+          if (colDef.tipo === 'moneda') {
+            cell.numFmt = '"S/" #,##0.00;[Red]-"S/" #,##0.00;"S/" 0.00';
+          } else if (colDef.tipo === 'entero') {
+            cell.numFmt = '#,##0';
+          } else if (colDef.tipo === 'cantidad' || colDef.tipo === 'numero') {
+            const numVal = Number(cell.value) || 0;
+            if (Number.isInteger(numVal)) {
+              cell.numFmt = '#,##0'; // Entero limpio: 1, 2, 10, 24
+            } else {
+              // Si es producto vendido por peso / fracción (ej: 0.50 kg, 1.250 kg)
+              const strVal = numVal.toString();
+              const numDecimals = strVal.includes('.') ? strVal.split('.')[1].length : 0;
+              cell.numFmt = numDecimals > 2 ? '#,##0.000' : '#,##0.00';
+            }
+          } else if (colDef.tipo === 'fecha' && cell.value instanceof Date) {
+            cell.numFmt = 'DD/MM/YYYY HH:mm';
+          }
+
+          const esNumerico = colDef.tipo === 'moneda' || colDef.tipo === 'numero' || colDef.tipo === 'entero' || colDef.tipo === 'cantidad';
+          const align = colDef.alineacion || (esNumerico ? 'right' : (colDef.tipo === 'fecha' || colDef.tipo === 'booleano' || colDef.tipo === 'estado' ? 'center' : 'left'));
+
+          cell.alignment = { horizontal: align, vertical: 'middle' };
+          cell.font = { name: 'Calibri', size: 10, color: { argb: '1E293B' } };
+
+          if (colDef.tipo === 'estado') {
+            const textVal = String(cell.value || '').toUpperCase();
+            if (textVal.includes('ACTIVO') || textVal.includes('COMPLETADA') || textVal.includes('RECIBIDA') || textVal.includes('ABIERTO')) {
+              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: '166534' } };
+            } else if (textVal.includes('INACTIVO') || textVal.includes('ANULADA') || textVal.includes('CANCELADA') || textVal.includes('CERRADO')) {
+              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: '991B1B' } };
+            }
+          }
+
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: bgArgb },
+          };
+
+          // ==========================================
+          // BORDES DISTINTIVOS DE GRUPO/VENTA
+          // ==========================================
+          // Línea divisoria sólida y oscura arriba y abajo de cada venta
+          cell.border = {
+            top: isFirstInGroup
+              ? { style: 'medium', color: { argb: '334155' } } // Límite superior de la venta
+              : { style: 'thin', color: { argb: 'E2E8F0' } },  // Línea interna entre productos
+            bottom: isLastInGroup
+              ? { style: 'medium', color: { argb: '334155' } } // Límite inferior marcado entre ventas
+              : { style: 'thin', color: { argb: 'E2E8F0' } },  // Línea interna entre productos
+            left: { style: 'thin', color: { argb: 'CBD5E1' } },
+            right: { style: 'thin', color: { argb: 'CBD5E1' } },
+          };
+        });
+
+        currentRowIndex++;
       });
+
+      const endRowForGroup = currentRowIndex - 1;
+
+      // ==========================================
+      // COMBINAR (MERGE) CELDAS COMUNES DEL GRUPO
+      // ==========================================
+      if (hoja.columnasACombinar && grupo.items.length > 1) {
+        hoja.columnasACombinar.forEach((colKey) => {
+          const colIdx = hoja.columnas.findIndex((c) => c.key === colKey) + 1;
+          if (colIdx > 0) {
+            try {
+              worksheet.mergeCells(startRowForGroup, colIdx, endRowForGroup, colIdx);
+              const topCell = worksheet.getCell(startRowForGroup, colIdx);
+              const colDef = hoja.columnas[colIdx - 1];
+              topCell.alignment = {
+                horizontal: colDef?.alineacion || 'center',
+                vertical: 'middle',
+                wrapText: true,
+              };
+
+              // Formatear todas las celdas del rango combinado para bordes consistentes en Excel
+              for (let r = startRowForGroup; r <= endRowForGroup; r++) {
+                const c = worksheet.getCell(r, colIdx);
+                c.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: bgArgb },
+                };
+                c.border = {
+                  top: r === startRowForGroup
+                    ? { style: 'medium', color: { argb: '334155' } }
+                    : { style: 'thin', color: { argb: 'E2E8F0' } },
+                  bottom: r === endRowForGroup
+                    ? { style: 'medium', color: { argb: '334155' } }
+                    : { style: 'thin', color: { argb: 'E2E8F0' } },
+                  left: { style: 'medium', color: { argb: '94A3B8' } },
+                  right: { style: 'medium', color: { argb: '94A3B8' } },
+                };
+              }
+
+              // Resaltar ID de Venta en negrita azul
+              if (colDef?.key === 'codigo' || colDef?.key === 'codigoVenta' || colDef?.key === 'codigoCompra') {
+                topCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: '1E40AF' } };
+              }
+            } catch (err) {}
+          }
+        });
+      }
     });
 
     // ==========================================
     // 4. FILA DE TOTALES
     // ==========================================
-    if (opciones.mostrarTotales && opciones.datos.length > 0) {
+    if (hoja.mostrarTotales && hoja.datos.length > 0) {
       const totalsValues: any[] = [];
 
-      opciones.columnas.forEach((col, idx) => {
+      hoja.columnas.forEach((col, idx) => {
         if (idx === 0) {
           totalsValues.push('TOTALES GENERALES');
         } else if (col.esTotalizable) {
-          const suma = opciones.datos.reduce((acc, curr) => acc + (Number(curr[col.key]) || 0), 0);
+          const suma = hoja.datos.reduce((acc, curr) => acc + (Number(curr[col.key]) || 0), 0);
           totalsValues.push(suma);
         } else {
           totalsValues.push('');
@@ -212,7 +361,7 @@ export class ExcelService {
       totalRow.height = 26;
 
       totalRow.eachCell({ includeEmpty: true }, (cell, colIndex) => {
-        const colDef = opciones.columnas[colIndex - 1];
+        const colDef = hoja.columnas[colIndex - 1];
         if (!colDef) return;
 
         cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: '0F172A' } };
@@ -224,18 +373,19 @@ export class ExcelService {
 
         if (colDef.tipo === 'moneda') {
           cell.numFmt = '"S/" #,##0.00';
-        } else if (colDef.tipo === 'numero') {
-          cell.numFmt = '#,##0.00';
         } else if (colDef.tipo === 'entero') {
           cell.numFmt = '#,##0';
+        } else if (colDef.tipo === 'cantidad' || colDef.tipo === 'numero') {
+          const numVal = Number(cell.value) || 0;
+          cell.numFmt = Number.isInteger(numVal) ? '#,##0' : '#,##0.00';
         }
 
-        const esNumerico = colDef.tipo === 'moneda' || colDef.tipo === 'numero' || colDef.tipo === 'entero';
+        const esNumerico = colDef.tipo === 'moneda' || colDef.tipo === 'numero' || colDef.tipo === 'entero' || colDef.tipo === 'cantidad';
         const align = colIndex === 1 ? 'left' : colDef.alineacion || (esNumerico ? 'right' : 'center');
         cell.alignment = { horizontal: align, vertical: 'middle' };
 
         cell.border = {
-          top: { style: 'thin', color: { argb: '475569' } },
+          top: { style: 'medium', color: { argb: '0F172A' } },
           bottom: { style: 'double', color: { argb: '0F172A' } },
           left: { style: 'thin', color: { argb: 'CBD5E1' } },
           right: { style: 'thin', color: { argb: 'CBD5E1' } },
@@ -246,11 +396,11 @@ export class ExcelService {
     // ==========================================
     // 5. AJUSTE DINÁMICO DE ANCHO DE COLUMNAS
     // ==========================================
-    opciones.columnas.forEach((col, idx) => {
+    hoja.columnas.forEach((col, idx) => {
       const colNumber = idx + 1;
       let maxLen = col.header.length;
 
-      opciones.datos.forEach((item) => {
+      hoja.datos.forEach((item) => {
         const val = item[col.key];
         if (val !== undefined && val !== null) {
           let strVal = String(val);
@@ -262,15 +412,6 @@ export class ExcelService {
       const column = worksheet.getColumn(colNumber);
       column.width = Math.max(col.width || 14, maxLen + 4);
     });
-
-    // ==========================================
-    // 6. ENVIAR A EXPRESS RESPONSE STREAM
-    // ==========================================
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${opciones.nombreArchivo}"`);
-
-    await workbook.xlsx.write(res);
-    res.end();
   }
 
   private obtenerLetraColumna(colIndex: number): string {
