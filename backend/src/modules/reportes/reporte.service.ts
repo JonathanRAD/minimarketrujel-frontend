@@ -47,8 +47,6 @@ export class ReporteService {
       ],
     });
 
-    const fechaHoy = new Date();
-
     const datosFormateados = productos.map((p, idx) => {
       const precioVenta = Number(p.precioVenta);
       const costo = Number(p.costo);
@@ -63,7 +61,7 @@ export class ReporteService {
         unidadMedida: p.unidadMedida || 'UNID.',
         costo,
         precioVenta,
-        fechaRegistro: fechaHoy,
+        fechaRegistro: p.createdAt,
         tienda: '',
       };
     });
