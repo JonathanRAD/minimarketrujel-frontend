@@ -331,7 +331,7 @@
 
           <div class="products-grid" *ngIf="catalogoFiltrado().length > 0">
 
-            <button type="button" class="product-card" *ngFor="let prod of catalogoFiltrado(); trackBy: trackByProductoId"
+            <button type="button" class="product-card" *ngFor="let prod of catalogoPaginado(); trackBy: trackByProductoId"
               [disabled]="obtenerStockDisponible(prod) <= 0" (click)="agregarAlCarrito(prod)">
 
               <!-- Imagen / Fallback -->
@@ -361,6 +361,14 @@
 
             </button>
 
+          </div>
+
+          <!-- Paginación Progresiva: Cargar más productos -->
+          <div class="load-more-container" *ngIf="catalogoFiltrado().length > catalogoPaginado().length">
+            <button type="button" class="btn-load-more" (click)="cargarMasProductos()">
+              <span class="material-icons">expand_more</span>
+              <span>Cargar más productos (mostrando {{ catalogoPaginado().length }} de {{ catalogoFiltrado().length }})</span>
+            </button>
           </div>
         </div>
 

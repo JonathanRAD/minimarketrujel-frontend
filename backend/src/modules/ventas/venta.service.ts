@@ -46,9 +46,10 @@ export class VentaService {
       montoEfectivo = 0;
       montoTarjeta = totalCalculado;
     } else {
-      // FIADO
+      // FIADO: Validar cliente y límite de crédito
       montoEfectivo = 0;
       montoTarjeta = 0;
+      await this.validarClienteParaFiado(data.clienteId, totalCalculado);
     }
 
     const venta = await ventaRepository.crearConTransaccion({
@@ -127,8 +128,10 @@ export class VentaService {
       montoEfectivo = 0;
       montoTarjeta = totalCalculado;
     } else {
+      // FIADO: Validar cliente y límite de crédito
       montoEfectivo = 0;
       montoTarjeta = 0;
+      await this.validarClienteParaFiado(data.clienteId, totalCalculado, id);
     }
 
     const ventaActualizada = await ventaRepository.actualizarConTransaccion(id, usuarioId, {
@@ -181,6 +184,48 @@ export class VentaService {
       }
     } catch (err) {
       console.error('Error en verificarAlertasStock:', err);
+    }
+  }
+
+  private async validarClienteParaFiado(clienteId?: string, totalVenta = 0, ventaIdAExcluir?: string) {
+    if (!clienteId) {
+      throw new BadRequestError('Para realizar una venta al fiado debes asociar un cliente');
+    }
+
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: clienteId },
+    });
+
+    if (!cliente || !cliente.activo) {
+      throw new BadRequestError('El cliente seleccionado no existe o se encuentra inactivo');
+    }
+
+    const limiteCredito = Number(cliente.limiteCredito);
+    if (limiteCredito > 0) {
+      const whereCondition: any = {
+        clienteId,
+        pagado: false,
+        venta: { estado: 'COMPLETADA' },
+      };
+
+      if (ventaIdAExcluir) {
+        whereCondition.ventaId = { not: ventaIdAExcluir };
+      }
+
+      const fiadosPendientes = await prisma.fiado.aggregate({
+        where: whereCondition,
+        _sum: { monto: true },
+      });
+
+      const deudaActual = Number(fiadosPendientes._sum.monto || 0);
+      const nuevoTotalDeuda = Number((deudaActual + totalVenta).toFixed(2));
+
+      if (nuevoTotalDeuda > limiteCredito) {
+        const creditoDisponible = Math.max(0, Number((limiteCredito - deudaActual).toFixed(2)));
+        throw new BadRequestError(
+          `Esta venta excede el límite de crédito del cliente. Deuda actual pendiente: S/ ${deudaActual.toFixed(2)}, Límite de crédito: S/ ${limiteCredito.toFixed(2)}, Saldo disponible: S/ ${creditoDisponible.toFixed(2)}`
+        );
+      }
     }
   }
 }

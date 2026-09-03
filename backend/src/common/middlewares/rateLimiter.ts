@@ -7,6 +7,19 @@ interface LimiteIP {
 
 const cache = new Map<string, LimiteIP>();
 
+// Limpieza periódica de registros expirados cada 5 minutos para evitar acumulación de memoria
+const cleanupTimer = setInterval(() => {
+  const ahora = Date.now();
+  for (const [ip, reg] of cache.entries()) {
+    if (ahora > reg.expira) {
+      cache.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000);
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
+
 /**
  * Middleware simple de rate limiting en memoria.
  * Bloquea temporalmente peticiones desde una misma IP si superan el máximo permitido.

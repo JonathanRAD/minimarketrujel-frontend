@@ -130,7 +130,6 @@ model Producto {
   movimientosInventario MovimientoInventario[]
   promociones           Promocion[]
 
-  @@index([codigoBarras])
   @@index([categoriaId])
   @@map("productos")
 }
@@ -278,6 +277,8 @@ model Venta {
   @@index([fecha])
   @@index([usuarioId])
   @@index([turnoId])
+  @@index([clienteId])
+  @@index([turnoId, estado])
   @@map("ventas")
 }
 

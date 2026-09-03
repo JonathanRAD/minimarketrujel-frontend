@@ -2,30 +2,32 @@ import { prisma } from '../../config/prisma';
 
 export class ReporteRepository {
   async obtenerResumenFinanciero(fechaInicio: Date, fechaFin: Date) {
-    const ventas = await prisma.venta.findMany({
-      where: {
-        estado: 'COMPLETADA',
-        fecha: {
-          gte: fechaInicio,
-          lte: fechaFin,
-        },
+    const filtroVentas = {
+      estado: 'COMPLETADA' as const,
+      fecha: {
+        gte: fechaInicio,
+        lte: fechaFin,
       },
-      include: {
-        detalles: {
-          include: {
-            producto: {
-              select: {
-                nombre: true,
-                costo: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    };
 
-    let ventasTotales = 0;
-    let costoTotalVentas = 0;
+    const [agrupadoMetodos, agregacionCostos] = await Promise.all([
+      prisma.venta.groupBy({
+        by: ['metodoPago'],
+        where: filtroVentas,
+        _sum: { total: true },
+      }),
+      prisma.$queryRaw<Array<{ costoTotal: number | null }>>`
+        SELECT 
+          COALESCE(SUM(vd.cantidad * COALESCE(vd.costo_unitario, p.costo)), 0)::numeric as "costoTotal"
+        FROM venta_detalle vd
+        INNER JOIN ventas v ON v.id = vd.venta_id
+        INNER JOIN productos p ON p.id = vd.producto_id
+        WHERE v.estado::text = 'COMPLETADA'
+          AND v.fecha >= ${fechaInicio}
+          AND v.fecha <= ${fechaFin}
+      `,
+    ]);
+
     const metodosPagoConsolidado: Record<string, number> = {
       EFECTIVO: 0,
       TARJETA: 0,
@@ -33,36 +35,25 @@ export class ReporteRepository {
       FIADO: 0,
     };
 
-    for (const venta of ventas) {
-      const totalVenta = Number(venta.total);
-      ventasTotales += totalVenta;
-
-      // Sumar al método de pago correspondiente
-      if (metodosPagoConsolidado[venta.metodoPago] !== undefined) {
-        metodosPagoConsolidado[venta.metodoPago] += totalVenta;
+    let ventasTotales = 0;
+    for (const item of agrupadoMetodos) {
+      const monto = Number(item._sum.total || 0);
+      if (metodosPagoConsolidado[item.metodoPago] !== undefined) {
+        metodosPagoConsolidado[item.metodoPago] = monto;
       }
-
-      // Calcular costo de los productos vendidos usando el costo histórico registrado en la venta
-      for (const detalle of venta.detalles) {
-        const cantidad = Number(detalle.cantidad);
-        // Fallback: si es una venta antigua sin costoUnitario guardado, se usa el costo actual del producto
-        const costoUnitario = detalle.costoUnitario !== null && detalle.costoUnitario !== undefined
-          ? Number(detalle.costoUnitario)
-          : Number(detalle.producto.costo);
-
-        costoTotalVentas += cantidad * costoUnitario;
-      }
+      ventasTotales += monto;
     }
 
-    const gananciaBruta = ventasTotales - costoTotalVentas;
+    const costoTotalVentas = Number(agregacionCostos[0]?.costoTotal || 0);
+    const gananciaBruta = Number((ventasTotales - costoTotalVentas).toFixed(2));
 
     return {
-      ventasTotales,
-      costoTotalVentas,
+      ventasTotales: Number(ventasTotales.toFixed(2)),
+      costoTotalVentas: Number(costoTotalVentas.toFixed(2)),
       gananciaBruta,
       metodosPago: Object.entries(metodosPagoConsolidado).map(([metodo, total]) => ({
         metodo,
-        total,
+        total: Number(total.toFixed(2)),
       })),
     };
   }

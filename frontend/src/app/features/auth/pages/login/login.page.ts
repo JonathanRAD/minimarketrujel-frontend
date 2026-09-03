@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -37,7 +37,7 @@ export class LoginPageComponent {
     this.form.reset();
   }
 
-  // LÃ³gica del teclado numÃ©rico
+  // Lógica del teclado numérico
   pulsarNumero(num: number) {
     if (this.pin().length < 6 && !this.cargando()) {
       const nuevoPin = this.pin() + num;
@@ -51,6 +51,28 @@ export class LoginPageComponent {
   borrarDigito() {
     if (this.pin().length > 0 && !this.cargando()) {
       this.pin.update(p => p.slice(0, -1));
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    if (this.metodoAcceso() !== 'pin') return;
+
+    // Si el foco está en un input o textarea, no interferir
+    const activeEl = document.activeElement as HTMLElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
+    if (event.key >= '0' && event.key <= '9') {
+      event.preventDefault();
+      this.pulsarNumero(Number(event.key));
+    } else if (event.key === 'Backspace') {
+      event.preventDefault();
+      this.borrarDigito();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.pin.set('');
     }
   }
 

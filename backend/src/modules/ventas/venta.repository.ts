@@ -154,6 +154,18 @@ export class VentaRepository {
         });
       }
 
+      // Si el método de pago es FIADO, registrar la cuenta por cobrar en la tabla de fiados
+      if (params.metodoPago === 'FIADO' && params.clienteId) {
+        await tx.fiado.create({
+          data: {
+            clienteId: params.clienteId,
+            ventaId: venta.id,
+            monto: new Prisma.Decimal(total),
+            pagado: false,
+          },
+        });
+      }
+
       return venta;
     });
   }
@@ -319,6 +331,42 @@ export class VentaRepository {
             referenciaId: id,
             motivo: `Venta editada ${id}`,
           },
+        });
+      }
+
+      // Sincronizar cuenta por cobrar (Fiado) si corresponde
+      const totalNuevo = params.detalles.reduce(
+        (acc, d) => acc + d.cantidad * d.precioUnitario,
+        0
+      );
+
+      if (params.metodoPago === 'FIADO' && params.clienteId) {
+        const fiadoExistente = await tx.fiado.findUnique({
+          where: { ventaId: id },
+        });
+
+        if (fiadoExistente) {
+          await tx.fiado.update({
+            where: { id: fiadoExistente.id },
+            data: {
+              clienteId: params.clienteId,
+              monto: new Prisma.Decimal(totalNuevo),
+            },
+          });
+        } else {
+          await tx.fiado.create({
+            data: {
+              clienteId: params.clienteId,
+              ventaId: id,
+              monto: new Prisma.Decimal(totalNuevo),
+              pagado: false,
+            },
+          });
+        }
+      } else {
+        // Si ya no es fiado, remover el fiado si aún estaba pendiente de pago
+        await tx.fiado.deleteMany({
+          where: { ventaId: id, pagado: false },
         });
       }
 

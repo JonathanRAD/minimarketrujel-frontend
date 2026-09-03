@@ -91,6 +91,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
   productos = signal<Producto[]>([]);
   categoriaSeleccionadaId = signal<string>('TODAS');
   busquedaCatalogo = signal<string>('');
+  limiteVisible = signal<number>(48);
 
   catalogoFiltrado = computed(() => {
     const catId = this.categoriaSeleccionadaId();
@@ -114,6 +115,14 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       );
     });
   });
+
+  catalogoPaginado = computed(() => {
+    return this.catalogoFiltrado().slice(0, this.limiteVisible());
+  });
+
+  cargarMasProductos(): void {
+    this.limiteVisible.update((val) => val + 48);
+  }
 
   // --- MEJORAS POS HÍBRIDO & PESO ---
   mostrarModalPeso = signal(false);
@@ -153,20 +162,26 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       error: () => this.categorias.set([])
     });
 
+    this.recargarProductosSilencioso();
+  }
+
+  recargarProductosSilencioso(): void {
     this.productoService.listar({ todo: true }).subscribe({
       next: (res) => this.productos.set(res.productos),
-      error: () => this.productos.set([])
+      error: (err) => console.error('Error al sincronizar productos POS:', err)
     });
   }
 
   seleccionarCategoria(id: string) {
     this.categoriaSeleccionadaId.set(id);
+    this.limiteVisible.set(48);
   }
 
   obtenerStockDisponible(producto: Producto): number {
-    const itemCarrito = this.items().find((item) => item.producto.id === producto.id);
+    const prodActual = this.productos().find((p) => p.id === producto.id) || producto;
+    const itemCarrito = this.items().find((item) => item.producto.id === prodActual.id);
     const cantidadEnCarrito = itemCarrito ? itemCarrito.cantidad : 0;
-    return Number(producto.stockActual) - cantidadEnCarrito;
+    return Number(prodActual.stockActual) - cantidadEnCarrito;
   }
 
   agregarAlCarrito(producto: Producto) {
@@ -175,13 +190,15 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       return;
     }
     
-    if (this.obtenerStockDisponible(producto) <= 0) {
-      this.mensajeError.set(`No hay stock suficiente para "${producto.nombre}" en la tienda.`);
+    const prodActual = this.productos().find((p) => p.id === producto.id) || producto;
+
+    if (this.obtenerStockDisponible(prodActual) <= 0) {
+      this.mensajeError.set(`No hay stock suficiente para "${prodActual.nombre}" en la tienda.`);
       return;
     }
 
-    if (producto.unidadMedida === 'KG' || producto.unidadMedida === 'G') {
-      this.productoParaPeso.set(producto);
+    if (prodActual.unidadMedida === 'KG' || prodActual.unidadMedida === 'G') {
+      this.productoParaPeso.set(prodActual);
       this.pesoIngresado.set(null);
       this.mostrarModalPeso.set(true);
       setTimeout(() => {
@@ -192,8 +209,8 @@ export class VentaPageComponent implements OnInit, OnDestroy {
         }
       }, 50);
     } else {
-      this.carritoService.agregarProducto(producto, 1);
-      this.actualizarUltimoProducto(producto, 1);
+      this.carritoService.agregarProducto(prodActual, 1);
+      this.actualizarUltimoProducto(prodActual, 1);
       this.mensajeError.set(null);
     }
   }
@@ -222,13 +239,15 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.obtenerStockDisponible(producto) < peso) {
-      this.mensajeError.set(`No hay stock suficiente para agregar ${peso} ${producto.unidadMedida} de "${producto.nombre}".`);
+    const prodActual = this.productos().find((p) => p.id === producto.id) || producto;
+
+    if (this.obtenerStockDisponible(prodActual) < peso) {
+      this.mensajeError.set(`No hay stock suficiente para agregar ${peso} ${prodActual.unidadMedida} de "${prodActual.nombre}".`);
       return;
     }
 
-    this.carritoService.agregarProducto(producto, peso);
-    this.actualizarUltimoProducto(producto, peso);
+    this.carritoService.agregarProducto(prodActual, peso);
+    this.actualizarUltimoProducto(prodActual, peso);
     this.cerrarModalPeso();
   }
 
@@ -249,6 +268,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
 
   onBusquedaCatalogoChange(val: string) {
     this.busquedaCatalogo.set(val);
+    this.limiteVisible.set(48);
   }
 
   obtenerIniciales(nombre: string): string {
@@ -323,16 +343,35 @@ export class VentaPageComponent implements OnInit, OnDestroy {
     }
 
     this.mensajeError.set(null);
+
+    // 1. Si ya se encuentra en el catálogo en memoria, procesarlo de inmediato
+    const prodLocal = this.productos().find((p) => p.codigoBarras === codigo);
+    if (prodLocal) {
+      if (this.obtenerStockDisponible(prodLocal) <= 0) {
+        this.mensajeError.set(`No hay stock suficiente para "${prodLocal.nombre}" en la tienda.`);
+        return;
+      }
+      this.agregarAlCarrito(prodLocal);
+      return;
+    }
+
+    // 2. Si no estaba en memoria, buscar en la API
     this.cargando.set(true);
 
     this.productoService.buscarPorCodigoBarras(codigo).subscribe({
       next: (producto) => {
+        this.cargando.set(false);
+        this.productos.update((prods) => {
+          if (!prods.some((p) => p.id === producto.id)) {
+            return [...prods, producto];
+          }
+          return prods;
+        });
+
         if (this.obtenerStockDisponible(producto) <= 0) {
           this.mensajeError.set(`No hay stock suficiente para "${producto.nombre}" en la tienda.`);
-          this.cargando.set(false);
           return;
         }
-        this.cargando.set(false);
         this.agregarAlCarrito(producto);
       },
       error: () => {
@@ -487,6 +526,7 @@ export class VentaPageComponent implements OnInit, OnDestroy {
     this.clienteSeleccionado.set(null);
     this.busquedaCatalogo.set('');
     this.busquedaCliente.set('');
+    this.limiteVisible.set(48);
     this.mensajeError.set(null);
   }
 
@@ -564,6 +604,21 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       this.fechaVentaActual.set(new Date());
       this.clienteSeleccionadoVenta.set(this.clienteSeleccionado());
 
+      // Descontar inmediatamente el stock en memoria de los productos vendidos (Optimistic UI Update)
+      this.productos.update((prods) =>
+        prods.map((p) => {
+          const itemVendido = detalles.find((d) => d.productoId === p.id);
+          if (itemVendido) {
+            const stockRestante = Math.max(0, Number((Number(p.stockActual) - itemVendido.cantidad).toFixed(3)));
+            return {
+              ...p,
+              stockActual: stockRestante,
+            };
+          }
+          return p;
+        })
+      );
+
       this.procesandoCobro.set(false);
       this.reiniciarEstadoPOS();
       this.actualizarVentasPendientes(); // Forzar actualización de IndexedDB badge
@@ -577,6 +632,8 @@ export class VentaPageComponent implements OnInit, OnDestroy {
       } else {
         // Al cobrar con éxito en online, podemos re-consultar el estado de caja para actualizar el flujo
         this.verificarTurnoCaja();
+        // Sincronizar silenciosamente catálogo con la base de datos
+        this.recargarProductosSilencioso();
       }
     } catch (err: any) {
       this.procesandoCobro.set(false);
