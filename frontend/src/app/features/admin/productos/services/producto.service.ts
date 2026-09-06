@@ -36,7 +36,19 @@ export interface ItemPreAnalisisExcel {
     stockActual: number;
     puntaje: number;
   };
+  sugerencias?: Array<{
+    id: string;
+    nombre: string;
+    codigoBarras?: string;
+    stockActual: number;
+    puntaje: number;
+  }>;
 }
+
+export type AccionImportacionOverride =
+  | 'NUEVO'
+  | 'ACTUALIZAR'
+  | { accion: 'NUEVO' | 'ACTUALIZAR'; productoId?: string };
 
 export interface ResumenPreAnalisisExcel {
   totalProcesados: number;
@@ -113,7 +125,7 @@ export class ProductoService {
     fileBase64: string,
     modoImportacion: 'REEMPLAZAR' | 'SUMAR' = 'REEMPLAZAR',
     fechaCorte?: string,
-    overrideAcciones?: { [fila: number]: 'NUEVO' | 'ACTUALIZAR' }
+    overrideAcciones?: { [fila: number]: AccionImportacionOverride }
   ): Observable<ResumenImportacionExcel> {
     return this.http
       .post<ApiResponse<ResumenImportacionExcel>>(`${this.baseUrl}/importar-excel`, {

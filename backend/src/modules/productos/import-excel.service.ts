@@ -26,6 +26,13 @@ export interface ItemPreAnalisisExcel {
     stockActual: number;
     puntaje: number;
   };
+  sugerencias?: Array<{
+    id: string;
+    nombre: string;
+    codigoBarras?: string;
+    stockActual: number;
+    puntaje: number;
+  }>;
 }
 
 export interface ResumenPreAnalisisExcel {
@@ -438,6 +445,7 @@ export class ImportExcelService {
       });
 
       let puntaje = 1.0;
+      let sugerencias: Array<{ id: string; nombre: string; codigoBarras?: string; stockActual: number; puntaje: number }> | undefined = undefined;
 
       if (!productoExistente) {
         const matchFuzzy = FuzzyMatchUtils.buscarMejorCoincidencia(
@@ -448,6 +456,21 @@ export class ImportExcelService {
         if (matchFuzzy) {
           productoExistente = dbProductos.find((p) => p.id === matchFuzzy.producto.id);
           puntaje = matchFuzzy.puntaje;
+        } else {
+          const candidatosSugeridos = FuzzyMatchUtils.buscarSugerencias(
+            nombreCompleto,
+            dbProductos.map((p) => ({
+              id: p.id,
+              nombre: p.nombre,
+              codigoBarras: p.codigoBarras,
+              stockActual: p.stockActual,
+            })),
+            0.45,
+            3
+          );
+          if (candidatosSugeridos.length > 0) {
+            sugerencias = candidatosSugeridos;
+          }
         }
       }
 
@@ -479,6 +502,7 @@ export class ImportExcelService {
               puntaje,
             }
           : undefined,
+        sugerencias,
       });
     }
 
@@ -498,7 +522,12 @@ export class ImportExcelService {
     usuarioId: string,
     modoImportacion: 'REEMPLAZAR' | 'SUMAR' = 'REEMPLAZAR',
     fechaCorte?: string,
-    overrideAcciones?: { [fila: number]: 'NUEVO' | 'ACTUALIZAR' }
+    overrideAcciones?: {
+      [fila: number]:
+        | 'NUEVO'
+        | 'ACTUALIZAR'
+        | { accion: 'NUEVO' | 'ACTUALIZAR'; productoId?: string };
+    }
   ): Promise<ResumenImportacionExcel> {
     const preAnalisis = await this.preanalizarExcel(buffer, fechaCorte);
 
@@ -525,7 +554,20 @@ export class ImportExcelService {
     const errores: Array<{ fila: number; error: string }> = [];
 
     for (const item of preAnalisis.items) {
-      const tipoAccionFinal = overrideAcciones?.[item.fila] || item.tipoAccion;
+      const override = overrideAcciones?.[item.fila];
+      let tipoAccionFinal: 'NUEVO' | 'ACTUALIZAR' = item.tipoAccion;
+      let targetProductoId: string | undefined = item.coincidenciaDb?.id;
+
+      if (override) {
+        if (typeof override === 'string') {
+          tipoAccionFinal = override;
+        } else if (typeof override === 'object') {
+          tipoAccionFinal = override.accion || tipoAccionFinal;
+          if (override.productoId) {
+            targetProductoId = override.productoId;
+          }
+        }
+      }
 
       try {
         // Categoria ID
@@ -549,8 +591,8 @@ export class ImportExcelService {
         else if (unidUpper.includes('LITRO') || unidUpper.includes('LT')) unidadMedida = 'LITRO';
         else if (unidUpper.includes('ML')) unidadMedida = 'ML';
 
-        if (tipoAccionFinal === 'ACTUALIZAR' && item.coincidenciaDb) {
-          const prodDb = dbProductos.find((p) => p.id === item.coincidenciaDb!.id);
+        if (tipoAccionFinal === 'ACTUALIZAR' && targetProductoId) {
+          const prodDb = dbProductos.find((p) => p.id === targetProductoId);
           if (prodDb) {
             const stockNuevo = modoImportacion === 'SUMAR'
               ? Number(prodDb.stockActual) + item.stock

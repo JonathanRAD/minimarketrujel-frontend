@@ -241,4 +241,37 @@ export class FuzzyMatchUtils {
 
     return null;
   }
+
+  /**
+   * Obtiene una lista de candidatos con coincidencia parcial significativa para sugerir al usuario.
+   * @param nombreBuscar Nombre del producto en Excel
+   * @param candidatos Lista de productos existentes
+   * @param umbralMinimo Puntaje mínimo para considerarlo sugerencia (defecto: 0.45)
+   * @param limite Máximo de sugerencias a devolver (defecto: 3)
+   */
+  public static buscarSugerencias<T extends { id: string; nombre: string; codigoBarras?: string | null; stockActual?: any }>(
+    nombreBuscar: string,
+    candidatos: T[],
+    umbralMinimo = 0.45,
+    limite = 3
+  ): Array<{ id: string; nombre: string; codigoBarras?: string; stockActual: number; puntaje: number }> {
+    const resultados: Array<{ id: string; nombre: string; codigoBarras?: string; stockActual: number; puntaje: number }> = [];
+
+    for (const candidato of candidatos) {
+      const puntaje = this.calcularPuntajeCoincidencia(nombreBuscar, candidato.nombre);
+      if (puntaje >= umbralMinimo) {
+        resultados.push({
+          id: candidato.id,
+          nombre: candidato.nombre,
+          codigoBarras: candidato.codigoBarras || undefined,
+          stockActual: Number(candidato.stockActual) || 0,
+          puntaje,
+        });
+      }
+    }
+
+    return resultados
+      .sort((a, b) => b.puntaje - a.puntaje)
+      .slice(0, limite);
+  }
 }

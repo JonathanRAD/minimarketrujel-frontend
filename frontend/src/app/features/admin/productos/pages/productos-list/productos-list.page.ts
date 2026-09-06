@@ -101,8 +101,9 @@ export class ProductosListPageComponent implements OnInit {
 
   abrirModalImportarExcel() {
     const dialogRef = this.dialog.open(ProductoImportModalComponent, {
-      width: '680px',
+      width: '1150px',
       maxWidth: '96vw',
+      maxHeight: '94vh',
       disableClose: false,
     });
 

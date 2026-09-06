@@ -45,8 +45,19 @@ export class ProductoImportModalComponent {
   preAnalisis = signal<ResumenPreAnalisisExcel | null>(null);
   pestanaActiva = signal<'NUEVO' | 'ACTUALIZAR'>('NUEVO');
 
-  // Mapa de anulaciones personalizadas por el usuario: fila -> 'NUEVO' | 'ACTUALIZAR'
-  overrideAcciones = signal<{ [fila: number]: 'NUEVO' | 'ACTUALIZAR' }>({});
+  // Mapa de anulaciones personalizadas por el usuario: fila -> 'NUEVO' | 'ACTUALIZAR' o { accion, productoId }
+  overrideAcciones = signal<{
+    [fila: number]: 'NUEVO' | 'ACTUALIZAR' | { accion: 'NUEVO' | 'ACTUALIZAR'; productoId?: string };
+  }>({});
+
+  // Mapa de coincidencias asignadas manualmente o sobrescritas
+  overrideCoincidencias = signal<{ [fila: number]: ItemPreAnalisisExcel['coincidenciaDb'] }>({});
+
+  // Estado del selector / modal de vinculación manual
+  itemParaVincular = signal<ItemPreAnalisisExcel | null>(null);
+  busquedaCatalogo = signal<string>('');
+  resultadosBusqueda = signal<any[]>([]);
+  buscandoProductos = signal<boolean>(false);
 
   resumenFinal = signal<ResumenImportacionExcel | null>(null);
   isDragging = signal(false);
@@ -106,6 +117,8 @@ export class ProductoImportModalComponent {
     this.resumenFinal.set(null);
     this.error.set(null);
     this.overrideAcciones.set({});
+    this.overrideCoincidencias.set({});
+    this.cerrarBuscadorVinculacion();
   }
 
   onFechaCorteChange(event: Event): void {
@@ -138,6 +151,7 @@ export class ProductoImportModalComponent {
         this.analizando.set(false);
         this.preAnalisis.set(res);
         this.overrideAcciones.set({});
+        this.overrideCoincidencias.set({});
 
         // Seleccionar automáticamente la pestaña con contenido
         if (res.totalNuevos > 0) this.pestanaActiva.set('NUEVO');
@@ -153,16 +167,125 @@ export class ProductoImportModalComponent {
   /** Permite al usuario cambiar la acción asignada a una fila en la vista previa */
   toggleAccionItem(item: ItemPreAnalisisExcel): void {
     const actual = this.getAccionEfectiva(item);
-    const nuevoValor: 'NUEVO' | 'ACTUALIZAR' = actual === 'NUEVO' ? 'ACTUALIZAR' : 'NUEVO';
+    if (actual === 'ACTUALIZAR') {
+      this.desvincularItem(item);
+    } else {
+      this.abrirBuscadorVinculacion(item);
+    }
+  }
 
+  /** Vincula directamente un ítem con una sugerencia automática en 1 solo clic */
+  vincularConSugerencia(
+    item: ItemPreAnalisisExcel,
+    sug: { id: string; nombre: string; codigoBarras?: string; stockActual: number; puntaje: number }
+  ): void {
     this.overrideAcciones.update((mapa) => ({
       ...mapa,
-      [item.fila]: nuevoValor,
+      [item.fila]: { accion: 'ACTUALIZAR', productoId: sug.id },
+    }));
+    this.overrideCoincidencias.update((mapa) => ({
+      ...mapa,
+      [item.fila]: {
+        id: sug.id,
+        nombre: sug.nombre,
+        codigoBarras: sug.codigoBarras,
+        stockActual: sug.stockActual,
+        puntaje: sug.puntaje,
+      },
     }));
   }
 
+  /** Desvincula un producto y lo vuelve a clasificar como Nuevo */
+  desvincularItem(item: ItemPreAnalisisExcel): void {
+    this.overrideAcciones.update((mapa) => ({
+      ...mapa,
+      [item.fila]: 'NUEVO',
+    }));
+    this.overrideCoincidencias.update((mapa) => {
+      const copia = { ...mapa };
+      delete copia[item.fila];
+      return copia;
+    });
+  }
+
+  /** Abre el buscador manual de productos para vincular la fila */
+  abrirBuscadorVinculacion(item: ItemPreAnalisisExcel): void {
+    this.itemParaVincular.set(item);
+
+    // Extraer una palabra clave inicial para ayudar al usuario
+    const palabras = item.nombreExcel
+      .replace(/(BEBIDA|ENERGIZANTE|GASEOSA|PRODUCTO|DE|CON|EL|LA|EN|UN|UNA|DEL|LOS|LAS)\b/gi, '')
+      .trim()
+      .split(/\s+/)
+      .filter((p) => p.length >= 3);
+
+    const queryInicial = palabras[0] || '';
+    this.busquedaCatalogo.set(queryInicial);
+    this.ejecutarBusquedaCatalogo(queryInicial);
+  }
+
+  cerrarBuscadorVinculacion(): void {
+    this.itemParaVincular.set(null);
+    this.busquedaCatalogo.set('');
+    this.resultadosBusqueda.set([]);
+    this.buscandoProductos.set(false);
+  }
+
+  onInputBusquedaChange(): void {
+    this.ejecutarBusquedaCatalogo(this.busquedaCatalogo());
+  }
+
+  ejecutarBusquedaCatalogo(query: string): void {
+    const q = query.trim();
+    this.buscandoProductos.set(true);
+
+    this.productoService.listar({ busqueda: q || undefined, limite: 10, todo: false }).subscribe({
+      next: (res) => {
+        this.resultadosBusqueda.set(res.productos || []);
+        this.buscandoProductos.set(false);
+      },
+      error: () => {
+        this.resultadosBusqueda.set([]);
+        this.buscandoProductos.set(false);
+      },
+    });
+  }
+
+  seleccionarProductoCatalogo(producto: any): void {
+    const item = this.itemParaVincular();
+    if (!item) return;
+
+    this.overrideAcciones.update((mapa) => ({
+      ...mapa,
+      [item.fila]: { accion: 'ACTUALIZAR', productoId: producto.id },
+    }));
+    this.overrideCoincidencias.update((mapa) => ({
+      ...mapa,
+      [item.fila]: {
+        id: producto.id,
+        nombre: producto.nombre,
+        codigoBarras: producto.codigoBarras,
+        stockActual: Number(producto.stockActual) || 0,
+        puntaje: 1.0,
+      },
+    }));
+
+    this.cerrarBuscadorVinculacion();
+  }
+
   getAccionEfectiva(item: ItemPreAnalisisExcel): 'NUEVO' | 'ACTUALIZAR' {
-    return this.overrideAcciones()[item.fila] || item.tipoAccion;
+    const ov = this.overrideAcciones()[item.fila];
+    if (!ov) return item.tipoAccion;
+    if (typeof ov === 'string') return ov;
+    return ov.accion;
+  }
+
+  getCoincidenciaEfectiva(item: ItemPreAnalisisExcel): ItemPreAnalisisExcel['coincidenciaDb'] {
+    return this.overrideCoincidencias()[item.fila] || item.coincidenciaDb;
+  }
+
+  esVinculadoManualmente(item: ItemPreAnalisisExcel): boolean {
+    return !!this.overrideCoincidencias()[item.fila];
   }
 
   getItemsFiltrados(tipo: 'NUEVO' | 'ACTUALIZAR'): ItemPreAnalisisExcel[] {

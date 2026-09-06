@@ -158,33 +158,73 @@
 
     <!-- Pestaña 1: Productos Nuevos -->
     <div *ngIf="pestanaActiva() === 'NUEVO'" class="tab-content">
-      <p class="tab-description">Los siguientes <strong>{{ getConteoEfectivo('NUEVO') }} productos</strong> se crearán como registros nuevos en tu catálogo:</p>
+      <p class="tab-description">Los siguientes <strong>{{ getConteoEfectivo('NUEVO') }} productos</strong> se crearán como registros nuevos en tu catálogo. Si alguno ya existe en tu sistema, puedes vincularlo como coincidencia:</p>
       <div class="table-scroll-container">
-        <table class="preview-table">
+        <table class="preview-table table-nuevos">
           <thead>
             <tr>
-              <th>Fila</th>
-              <th>Producto Completo (Excel)</th>
-              <th>Categoría</th>
-              <th>Stock</th>
-              <th>Costo Unit.</th>
-              <th>P. Venta</th>
+              <th class="col-fila text-center">Fila</th>
+              <th class="col-nombre-th">Producto Completo (Excel)</th>
+              <th class="col-cat-th">Categoría</th>
+              <th class="col-stock-th">Stock</th>
+              <th class="col-costo-th text-right">Costo Unit.</th>
+              <th class="col-precio-th text-right">P. Venta</th>
+              <th class="col-accion-th">Acción / Coincidencia</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of getItemsFiltrados('NUEVO')">
-              <td class="font-mono text-center col-fila">{{ item.fila }}</td>
+              <td class="col-fila text-center font-mono">{{ item.fila }}</td>
               <td class="col-nombre">
                 <span class="item-name font-semibold text-slate-800">{{ item.nombreExcel }}</span>
-                <span *ngIf="item.codigoBarras && !item.codigoBarras.startsWith('SC-AUTO')" class="item-code text-xs text-slate-400">Cod: {{ item.codigoBarras }}</span>
+                <span *ngIf="item.codigoBarras && !item.codigoBarras.startsWith('SC-AUTO')" class="item-code">Cod: {{ item.codigoBarras }}</span>
               </td>
-              <td><span class="cat-pill">{{ item.categoria }}</span></td>
-              <td><strong>{{ item.stock }}</strong> {{ item.unidadMedida }}</td>
-              <td>S/ {{ item.costo | number:'1.2-2' }}</td>
-              <td class="font-bold text-emerald-700">S/ {{ item.precioVenta | number:'1.2-2' }}</td>
+              <td class="col-cat"><span class="cat-pill">{{ item.categoria }}</span></td>
+              <td class="col-stock"><strong>{{ item.stock }}</strong> <span class="unit-sub">{{ item.unidadMedida }}</span></td>
+              <td class="col-costo text-right">S/ {{ item.costo | number:'1.2-2' }}</td>
+              <td class="col-precio text-right font-bold text-emerald-700">S/ {{ item.precioVenta | number:'1.2-2' }}</td>
+              <td class="col-acciones-nuevo">
+                <!-- Sugerencia inteligente de 1 clic si fue detectada -->
+                <div *ngIf="item.sugerencias && item.sugerencias.length > 0" class="suggestion-chip-box">
+                  <div class="suggestion-hint" title="Similitud encontrada con producto de tu catálogo">
+                    <span class="material-icons text-amber-500 text-xs">lightbulb</span>
+                    <span class="suggestion-text">¿Es <strong>{{ item.sugerencias[0].nombre }}</strong>?</span>
+                    <span class="similarity-pill">{{ item.sugerencias[0].puntaje * 100 | number:'1.0-0' }}%</span>
+                  </div>
+                  <div class="suggestion-actions">
+                    <button
+                      type="button"
+                      class="btn-vincular-sug"
+                      (click)="vincularConSugerencia(item, item.sugerencias[0])"
+                      title="Vincular con {{ item.sugerencias[0].nombre }} en 1 clic">
+                      <span class="material-icons text-xs">link</span>
+                      <span>Vincular</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-buscar-otro"
+                      (click)="abrirBuscadorVinculacion(item)"
+                      title="Buscar otro producto en tu catálogo">
+                      <span class="material-icons text-xs">search</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Botón de vinculación manual si no hay sugerencias directas -->
+                <div *ngIf="!item.sugerencias || item.sugerencias.length === 0" class="manual-vincular-box">
+                  <button
+                    type="button"
+                    class="btn-vincular-manual"
+                    (click)="abrirBuscadorVinculacion(item)"
+                    title="Buscar y asociar con un producto ya registrado en el sistema">
+                    <span class="material-icons text-xs">link</span>
+                    <span>Marcar Coincidencia</span>
+                  </button>
+                </div>
+              </td>
             </tr>
             <tr *ngIf="getItemsFiltrados('NUEVO').length === 0">
-              <td colspan="6" class="text-center py-6 text-slate-400">No hay productos nuevos clasificados en este filtro.</td>
+              <td colspan="7" class="text-center py-8 text-slate-400">No hay productos nuevos clasificados en este filtro.</td>
             </tr>
           </tbody>
         </table>
@@ -193,45 +233,160 @@
 
     <!-- Pestaña 2: Coincidencias / Actualizaciones -->
     <div *ngIf="pestanaActiva() === 'ACTUALIZAR'" class="tab-content">
-      <p class="tab-description">Los siguientes <strong>{{ getConteoEfectivo('ACTUALIZAR') }} productos</strong> coincidieron con registros en tu BD. Si alguno no corresponde, haz clic en cambiar:</p>
+      <p class="tab-description">Los siguientes <strong>{{ getConteoEfectivo('ACTUALIZAR') }} productos</strong> actualizarán registros existentes en tu BD:</p>
       <div class="table-scroll-container">
-        <table class="preview-table">
+        <table class="preview-table table-coincidencias">
           <thead>
             <tr>
-              <th>Fila</th>
-              <th>Producto en Excel</th>
-              <th>Coincide en BD con</th>
-              <th>Stock</th>
-              <th>Acción de Importación</th>
+              <th class="col-fila text-center">Fila</th>
+              <th class="col-excel-th">Producto en Excel</th>
+              <th class="col-match-th">Coincide en BD con</th>
+              <th class="col-stock-th">Stock Excel</th>
+              <th class="col-accion-coincide-th text-right">Acción de Importación</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of getItemsFiltrados('ACTUALIZAR')">
-              <td class="font-mono text-center col-fila">{{ item.fila }}</td>
-              <td class="col-nombre font-medium text-slate-800">{{ item.nombreExcel }}</td>
-              <td>
+              <td class="col-fila text-center font-mono">{{ item.fila }}</td>
+              <td class="col-nombre font-medium text-slate-800">
+                <span class="item-name">{{ item.nombreExcel }}</span>
+                <span *ngIf="esVinculadoManualmente(item)" class="manual-tag">
+                  <span class="material-icons text-xs">touch_app</span> Vinculado manual
+                </span>
+              </td>
+              <td class="col-match">
                 <div class="db-match-card">
-                  <span class="material-icons text-amber-500 text-sm">link</span>
-                  <span class="match-name font-semibold text-amber-900">{{ item.coincidenciaDb?.nombre }}</span>
+                  <span class="material-icons text-amber-500 text-base icon-link">link</span>
+                  <div class="match-info">
+                    <span class="match-name font-semibold text-amber-900">{{ getCoincidenciaEfectiva(item)?.nombre }}</span>
+                    <span class="match-sub text-xs text-amber-700">
+                      <span *ngIf="getCoincidenciaEfectiva(item)?.codigoBarras">Cod: {{ getCoincidenciaEfectiva(item)?.codigoBarras }} &bull; </span>
+                      Stock actual en BD: <strong>{{ getCoincidenciaEfectiva(item)?.stockActual }}</strong>
+                    </span>
+                  </div>
                 </div>
               </td>
-              <td><strong>{{ item.stock }}</strong> {{ item.unidadMedida }}</td>
-              <td>
+              <td class="col-stock"><strong>{{ item.stock }}</strong> <span class="unit-sub">{{ item.unidadMedida }}</span></td>
+              <td class="col-accion-coincide text-right">
                 <button
                   type="button"
                   class="btn-toggle-action"
                   (click)="toggleAccionItem(item)"
-                  title="Cambiar acción para esta fila">
-                  <span class="material-icons text-xs">add_circle_outline</span>
+                  title="Desvincular y crearlo como nuevo">
+                  <span class="material-icons text-xs">undo</span>
                   <span>Importar como Nuevo</span>
                 </button>
               </td>
             </tr>
             <tr *ngIf="getItemsFiltrados('ACTUALIZAR').length === 0">
-              <td colspan="5" class="text-center py-6 text-slate-400">No hay coincidencias en este filtro. Todos los registros se crearán como nuevos.</td>
+              <td colspan="5" class="text-center py-8 text-slate-400">No hay coincidencias en este filtro. Todos los registros se crearán como nuevos.</td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FLOTANTE DE BÚSQUEDA Y VINCULACIÓN MANUAL -->
+  <div *ngIf="itemParaVincular()" class="submodal-overlay" (click)="cerrarBuscadorVinculacion()">
+    <div class="submodal-box" (click)="$event.stopPropagation()">
+      <div class="submodal-header">
+        <div class="submodal-header-text">
+          <div class="submodal-title-row">
+            <span class="material-icons text-blue-600">link</span>
+            <h3 class="submodal-title">Vincular con Producto del Sistema</h3>
+          </div>
+          <p class="submodal-subtitle">
+            Selecciona el producto en BD que corresponde a:
+            <span class="highlighted-excel-name">"{{ itemParaVincular()?.nombreExcel }}"</span> (Fila {{ itemParaVincular()?.fila }})
+          </p>
+        </div>
+        <button type="button" class="btn-submodal-close" (click)="cerrarBuscadorVinculacion()" title="Cerrar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="submodal-body">
+        <!-- Input de búsqueda -->
+        <div class="submodal-search-bar">
+          <span class="material-icons search-icon">search</span>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="busquedaCatalogo"
+            (ngModelChange)="onInputBusquedaChange()"
+            placeholder="Buscar por nombre o código de barras..."
+            autofocus />
+          <button *ngIf="busquedaCatalogo()" type="button" class="btn-clear-txt" (click)="busquedaCatalogo.set(''); onInputBusquedaChange()">
+            <span class="material-icons text-sm">close</span>
+          </button>
+        </div>
+
+        <!-- Sugerencias detectadas si existen -->
+        <div *ngIf="itemParaVincular()?.sugerencias && itemParaVincular()!.sugerencias!.length > 0" class="submodal-section">
+          <span class="submodal-section-badge">
+            <span class="material-icons text-amber-500 text-xs">auto_awesome</span>
+            Sugerencias detectadas por aproximación:
+          </span>
+          <div class="suggestions-grid">
+            <div *ngFor="let sug of itemParaVincular()?.sugerencias" class="sug-card">
+              <div class="sug-details">
+                <span class="sug-title font-semibold text-slate-800">{{ sug.nombre }}</span>
+                <div class="sug-meta-chips">
+                  <span *ngIf="sug.codigoBarras" class="chip-code">Cod: {{ sug.codigoBarras }}</span>
+                  <span class="chip-stock">Stock actual: {{ sug.stockActual }}</span>
+                  <span class="chip-similitud">{{ sug.puntaje * 100 | number:'1.0-0' }}% similitud</span>
+                </div>
+              </div>
+              <button type="button" class="btn-select-match" (click)="seleccionarProductoCatalogo(sug)">
+                <span class="material-icons text-xs">check</span>
+                <span>Vincular</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de resultados en base de datos -->
+        <div class="submodal-section">
+          <span class="submodal-section-badge">
+            <span class="material-icons text-blue-500 text-xs">inventory_2</span>
+            Resultados en el catálogo ({{ resultadosBusqueda().length }}):
+          </span>
+
+          <div *ngIf="buscandoProductos()" class="submodal-loading">
+            <span class="material-icons spin">refresh</span>
+            <span>Buscando en catálogo...</span>
+          </div>
+
+          <div *ngIf="!buscandoProductos() && resultadosBusqueda().length === 0" class="submodal-empty">
+            <span class="material-icons text-slate-300 text-3xl">search_off</span>
+            <p class="text-sm text-slate-500">No se encontraron productos con "<strong>{{ busquedaCatalogo() }}</strong>"</p>
+          </div>
+
+          <div *ngIf="!buscandoProductos() && resultadosBusqueda().length > 0" class="submodal-results-list">
+            <div *ngFor="let prod of resultadosBusqueda()" class="result-row">
+              <div class="result-info">
+                <span class="result-name font-semibold text-slate-800">{{ prod.nombre }}</span>
+                <div class="result-badges">
+                  <span *ngIf="prod.codigoBarras" class="chip-code">Cod: {{ prod.codigoBarras }}</span>
+                  <span class="chip-stock">Stock: {{ prod.stockActual }}</span>
+                  <span class="chip-price">P. Venta: S/ {{ prod.precioVenta | number:'1.2-2' }}</span>
+                  <span *ngIf="prod.categoria?.nombre" class="chip-cat">{{ prod.categoria.nombre }}</span>
+                </div>
+              </div>
+              <button type="button" class="btn-select-match" (click)="seleccionarProductoCatalogo(prod)">
+                <span class="material-icons text-xs">link</span>
+                <span>Vincular</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="submodal-footer">
+        <button type="button" class="btn-cancel" (click)="cerrarBuscadorVinculacion()">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
